@@ -2,16 +2,16 @@ package codes.laivy.jhttp.utilities;
 
 import codes.laivy.jhttp.exception.TransferEncodingException;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.zip.*;
+import java.util.*;
+import java.util.zip.DeflaterInputStream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public abstract class TransferEncoding {
 
@@ -84,6 +84,10 @@ public abstract class TransferEncoding {
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
+
+        }
+        @Override
+        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
 
         }
 
@@ -181,7 +185,74 @@ public abstract class TransferEncoding {
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
 
+            @NotNull Map<Integer, String> dictionary = new HashMap<>();
+            for (int i = 0; i < 256; i++) {
+                dictionary.put(i, "" + (char) i);
+            }
+
+            @NotNull List<Byte> result = new LinkedList<>();
+            int oldCode = bytes[0];
+            result.add((byte) oldCode);
+
+            for (int i = 1; i < bytes.length; i++) {
+                int code = bytes[i] & 0xff;
+                @NotNull String current;
+
+                if (dictionary.containsKey(code)) {
+                    current = dictionary.get(code);
+                } else if (code == dictionary.size()) {
+                    current = dictionary.get(oldCode) + dictionary.get(oldCode).charAt(0);
+                } else {
+                    throw new IllegalArgumentException("Bad compressed code");
+                }
+
+                for (char c : current.toCharArray()) {
+                    result.add((byte) c);
+                }
+
+                dictionary.put(dictionary.size(), dictionary.get(oldCode) + current.charAt(0));
+                oldCode = code;
+            }
+
+            byte[] decompressed = new byte[result.size()];
+            for (int i = 0; i < result.size(); i++) {
+                decompressed[i] = result.get(i);
+            }
+
+            return decompressed;
+        }
+        @Override
+        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
+
+            @NotNull Map<String, Integer> dictionary = new HashMap<>();
+            for (int i = 0; i < 256; i++) {
+                dictionary.put(String.valueOf(i), i);
+            }
+
+            @NotNull List<Byte> result = new LinkedList<>();
+            @NotNull String current = "";
+
+            for (byte b : bytes) {
+                String combined = current + (char) b;
+                if (dictionary.containsKey(combined)) {
+                    current = combined;
+                } else {
+                    result.add((byte) (int) dictionary.get(current));
+                    dictionary.put(combined, dictionary.size());
+                    current = "" + (char) b;
+                }
+            }
+            result.add((byte) (int) dictionary.get(current));
+
+            byte[] compressed = new byte[result.size()];
+            for (int i = 0; i < result.size(); i++) {
+                compressed[i] = result.get(i);
+            }
+
+            return compressed;
         }
 
     }
@@ -199,6 +270,10 @@ public abstract class TransferEncoding {
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) {
+            return bytes;
+        }
+        @Override
+        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
             return bytes;
         }
 

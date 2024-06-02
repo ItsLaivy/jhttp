@@ -39,5 +39,16 @@ public final class TransferEncodingTests {
 
         Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8));
     }
+    @Test
+    @Order(value = 2)
+    void compress() throws TransferEncodingException {
+        @NotNull String target = "Just a Cool Text!";
+
+        @NotNull TransferEncoding encoding = TransferEncoding.Compress.getInstance();
+        byte[] compressed = encoding.compress(target.getBytes(StandardCharsets.UTF_8));
+        byte[] decompressed = encoding.decompress(compressed);
+
+        Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8));
+    }
 
 }
