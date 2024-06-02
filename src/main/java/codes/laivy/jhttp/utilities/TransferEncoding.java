@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.*;
 
 public abstract class TransferEncoding {
 
@@ -105,9 +104,10 @@ public abstract class TransferEncoding {
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
             if (bytes.length == 0) return new byte[0];
 
-            try (@NotNull GZIPInputStream stream = new GZIPInputStream(new ByteInputStream(bytes, bytes.length))) {
-                // todo: 02/06/2024 the commons-io library must be removed from pom.xml
-                return IOUtils.toByteArray(stream);
+            try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
+                try (@NotNull GZIPInputStream stream = new GZIPInputStream(byteStream)) {
+                    return byteStream.getBytes();
+                }
             } catch (@NotNull IOException e) {
                 throw new TransferEncodingException("cannot decompress with gzip native stream", e);
             }
@@ -141,7 +141,29 @@ public abstract class TransferEncoding {
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
 
+            try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
+                try (@NotNull DeflaterInputStream stream = new DeflaterInputStream(byteStream)) {
+                    return byteStream.getBytes();
+                }
+            } catch (@NotNull IOException e) {
+                throw new TransferEncodingException("cannot decompress with gzip native stream", e);
+            }
+
+        }
+        @Override
+        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
+
+            try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
+                try (@NotNull DeflaterOutputStream stream = new DeflaterOutputStream(byteStream)) {
+                    stream.write(bytes);
+                    return byteStream.toByteArray();
+                }
+            } catch (@NotNull IOException e) {
+                throw new TransferEncodingException("cannot compress with deflater native stream", e);
+            }
         }
 
     }
