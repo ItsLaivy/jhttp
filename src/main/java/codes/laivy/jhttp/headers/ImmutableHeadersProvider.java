@@ -8,14 +8,14 @@ import java.util.stream.Stream;
 
 final class ImmutableHeadersProvider implements Headers {
 
-    private final @NotNull Header[] headers;
+    private final @NotNull Header<?>[] headers;
 
-    public ImmutableHeadersProvider(@NotNull Header[] headers) {
+    public ImmutableHeadersProvider(@NotNull Header<?>[] headers) {
         this.headers = Arrays.copyOf(headers, headers.length);
     }
 
     @Override
-    public @NotNull Header @NotNull [] get(@NotNull String name) {
+    public @NotNull Header<?> @NotNull [] get(@NotNull String name) {
         return stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(Header[]::new);
     }
 
@@ -25,7 +25,7 @@ final class ImmutableHeadersProvider implements Headers {
     }
 
     @Override
-    public @NotNull Stream<Header> stream() {
+    public @NotNull Stream<Header<?>> stream() {
         return Arrays.stream(headers);
     }
 
@@ -35,7 +35,7 @@ final class ImmutableHeadersProvider implements Headers {
     }
 
     @Override
-    public @NotNull Iterator<Header> iterator() {
+    public @NotNull Iterator<Header<?>> iterator() {
         return stream().iterator();
     }
 }

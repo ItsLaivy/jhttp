@@ -10,10 +10,10 @@ import java.util.stream.Stream;
 
 final class MutableHeadersProvider implements MutableHeaders {
 
-    private final @NotNull List<Header> list = new LinkedList<>();
+    private final @NotNull List<Header<?>> list = new LinkedList<>();
 
     @Override
-    public @NotNull Header @NotNull [] get(@NotNull String name) {
+    public @NotNull Header<?> @NotNull [] get(@NotNull String name) {
         return list.stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(Header[]::new);
     }
 
@@ -23,7 +23,7 @@ final class MutableHeadersProvider implements MutableHeaders {
     }
 
     @Override
-    public @NotNull Stream<Header> stream() {
+    public @NotNull Stream<Header<?>> stream() {
         return list.stream();
     }
 
@@ -33,18 +33,18 @@ final class MutableHeadersProvider implements MutableHeaders {
     }
 
     @Override
-    public boolean put(@NotNull Header header) {
+    public boolean put(@NotNull Header<?> header) {
         remove(header.getKey());
         return add(header);
     }
 
     @Override
-    public boolean add(@NotNull Header header) {
+    public boolean add(@NotNull Header<?> header) {
         return list.add(header);
     }
 
     @Override
-    public boolean remove(@NotNull Header header) {
+    public boolean remove(@NotNull Header<?> header) {
         return list.remove(header);
     }
 
@@ -60,7 +60,7 @@ final class MutableHeadersProvider implements MutableHeaders {
 
     @NotNull
     @Override
-    public Iterator<Header> iterator() {
+    public Iterator<Header<?>> iterator() {
         return list.iterator();
     }
 }

@@ -2,27 +2,29 @@ package codes.laivy.jhttp.headers;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public interface Headers extends Iterable<Header> {
+public interface Headers extends Iterable<Header<?>> {
 
     // Static initializers
 
     static @NotNull MutableHeaders createMutable() {
         return new MutableHeadersProvider();
     }
-    static @NotNull Headers createImmutable(@NotNull Header @NotNull [] headers) {
+    static @NotNull Headers createImmutable(@NotNull Header<?> @NotNull [] headers) {
         return new ImmutableHeadersProvider(headers);
     }
 
     // Object
 
-    @NotNull Header @NotNull [] get(@NotNull String name);
+    @NotNull Header<?> @NotNull [] get(@NotNull String name);
     boolean contains(@NotNull String name);
 
-    @NotNull Stream<Header> stream();
+    @NotNull Stream<Header<?>> stream();
 
     int size();
 
@@ -30,10 +32,10 @@ public interface Headers extends Iterable<Header> {
         return (int) stream().filter(header -> header.getName().equalsIgnoreCase(name)).count();
     }
 
-    default @NotNull Optional<Header> first(@NotNull String name) {
+    default @NotNull Optional<Header<?>> first(@NotNull String name) {
         return stream().filter(header -> header.getName().equalsIgnoreCase(name)).findFirst();
     }
-    default @NotNull Optional<Header> last(@NotNull String name) {
+    default @NotNull Optional<Header<?>> last(@NotNull String name) {
         return stream()
                 .filter(header -> header.getName().equalsIgnoreCase(name))
                 .collect(Collectors.toList())
@@ -48,23 +50,32 @@ public interface Headers extends Iterable<Header> {
         return count(key.getName());
     }
 
-    default @NotNull Optional<Header> first(@NotNull HeaderKey<?> key) {
-        return first(key.getName());
+    default <E> @NotNull Optional<Header<E>> first(@NotNull HeaderKey<E> key) throws ClassCastException {
+        //noinspection unchecked
+        return Optional.ofNullable((Header<E>) first(key.getName()).orElse(null));
     }
-    default @NotNull Optional<Header> last(@NotNull HeaderKey<?> key) {
-        return last(key.getName());
+    default <E> @NotNull Optional<Header<E>> last(@NotNull HeaderKey<E> key) {
+        //noinspection unchecked
+        return Optional.ofNullable((Header<E>) last(key.getName()).orElse(null));
     }
 
-    default @NotNull Header @NotNull [] get(@NotNull HeaderKey<?> key) {
-        return get(key.getName());
+    @SuppressWarnings("unchecked")
+    default <E> @NotNull Header<E> @NotNull [] get(@NotNull HeaderKey<E> key) {
+        @NotNull List<Header<E>> headers = new LinkedList<>();
+
+        for (@NotNull Header<?> header : get(key.getName())) {
+            headers.add((Header<E>) header);
+        }
+
+        return headers.toArray(new Header[0]);
     }
 
     interface MutableHeaders extends Headers {
 
-        boolean put(@NotNull Header header);
-        boolean add(@NotNull Header header);
+        boolean put(@NotNull Header<?> header);
+        boolean add(@NotNull Header<?> header);
 
-        boolean remove(@NotNull Header header);
+        boolean remove(@NotNull Header<?> header);
         boolean remove(@NotNull HeaderKey<?> key);
         boolean remove(@NotNull String name);
 
