@@ -1,12 +1,18 @@
 package codes.laivy.jhttp.utilities;
 
 import codes.laivy.jhttp.exception.TransferEncodingException;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public abstract class TransferEncoding {
 
@@ -97,7 +103,27 @@ public abstract class TransferEncoding {
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
 
+            try (@NotNull GZIPInputStream stream = new GZIPInputStream(new ByteInputStream(bytes, bytes.length))) {
+                // todo: 02/06/2024 the commons-io library must be removed from pom.xml
+                return IOUtils.toByteArray(stream);
+            } catch (@NotNull IOException e) {
+                throw new TransferEncodingException("cannot decompress with gzip native stream", e);
+            }
+        }
+        @Override
+        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
+            if (bytes.length == 0) return new byte[0];
+
+            try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
+                try (@NotNull GZIPOutputStream stream = new GZIPOutputStream(byteStream)) {
+                    stream.write(bytes);
+                    return byteStream.toByteArray();
+                }
+            } catch (@NotNull IOException e) {
+                throw new TransferEncodingException("cannot compress with gzip native stream", e);
+            }
         }
 
     }
