@@ -15,40 +15,15 @@ public final class TransferEncodingTests {
 
     @Test
     @Order(value = 0)
-    void chunked() {
-    }
-    @Test
-    @Order(value = 1)
-    void gzip() throws TransferEncodingException {
+    void compressAndDecompress() throws TransferEncodingException {
         @NotNull String target = "Just a Cool Text!";
 
-        @NotNull TransferEncoding encoding = TransferEncoding.GZip.getInstance();
-        byte[] compressed = encoding.compress(target.getBytes(StandardCharsets.UTF_8));
-        byte[] decompressed = encoding.decompress(compressed);
+        for (@NotNull TransferEncoding encoding : TransferEncoding.Encodings.toArray()) {
+            byte[] compressed = encoding.compress(target.getBytes(StandardCharsets.UTF_8));
+            byte[] decompressed = encoding.decompress(compressed);
 
-        Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8));
-    }
-    @Test
-    @Order(value = 2)
-    void deflate() throws TransferEncodingException {
-        @NotNull String target = "Just a Cool Text!";
-
-        @NotNull TransferEncoding encoding = TransferEncoding.Deflate.getInstance();
-        byte[] compressed = encoding.compress(target.getBytes(StandardCharsets.UTF_8));
-        byte[] decompressed = encoding.decompress(compressed);
-
-        Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8));
-    }
-    @Test
-    @Order(value = 2)
-    void compress() throws TransferEncodingException {
-        @NotNull String target = "Just a Cool Text!";
-
-        @NotNull TransferEncoding encoding = TransferEncoding.Compress.getInstance();
-        byte[] compressed = encoding.compress(target.getBytes(StandardCharsets.UTF_8));
-        byte[] decompressed = encoding.decompress(compressed);
-
-        Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8));
+            Assertions.assertEquals(target, new String(decompressed, StandardCharsets.UTF_8), "cannot proceed compress/decompress test using '" + encoding.getName() + "' encoding");
+        }
     }
 
 }

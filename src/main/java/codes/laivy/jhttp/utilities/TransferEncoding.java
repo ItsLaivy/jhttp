@@ -4,35 +4,16 @@ import codes.laivy.jhttp.exception.TransferEncodingException;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.zip.DeflaterInputStream;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import java.util.zip.*;
 
 public abstract class TransferEncoding {
-
-    // Static initializers
-
-    private static final @NotNull Set<TransferEncoding> encodings = new HashSet<>();
-
-    public static @NotNull TransferEncoding[] getEncodings() {
-        // Creates a set with the current registered encodings
-        @NotNull Set<TransferEncoding> encodings = new HashSet<>(TransferEncoding.encodings);
-
-        // Try to add the default encodings if not exists
-        encodings.add(TransferEncoding.Chunked.getInstance());
-        encodings.add(TransferEncoding.GZip.getInstance());
-        encodings.add(TransferEncoding.Deflate.getInstance());
-        encodings.add(TransferEncoding.Compress.getInstance());
-        encodings.add(TransferEncoding.Identity.getInstance());
-
-        // Convert into an array
-        return encodings.toArray(new TransferEncoding[0]);
-    }
 
     // Object
 
@@ -48,6 +29,11 @@ public abstract class TransferEncoding {
 
     public abstract byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException;
     public abstract byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException;
+
+    public final synchronized void register() {
+        Encodings.collection.removeIf(encoding -> encoding.getName().equalsIgnoreCase(getName()));
+        Encodings.collection.add(this);
+    }
 
     // Equals
 
@@ -70,7 +56,74 @@ public abstract class TransferEncoding {
 
     // Classes
 
+    public static final class Encodings {
+
+        private static final @NotNull Set<TransferEncoding> collection = ConcurrentHashMap.newKeySet();
+
+        private Encodings() {
+            throw new UnsupportedOperationException();
+        }
+
+        public static @NotNull Optional<TransferEncoding> retrieve(@NotNull String name) {
+            @NotNull Set<TransferEncoding> encodings = new HashSet<>(Encodings.collection);
+            encodings.add(new Chunked());
+            encodings.add(new GZip());
+            encodings.add(new Deflate());
+            encodings.add(new Compress());
+            encodings.add(new Identity());
+
+            return stream().filter(encoding -> encoding.getName().equalsIgnoreCase(name)).findFirst();
+        }
+
+        public static boolean add(@NotNull TransferEncoding encoding) {
+            return collection.add(encoding);
+        }
+        public static boolean remove(@NotNull TransferEncoding encoding) {
+            return collection.remove(encoding);
+        }
+        public static boolean contains(@NotNull TransferEncoding encoding) {
+            return collection.contains(encoding);
+        }
+
+        public int size() {
+            return collection.size();
+        }
+        public boolean isEmpty() {
+            return collection.isEmpty();
+        }
+
+        public static @NotNull Stream<TransferEncoding> stream() {
+            return collection.stream();
+        }
+        public static @NotNull Iterator<TransferEncoding> iterator() {
+            return collection.iterator();
+        }
+        public static @NotNull TransferEncoding[] toArray() {
+            return collection.toArray(new TransferEncoding[0]);
+        }
+        
+    }
+
     public static final class Chunked extends TransferEncoding {
+
+        // Static initializers
+
+        // todo: enhance this
+        @Range(from = 1, to = Integer.MAX_VALUE)
+        private static int slice = 2048;
+
+        @Range(from = 1, to = Integer.MAX_VALUE)
+        public static int getSlice() {
+            return slice;
+        }
+        public static void setSlice(
+                @Range(from = 1, to = Integer.MAX_VALUE)
+                int slice
+        ) {
+            Chunked.slice = slice;
+        }
+
+        // Object
 
         private static final @NotNull Chunked instance = new Chunked();
 
@@ -133,22 +186,33 @@ public abstract class TransferEncoding {
     }
     public static final class Deflate extends TransferEncoding {
 
-        private static final @NotNull Deflate instance = new Deflate();
+        // Static initializers
 
-        public static @NotNull Deflate getInstance() {
-            return instance;
+        private static @NotNull Deflater deflater = new Deflater();
+
+        public static @NotNull Deflater getDeflater() {
+            return deflater;
         }
+        public static void setDeflater(@NotNull Deflater deflater) {
+            Deflate.deflater = deflater;
+        }
+
+        // Object
 
         private Deflate() {
             super("deflate");
         }
+
+        // Getters
+
+        // Modules
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
             if (bytes.length == 0) return new byte[0];
 
             try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
-                try (@NotNull DeflaterInputStream stream = new DeflaterInputStream(byteStream)) {
+                try (@NotNull DeflaterInputStream stream = new DeflaterInputStream(byteStream, getDeflater())) {
                     return byteStream.getBytes();
                 }
             } catch (@NotNull IOException e) {
@@ -161,7 +225,7 @@ public abstract class TransferEncoding {
             if (bytes.length == 0) return new byte[0];
 
             try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
-                try (@NotNull DeflaterOutputStream stream = new DeflaterOutputStream(byteStream)) {
+                try (@NotNull DeflaterOutputStream stream = new DeflaterOutputStream(byteStream, getDeflater())) {
                     stream.write(bytes);
                     return byteStream.toByteArray();
                 }
