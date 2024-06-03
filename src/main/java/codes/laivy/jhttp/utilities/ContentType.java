@@ -29,7 +29,7 @@ public class ContentType {
     public static @NotNull ContentType parse(@NotNull String input) throws ParseException {
         @NotNull String mimeType;
         @Nullable Charset charset = null;
-        @NotNull List<NameValuePair> parameterList = new LinkedList<>();
+        @NotNull List<Parameter> parameterList = new LinkedList<>();
 
         @NotNull Matcher matcher = PARSE_PATTERN.matcher(input);
 
@@ -50,7 +50,7 @@ public class ContentType {
                     @NotNull Matcher paramMatcher = PARSE_VALUE_SEPARATOR_PATTERN.matcher(params);
 
                     while (paramMatcher.find()) {
-                        parameterList.add(NameValuePair.create(paramMatcher.group(1), paramMatcher.group(2)));
+                        parameterList.add(Parameter.create(paramMatcher.group(1), paramMatcher.group(2)));
                     }
                 }
             } catch (@NotNull Throwable throwable) {
@@ -60,13 +60,13 @@ public class ContentType {
             throw new ParseException("cannot parse '" + input + "' as a valid content type value", 0);
         }
 
-        return new ContentType(mimeType, charset, parameterList.toArray(new NameValuePair[0]));
+        return new ContentType(mimeType, charset, parameterList.toArray(new Parameter[0]));
     }
 
     public static @NotNull ContentType create(@NotNull String mimeType, @Nullable Charset charset) {
-        return new ContentType(mimeType, charset, new NameValuePair[0]);
+        return new ContentType(mimeType, charset, new Parameter[0]);
     }
-    public static @NotNull ContentType create(@NotNull String mimeType, @Nullable Charset charset, @NotNull NameValuePair[] parameters) {
+    public static @NotNull ContentType create(@NotNull String mimeType, @Nullable Charset charset, @NotNull Parameter[] parameters) {
         return new ContentType(mimeType, charset, parameters);
     }
 
@@ -126,9 +126,9 @@ public class ContentType {
 
     private final @NotNull String mimeType;
     private final @Nullable Charset charset;
-    private final @NotNull NameValuePair[] parameters;
+    private final @NotNull Parameter[] parameters;
 
-    private ContentType(@NotNull String mimeType, @Nullable Charset charset, @NotNull NameValuePair @NotNull [] parameters) {
+    private ContentType(@NotNull String mimeType, @Nullable Charset charset, @NotNull Parameter @NotNull [] parameters) {
         this.mimeType = mimeType;
         this.parameters = Arrays.copyOf(parameters, parameters.length);
 
@@ -155,7 +155,7 @@ public class ContentType {
         return charset;
     }
     @Contract(pure = true)
-    public final @NotNull NameValuePair[] getParameters() {
+    public final @NotNull Parameter[] getParameters() {
         return parameters;
     }
 
@@ -173,7 +173,7 @@ public class ContentType {
         if (getCharset() != null) {
             builder.append("; charset=").append(getCharset());
         }
-        for (NameValuePair entry : getParameters()) {
+        for (Parameter entry : getParameters()) {
             builder.append("; ").append(entry.getName()).append("=").append(entry.getValue());
         }
         return builder.toString();
@@ -191,6 +191,49 @@ public class ContentType {
         int result = Objects.hash(getMimeType(), getCharset());
         result = 31 * result + Arrays.hashCode(getParameters());
         return result;
+    }
+
+    // Classes
+
+    public static final class Parameter {
+
+        // Static initializers
+
+        public static @NotNull Parameter create(@NotNull String name, @NotNull String value) {
+            return new Parameter(name, value);
+        }
+
+        // Object
+
+        private final @NotNull String name;
+        private final @NotNull String value;
+
+        private Parameter(@NotNull String name, @NotNull String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public @NotNull String getName() {
+            return name;
+        }
+        public @NotNull String getValue() {
+            return value;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            Parameter parameter = (Parameter) object;
+            return Objects.equals(getName(), parameter.getName()) && Objects.equals(getValue(), parameter.getValue());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getName(), getValue());
+        }
+
     }
 
 }
