@@ -3,12 +3,14 @@ package codes.laivy.jhttp.headers;
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.encoding.TransferEncoding;
+import codes.laivy.jhttp.utilities.ContentType;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,7 +85,7 @@ public abstract class HeaderKey<T> {
      * @see <a href="https://regexr.com/7sfu0">RegExr Tests</a>
      * @apiNote Last change: 23/02/2024 | 19:06 (GMT-3)
      */
-    public static @NotNull HeaderKey<?> CONTENT_TYPE = new StringHeaderKey("Content-Type", Pattern.compile("^[a-zA-Z0-9+-.*]+/[a-zA-Z0-9+-.*]+(?:; ?(boundary=[a-zA-Z0-9-]+|charset=[a-zA-Z0-9-]+))?(?:; ?(boundary=[a-zA-Z0-9-]+|charset=[a-zA-Z0-9-]+))?$"));
+    public static @NotNull HeaderKey<ContentType> CONTENT_TYPE = new ContentTypeHeaderKey();
     public static @NotNull HeaderKey<?> COOKIE = new StringHeaderKey("Cookie");
     public static @NotNull HeaderKey<?> CRITICAL_CH = new StringHeaderKey("Critical-CH");
     public static @NotNull HeaderKey<?> CROSS_ORIGIN_EMBEDDER_POLICY = new StringHeaderKey("Cross-Origin-Embedder-Policy");
@@ -211,7 +213,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<?> WARNING = new StringHeaderKey("Warning");
     @Deprecated
     public static @NotNull HeaderKey<?> WIDTH = new StringHeaderKey("Width");
-    public static @NotNull HeaderKey<?> WWW_AUTHENTICATE = new StringHeaderKey("WWW-Authenticate");
+    public static @NotNull StringHeaderKey WWW_AUTHENTICATE = new StringHeaderKey("WWW-Authenticate");
     public static @NotNull HeaderKey<?> PROXY_CONNECTION = new StringHeaderKey("Proxy-Connection", Pattern.compile("^(?i)(keep-alive|close)(,\\s?[a-zA-Z0-9!#$%&'*+.^_`|~-]+)*$"));
 
     // Object
@@ -231,6 +233,10 @@ public abstract class HeaderKey<T> {
 
     public abstract @NotNull Header<T> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException;
     public abstract @NotNull String write(@NotNull Header<T> header);
+
+    public @NotNull Header<T> create(@NotNull T value) {
+        return Header
+    }
 
     // Implementations
 
@@ -284,6 +290,26 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull String write(@NotNull Header<String> header) {
             return header.getValue();
+        }
+    }
+
+    private static final class ContentTypeHeaderKey extends HeaderKey<ContentType> {
+        private ContentTypeHeaderKey() {
+            super("Content-Type");
+        }
+
+        @Override
+        public @NotNull Header<ContentType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                @NotNull ContentType type = ContentType.parse(value);
+                return Header.create(this, type);
+            } catch (@NotNull ParseException e) {
+                throw new HeaderFormatException("cannot parse content type '" + value + "'", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentType> header) {
+            return header.getValue().toString();
         }
     }
     private static final class TransferEncodingHeaderKey extends HeaderKey<TransferEncoding[]> {

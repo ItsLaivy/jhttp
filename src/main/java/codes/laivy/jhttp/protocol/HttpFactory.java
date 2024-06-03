@@ -39,8 +39,8 @@ public interface HttpFactory {
         boolean isCompatible(@NotNull HttpClient client, byte[] data);
     }
     interface Headers {
-        @NotNull Header parse(byte[] data) throws ParseException;
-        byte[] wrap(@NotNull Header header);
+        @NotNull Header<?> parse(byte[] data) throws ParseException;
+        byte[] wrap(@NotNull Header<?> header);
 
         boolean isCompatible(byte[] data);
     }

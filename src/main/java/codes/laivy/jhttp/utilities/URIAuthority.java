@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.utilities;
 
-import codes.laivy.jhttp.utilities.Credentials.Basic;
+import codes.laivy.jhttp.authorization.Credentials.Basic;
 import org.jetbrains.annotations.*;
 
 import java.net.IDN;

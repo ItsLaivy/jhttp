@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
+import codes.laivy.jhttp.exception.IllegalHttpVersionException;
 import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -28,15 +29,19 @@ public abstract class TransferEncoding {
         return name;
     }
 
-    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException;
-    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException;
+    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
+    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
+
+    public boolean isCompatible(@NotNull HttpVersion version) {
+        return true;
+    }
 
     public final synchronized void register() {
         Encodings.collection.removeIf(encoding -> encoding.getName().equalsIgnoreCase(getName()));
         Encodings.collection.add(this);
     }
 
-    // Equals
+    // Implementations
 
     @Override
     public boolean equals(@Nullable Object object) {

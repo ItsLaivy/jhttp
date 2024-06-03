@@ -117,7 +117,7 @@ final class HttpFactory1_1 implements HttpFactory {
             }
 
             // Validate host header
-            @NotNull Header[] hostHeaders = headerList.get(HeaderKey.HOST);
+            @NotNull Header<?>[] hostHeaders = headerList.get(HeaderKey.HOST);
             if (hostHeaders.length > 1) {
                 throw new ParseException("multiples '" + HeaderKey.HOST + "' headers", 0);
             }
@@ -134,10 +134,10 @@ final class HttpFactory1_1 implements HttpFactory {
             // Charset
             @NotNull Charset charset = StandardCharsets.UTF_8;
 
-            @NotNull Optional<Header> optional = headerList.first(HeaderKey.CONTENT_TYPE);
+            @NotNull Optional<Header<ContentType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
             if (optional.isPresent()) {
                 try {
-                    @NotNull ContentType type = ContentType.parse(optional.get().getValue());
+                    @NotNull ContentType type = optional.get().getValue();
                     charset = type.getCharset() != null ? type.getCharset() : StandardCharsets.UTF_8;
                 } catch (@NotNull Throwable throwable) {
                     throw new ParseException("cannot parse content type: " + throwable.getMessage(), 0);
@@ -167,7 +167,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull String authority = request.getAuthority() != null ? request.getAuthority().toString() : request.getUri().toString();
             builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion()).append("\r\n");
             // Write headers
-            for (@NotNull Header header : request.getHeaders()) {
+            for (@NotNull Header<?> header : request.getHeaders()) {
                 builder.append(new String(getHeaders().wrap(header))).append("\r\n");
             }
             // End request configurations
@@ -237,15 +237,21 @@ final class HttpFactory1_1 implements HttpFactory {
             // Charset
             @NotNull Charset charset = StandardCharsets.UTF_8;
 
-            @NotNull Optional<Header> optional = headerList.first(HeaderKey.CONTENT_TYPE);
+            @NotNull Optional<Header<ContentType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
             if (optional.isPresent()) {
-                @NotNull ContentType type = ContentType.parse(optional.get().getValue());
+                @NotNull ContentType type = optional.get().getValue();
                 charset = type.getCharset() != null ? type.getCharset() : StandardCharsets.UTF_8;
             }
             // Message
             @Nullable Message message = null;
             if (content.length == 2) {
-                message = new StringMessage(content[1], charset);
+                byte[] value = content[1].getBytes();
+
+                if () {
+
+                }
+
+                message = new StringMessage(, charset);
             }
 
             // todo: content length if not have
@@ -263,7 +269,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull StringBuilder builder = new StringBuilder();
             builder.append(getVersion()).append(" ").append(response.getStatus().getCode()).append(" ").append(response.getStatus().getMessage()).append("\r\n");
             // Write headers
-            for (@NotNull Header header : response.getHeaders()) {
+            for (@NotNull Header<?> header : response.getHeaders()) {
                 builder.append(new String(getHeaders().wrap(header))).append("\r\n");
             }
             // End request configurations
@@ -296,7 +302,7 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Headers headers = new Headers() {
         @Override
-        public @NotNull Header parse(byte[] data) throws ParseException {
+        public @NotNull Header<?> parse(byte[] data) throws ParseException {
             @NotNull String string = new String(data);
 
             if (!isCompatible(data)) {
@@ -308,16 +314,11 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull String value = parts[1];
 
             @NotNull HeaderKey<?> key = HeaderKey.create(name);
-
-            if (key.getPattern() != null && !key.getPattern().matcher(value).matches()) {
-                throw new ParseException("invalid header '" + key.getName() + "' value format: " + value, string.indexOf(value));
-            }
-
             return Header.create(key, value);
         }
 
         @Override
-        public byte[] wrap(@NotNull Header header) {
+        public byte[] wrap(@NotNull Header<?> header) {
             return (header.getName() + ": " + header.getValue()).getBytes();
         }
 

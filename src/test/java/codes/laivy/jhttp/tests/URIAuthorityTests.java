@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests;
 
-import codes.laivy.jhttp.utilities.Credentials;
+import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.utilities.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
