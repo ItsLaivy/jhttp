@@ -16,7 +16,7 @@ public final class AuthorizationTests {
     void basic() {
     }
     @Test
-    @Order(value = 0)
+    @Order(value = 1)
     void bearer() {
     }
 

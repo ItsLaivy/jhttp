@@ -2,7 +2,7 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.utilities.TransferEncoding;
+import codes.laivy.jhttp.encoding.TransferEncoding;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

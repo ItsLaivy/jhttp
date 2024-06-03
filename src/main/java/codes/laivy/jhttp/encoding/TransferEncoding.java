@@ -1,15 +1,21 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.TransferEncodingException;
+import codes.laivy.jhttp.encoding.TransferEncoding.Chunked.Chunk.Size;
+import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.utilities.NameValuePair;
+import codes.laivy.jhttp.utilities.StringUtils;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.*;
 
@@ -27,8 +33,8 @@ public abstract class TransferEncoding {
         return name;
     }
 
-    public abstract byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException;
-    public abstract byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException;
+    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException;
+    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException;
 
     public final synchronized void register() {
         Encodings.collection.removeIf(encoding -> encoding.getName().equalsIgnoreCase(getName()));
@@ -101,29 +107,12 @@ public abstract class TransferEncoding {
         public static @NotNull TransferEncoding[] toArray() {
             return collection.toArray(new TransferEncoding[0]);
         }
-        
+
     }
 
-    public static final class Chunked extends TransferEncoding {
+    public static class Chunked extends TransferEncoding {
 
         // Static initializers
-
-        // todo: enhance this
-        @Range(from = 1, to = Integer.MAX_VALUE)
-        private static int slice = 2048;
-
-        @Range(from = 1, to = Integer.MAX_VALUE)
-        public static int getSlice() {
-            return slice;
-        }
-        public static void setSlice(
-                @Range(from = 1, to = Integer.MAX_VALUE)
-                int slice
-        ) {
-            Chunked.slice = slice;
-        }
-
-        // Object
 
         private static final @NotNull Chunked instance = new Chunked();
 
@@ -131,17 +120,101 @@ public abstract class TransferEncoding {
             return instance;
         }
 
-        private Chunked() {
+        // Object
+
+        private final int slice;
+
+        protected Chunked(int slice) {
             super("chunked");
+            this.slice = slice;
         }
+
+        // Getters
+
+        public final int getSlice() {
+            return slice;
+        }
+
+        // Modules
 
         @Override
         public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
+            @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
+            @NotNull List<Chunk> chunks = new LinkedList<>();
 
+            @Nullable Size size = null;
+            while (!string.isEmpty()) {
+                if (size == null) {
+                    @NotNull String part = string.split("\r\n")[0];
+
+                    // todo: That will fail if the send data be higher than the describe size.
+                    size = ReadChunkSize.read(part);
+
+                    string = string.substring(part.length() + 2);
+                } else {
+                    @NotNull String part = string.substring(0, size.getAmount());
+                    @NotNull Chunk chunk = ReadChunk.read(size, part);
+                    size = null;
+
+                    string = string.substring(part.length());
+                    chunks.add(chunk);
+                }
+            }
+a
+            // Merge bytes
+            byte[] decompressed = new byte[chunks.stream().mapToInt(chunk -> chunk.getBytes().length).sum()];
+            int amount = 0;
+            for (@NotNull Chunk chunk : chunks) {
+                int length = chunk.getBytes().length;
+                decompressed = Arrays.copyOfRange(chunk.getBytes(), amount, length);
+                amount = length;
+            }
+
+            // Return
+            return decompressed;
         }
+
         @Override
         public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
+            @NotNull StringBuilder builder = new StringBuilder();
+            @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
 
+            for (byte[] block : StringUtils.explode(bytes, getSlice())) {
+                // todo: chunk extensions
+                builder.append(bytes.length).append("\r\n");
+                builder.append(string).append("\r\n");
+            }
+
+            return builder.toString().getBytes();
+        }
+
+        private static final class ReadChunk {
+            private static @NotNull Chunk read(@NotNull Size size, @NotNull String string) throws TransferEncodingException {
+                @NotNull String[] data = string.split("\\s*;\\s*", 2);
+            }
+        }
+        private static final class ReadChunkSize {
+            private static @NotNull Size read(@NotNull String string) {
+                @NotNull String[] data = string.split("\\s*;\\s*", 2);
+                @NotNull NameValuePair[] pairs = new NameValuePair[0];
+
+                if (data.length > 1) {
+                    @NotNull Pattern pattern = Pattern.compile("\\s*(?<key>[^;=\\s]+)\\s*(?:=\\s*(?<value>[^;\\s]*))?\\s*");
+                    @NotNull Matcher matcher = pattern.matcher(string);
+                    pairs = new NameValuePair[string.split(";").length];
+
+                    int index = 0;
+                    while (matcher.find()) {
+                        @NotNull String key = matcher.group("key");
+                        @Nullable String value = matcher.group("value");
+
+                        pairs[index] = NameValuePair.create(key, value);
+                        index++;
+                    }
+                }
+
+                return new Size(Integer.parseInt(data[0]), pairs);
+            }
         }
 
     }

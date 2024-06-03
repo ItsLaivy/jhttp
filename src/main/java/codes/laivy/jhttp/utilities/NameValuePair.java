@@ -6,6 +6,7 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
 
+// todo: improved this class
 public interface NameValuePair {
 
     @UnknownNullability String getName();
