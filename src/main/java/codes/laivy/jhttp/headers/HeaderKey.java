@@ -4,12 +4,14 @@ import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.encoding.TransferEncoding;
 import codes.laivy.jhttp.utilities.ContentType;
+import codes.laivy.jhttp.utilities.Pair;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -41,8 +43,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<ContentType[]> ACCEPT = new AcceptHeaderKey();
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
-    public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetime();
-    public static @NotNull HeaderKey<?> ACCEPT_CHARSET = new StringHeaderKey("Accept-Charset");
+    public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetimeHeaderKey();
+    public static @NotNull HeaderKey<Pair<Charset, @Nullable Float>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_ENCODING = new StringHeaderKey("Accept-Encoding");
     public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new StringHeaderKey("Accept-Language");
     public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch");
@@ -308,8 +310,53 @@ public abstract class HeaderKey<T> {
         }
     }
 
-    private static final class AcceptCHLifetime extends HeaderKey<Integer> {
-        private AcceptCHLifetime() {
+    private static final class AcceptCharsetHeaderKey extends HeaderKey<Pair<@NotNull Charset, @Nullable Float>[]> {
+        private AcceptCharsetHeaderKey() {
+            super("Accept-Charset", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Pair<Charset, Float>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[\\.,]\\d)?))?");
+            @NotNull Matcher matcher = pattern.matcher(value);
+
+            //noinspection unchecked
+            @NotNull Pair<Charset, Float>[] pairs = new Pair[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                if (!matcher.find()) break;
+
+                try {
+                    @NotNull Charset charset = Charset.forName(matcher.group("charset"));
+                    @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+
+                    pairs[group] = Pair.create(charset, weight);
+                } catch (@NotNull IllegalArgumentException ignore) {
+                    // Ignore completely charsets that are unknown by the environment
+                }
+            }
+
+            return create(pairs);
+        }
+
+        @Override
+        public @NotNull String write(@NotNull Header<Pair<Charset, Float>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Pair<Charset, Float> pair : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(pair.getKey().name());
+
+                if (pair.getValue() != null) {
+                    builder.append(";q=").append(pair.getValue());
+                }
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class AcceptCHLifetimeHeaderKey extends HeaderKey<Integer> {
+        private AcceptCHLifetimeHeaderKey() {
             super("Accept-CH-Lifetime", Target.RESPONSE);
         }
 
