@@ -2,9 +2,9 @@ package codes.laivy.jhttp.authorization;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Flushable;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Base64;
@@ -31,6 +31,66 @@ public interface Credentials extends CharSequence, Flushable {
 
     // Classes
 
+    final class Unknown implements Credentials {
+
+        // Static initializers
+
+        public static @NotNull Unknown create(char[] chars) {
+            return new Unknown(chars);
+        }
+        public static @NotNull Unknown create(@NotNull String credentials) {
+            return new Unknown(credentials.toCharArray());
+        }
+
+        // Object
+
+        private final char[] chars;
+        private volatile boolean flushed = false;
+
+        private Unknown(char[] chars) {
+            this.chars = chars;
+        }
+
+        // Getters
+
+        private char[] bytes() {
+            if (flushed) {
+                throw new IllegalStateException("this credential has been flushed and cannot be used anymore");
+            }
+            return chars;
+        }
+
+        @Override
+        public byte @NotNull [] getBytes() {
+            return toString().getBytes();
+        }
+
+        @Override
+        public synchronized void flush() {
+            Arrays.fill(bytes(), (char) 0);
+            flushed = true;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            Unknown that = (Unknown) object;
+            return Objects.deepEquals(bytes(), that.bytes());
+        }
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(bytes());
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return new String(bytes());
+        }
+
+    }
     class Bearer implements Credentials {
 
         // Object
@@ -60,12 +120,24 @@ public interface Credentials extends CharSequence, Flushable {
         }
 
         @Override
-        public synchronized void flush() throws IOException {
+        public synchronized void flush() {
             Arrays.fill(token(), (char) 0);
             flushed = true;
         }
 
         // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            Bearer bearer = (Bearer) object;
+            return Objects.deepEquals(token(), bearer.token());
+        }
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(token());
+        }
 
         @Override
         public @NotNull String toString() {
@@ -145,9 +217,7 @@ public interface Credentials extends CharSequence, Flushable {
         }
         @Override
         public int hashCode() {
-            int result = Objects.hash(getUsername());
-            result = 31 * result + Arrays.hashCode(getPassword());
-            return result;
+            return Objects.hash(getUsername(), Arrays.hashCode(getPassword()));
         }
 
         @Override
