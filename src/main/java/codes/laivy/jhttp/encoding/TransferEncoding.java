@@ -1,23 +1,13 @@
 package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.TransferEncodingException;
-import codes.laivy.jhttp.encoding.TransferEncoding.Chunked.Chunk.Size;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.utilities.NameValuePair;
-import codes.laivy.jhttp.utilities.StringUtils;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.zip.*;
 
 public abstract class TransferEncoding {
 
@@ -27,6 +17,10 @@ public abstract class TransferEncoding {
 
     protected TransferEncoding(@NotNull String name) {
         this.name = name;
+
+        if (name.contains(",") || name.contains(" ")) {
+            throw new IllegalArgumentException("transfer encoding name cannot have comma or space characters: '" + name + "'");
+        }
     }
 
     public final @NotNull String getName() {
@@ -57,11 +51,23 @@ public abstract class TransferEncoding {
 
     @Override
     public final @NotNull String toString() {
-        return name;
+        return name.toLowerCase();
     }
 
     // Classes
 
+    /**
+     * This class contains all the registered encodings. When creating your own encoding, in order for it to be
+     * identified and used in the reading/writing of HTTP data, you need to register it here using the
+     * {@link #register()} or {@link #add(TransferEncoding)} method.
+     *
+     * <p>The retrieve methods will always return the default encodings available in this package, except if there
+     * is already a custom encoding with the same name already added here, in which case it will return your encoding
+     * instead.</p>
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
     public static final class Encodings {
 
         private static final @NotNull Set<TransferEncoding> collection = ConcurrentHashMap.newKeySet();
@@ -70,350 +76,109 @@ public abstract class TransferEncoding {
             throw new UnsupportedOperationException();
         }
 
-        public static @NotNull Optional<TransferEncoding> retrieve(@NotNull String name) {
+        /**
+         * Retrieves all the available encodings, including the default ones and any custom ones that have been added.
+         *
+         * @return an unmodifiable collection of all registered encodings
+         * @author Daniel Richard (Laivy)
+         */
+        public static @NotNull Collection<TransferEncoding> retrieve() {
             @NotNull Set<TransferEncoding> encodings = new HashSet<>(Encodings.collection);
-            encodings.add(new Chunked());
-            encodings.add(new GZip());
-            encodings.add(new Deflate());
-            encodings.add(new Compress());
-            encodings.add(new Identity());
 
+            // If there's a custom encoding with any of these names, it will not be added
+            // since Sets doesn't allow multiples elements with the same properties.
+            encodings.add(ChunkedEncoding.builder().build());
+            encodings.add(GZipEncoding.builder().build());
+            encodings.add(DeflateEncoding.builder().build());
+            encodings.add(CompressEncoding.builder().build());
+            encodings.add(IdentityEncoding.builder().build());
+
+            return Collections.unmodifiableSet(encodings);
+        }
+
+        /**
+         * Retrieves an encoding by its name.
+         *
+         * @param name the name of the encoding to retrieve
+         * @return an optional containing the encoding if found, otherwise an empty optional
+         * @author Daniel Richard (Laivy)
+         */
+        public static @NotNull Optional<TransferEncoding> retrieve(@NotNull String name) {
             return stream().filter(encoding -> encoding.getName().equalsIgnoreCase(name)).findFirst();
         }
 
+        /**
+         * Adds a custom encoding to the collection.
+         *
+         * @param encoding the encoding to add
+         * @return {@code true} if the encoding was added successfully, {@code false} if it was already present
+         * @author Daniel Richard (Laivy)
+         */
         public static boolean add(@NotNull TransferEncoding encoding) {
             return collection.add(encoding);
         }
+
+        /**
+         * Removes a custom encoding from the collection.
+         *
+         * @param encoding the encoding to remove
+         * @return {@code true} if the encoding was removed successfully, {@code false} if it was not present
+         * @author Daniel Richard (Laivy)
+         */
         public static boolean remove(@NotNull TransferEncoding encoding) {
             return collection.remove(encoding);
         }
+
+        /**
+         * Checks if a specific encoding is present in the collection.
+         *
+         * @param encoding the encoding to check for
+         * @return {@code true} if the encoding is present, {@code false} otherwise
+         * @author Daniel Richard (Laivy)
+         */
         public static boolean contains(@NotNull TransferEncoding encoding) {
-            return collection.contains(encoding);
+            return retrieve().contains(encoding);
         }
 
+        /**
+         * Returns the number of encodings in the collection, including the default ones.
+         *
+         * @return the number of encodings in the collection
+         * @author Daniel Richard (Laivy)
+         */
         public int size() {
-            return collection.size();
-        }
-        public boolean isEmpty() {
-            return collection.isEmpty();
+            return retrieve().size();
         }
 
+        /**
+         * Returns a stream of all the encodings in the collection.
+         *
+         * @return a stream of all encodings
+         * @author Daniel Richard (Laivy)
+         */
         public static @NotNull Stream<TransferEncoding> stream() {
-            return collection.stream();
+            return retrieve().stream();
         }
+
+        /**
+         * Returns an iterator over the encodings in the collection.
+         *
+         * @return an iterator over the encodings
+         * @author Daniel Richard (Laivy)
+         */
         public static @NotNull Iterator<TransferEncoding> iterator() {
-            return collection.iterator();
+            return retrieve().iterator();
         }
+
+        /**
+         * Returns an array containing all the encodings in the collection.
+         *
+         * @return an array of all encodings
+         * @author Daniel Richard (Laivy)
+         */
         public static @NotNull TransferEncoding[] toArray() {
-            return collection.toArray(new TransferEncoding[0]);
+            return retrieve().toArray(new TransferEncoding[0]);
         }
-
-    }
-
-    public static class Chunked extends TransferEncoding {
-
-        // Static initializers
-
-        private static final @NotNull Chunked instance = new Chunked();
-
-        public static @NotNull Chunked getInstance() {
-            return instance;
-        }
-
-        // Object
-
-        private final int slice;
-
-        protected Chunked(int slice) {
-            super("chunked");
-            this.slice = slice;
-        }
-
-        // Getters
-
-        public final int getSlice() {
-            return slice;
-        }
-
-        // Modules
-
-        @Override
-        public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
-            @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
-            @NotNull List<Chunk> chunks = new LinkedList<>();
-
-            @Nullable Size size = null;
-            while (!string.isEmpty()) {
-                if (size == null) {
-                    @NotNull String part = string.split("\r\n")[0];
-
-                    // todo: That will fail if the send data be higher than the describe size.
-                    size = ReadChunkSize.read(part);
-
-                    string = string.substring(part.length() + 2);
-                } else {
-                    @NotNull String part = string.substring(0, size.getAmount());
-                    @NotNull Chunk chunk = ReadChunk.read(size, part);
-                    size = null;
-
-                    string = string.substring(part.length());
-                    chunks.add(chunk);
-                }
-            }
-a
-            // Merge bytes
-            byte[] decompressed = new byte[chunks.stream().mapToInt(chunk -> chunk.getBytes().length).sum()];
-            int amount = 0;
-            for (@NotNull Chunk chunk : chunks) {
-                int length = chunk.getBytes().length;
-                decompressed = Arrays.copyOfRange(chunk.getBytes(), amount, length);
-                amount = length;
-            }
-
-            // Return
-            return decompressed;
-        }
-
-        @Override
-        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
-            @NotNull StringBuilder builder = new StringBuilder();
-            @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
-
-            for (byte[] block : StringUtils.explode(bytes, getSlice())) {
-                // todo: chunk extensions
-                builder.append(bytes.length).append("\r\n");
-                builder.append(string).append("\r\n");
-            }
-
-            return builder.toString().getBytes();
-        }
-
-        private static final class ReadChunk {
-            private static @NotNull Chunk read(@NotNull Size size, @NotNull String string) throws TransferEncodingException {
-                @NotNull String[] data = string.split("\\s*;\\s*", 2);
-            }
-        }
-        private static final class ReadChunkSize {
-            private static @NotNull Size read(@NotNull String string) {
-                @NotNull String[] data = string.split("\\s*;\\s*", 2);
-                @NotNull NameValuePair[] pairs = new NameValuePair[0];
-
-                if (data.length > 1) {
-                    @NotNull Pattern pattern = Pattern.compile("\\s*(?<key>[^;=\\s]+)\\s*(?:=\\s*(?<value>[^;\\s]*))?\\s*");
-                    @NotNull Matcher matcher = pattern.matcher(string);
-                    pairs = new NameValuePair[string.split(";").length];
-
-                    int index = 0;
-                    while (matcher.find()) {
-                        @NotNull String key = matcher.group("key");
-                        @Nullable String value = matcher.group("value");
-
-                        pairs[index] = NameValuePair.create(key, value);
-                        index++;
-                    }
-                }
-
-                return new Size(Integer.parseInt(data[0]), pairs);
-            }
-        }
-
-    }
-    public static final class GZip extends TransferEncoding {
-
-        private static final @NotNull GZip instance = new GZip();
-
-        public static @NotNull GZip getInstance() {
-            return instance;
-        }
-
-        private GZip() {
-            super("gzip");
-        }
-
-        @Override
-        public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
-                try (@NotNull GZIPInputStream stream = new GZIPInputStream(byteStream)) {
-                    return byteStream.getBytes();
-                }
-            } catch (@NotNull IOException e) {
-                throw new TransferEncodingException("cannot decompress with gzip native stream", e);
-            }
-        }
-        @Override
-        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
-                try (@NotNull GZIPOutputStream stream = new GZIPOutputStream(byteStream)) {
-                    stream.write(bytes);
-                    return byteStream.toByteArray();
-                }
-            } catch (@NotNull IOException e) {
-                throw new TransferEncodingException("cannot compress with gzip native stream", e);
-            }
-        }
-
-    }
-    public static final class Deflate extends TransferEncoding {
-
-        // Static initializers
-
-        private static @NotNull Deflater deflater = new Deflater();
-
-        public static @NotNull Deflater getDeflater() {
-            return deflater;
-        }
-        public static void setDeflater(@NotNull Deflater deflater) {
-            Deflate.deflater = deflater;
-        }
-
-        // Object
-
-        private Deflate() {
-            super("deflate");
-        }
-
-        // Getters
-
-        // Modules
-
-        @Override
-        public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
-                try (@NotNull DeflaterInputStream stream = new DeflaterInputStream(byteStream, getDeflater())) {
-                    return byteStream.getBytes();
-                }
-            } catch (@NotNull IOException e) {
-                throw new TransferEncodingException("cannot decompress with gzip native stream", e);
-            }
-
-        }
-        @Override
-        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
-                try (@NotNull DeflaterOutputStream stream = new DeflaterOutputStream(byteStream, getDeflater())) {
-                    stream.write(bytes);
-                    return byteStream.toByteArray();
-                }
-            } catch (@NotNull IOException e) {
-                throw new TransferEncodingException("cannot compress with deflater native stream", e);
-            }
-        }
-
-    }
-    public static final class Compress extends TransferEncoding {
-
-        private static final @NotNull Compress instance = new Compress();
-
-        public static @NotNull Compress getInstance() {
-            return instance;
-        }
-
-        private Compress() {
-            super("compress");
-        }
-
-        @Override
-        public byte @NotNull [] decompress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            @NotNull Map<Integer, String> dictionary = new HashMap<>();
-            for (int i = 0; i < 256; i++) {
-                dictionary.put(i, "" + (char) i);
-            }
-
-            @NotNull List<Byte> result = new LinkedList<>();
-            int oldCode = bytes[0];
-            result.add((byte) oldCode);
-
-            for (int i = 1; i < bytes.length; i++) {
-                int code = bytes[i] & 0xff;
-                @NotNull String current;
-
-                if (dictionary.containsKey(code)) {
-                    current = dictionary.get(code);
-                } else if (code == dictionary.size()) {
-                    current = dictionary.get(oldCode) + dictionary.get(oldCode).charAt(0);
-                } else {
-                    throw new IllegalArgumentException("Bad compressed code");
-                }
-
-                for (char c : current.toCharArray()) {
-                    result.add((byte) c);
-                }
-
-                dictionary.put(dictionary.size(), dictionary.get(oldCode) + current.charAt(0));
-                oldCode = code;
-            }
-
-            byte[] decompressed = new byte[result.size()];
-            for (int i = 0; i < result.size(); i++) {
-                decompressed[i] = result.get(i);
-            }
-
-            return decompressed;
-        }
-        @Override
-        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
-            if (bytes.length == 0) return new byte[0];
-
-            @NotNull Map<String, Integer> dictionary = new HashMap<>();
-            for (int i = 0; i < 256; i++) {
-                dictionary.put(String.valueOf(i), i);
-            }
-
-            @NotNull List<Byte> result = new LinkedList<>();
-            @NotNull String current = "";
-
-            for (byte b : bytes) {
-                String combined = current + (char) b;
-                if (dictionary.containsKey(combined)) {
-                    current = combined;
-                } else {
-                    result.add((byte) (int) dictionary.get(current));
-                    dictionary.put(combined, dictionary.size());
-                    current = "" + (char) b;
-                }
-            }
-            result.add((byte) (int) dictionary.get(current));
-
-            byte[] compressed = new byte[result.size()];
-            for (int i = 0; i < result.size(); i++) {
-                compressed[i] = result.get(i);
-            }
-
-            return compressed;
-        }
-
-    }
-    public static final class Identity extends TransferEncoding {
-
-        private static final @NotNull Identity instance = new Identity();
-
-        public static @NotNull Identity getInstance() {
-            return instance;
-        }
-
-        private Identity() {
-            super("identity");
-        }
-
-        @Override
-        public byte @NotNull [] decompress(byte @NotNull [] bytes) {
-            return bytes;
-        }
-        @Override
-        public byte @NotNull [] compress(byte @NotNull [] bytes) throws TransferEncodingException {
-            return bytes;
-        }
-
     }
 
 }
