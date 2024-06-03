@@ -21,6 +21,9 @@ public abstract class HeaderKey<T> {
 
     public static final @NotNull Pattern NAME_FORMAT_REGEX = Pattern.compile("^[A-Za-z][A-Za-z0-9-]*$");
 
+    // todo: remove
+    @ApiStatus.ScheduledForRemoval
+    @Deprecated
     public static @NotNull HeaderKey<?> create(@NotNull String name) {
         try {
             @NotNull Field field = HeaderKey.class.getDeclaredField(name.replace("-", "_").toLowerCase());
@@ -30,15 +33,15 @@ public abstract class HeaderKey<T> {
             throw new IllegalStateException("Cannot create header key '" + name + "'");
         }
 
-        return new StringHeaderKey(name);
+        return new StringHeaderKey(name, Target.BOTH);
     }
 
     // Provided
 
     public static @NotNull HeaderKey<ContentType[]> ACCEPT = new AcceptHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_CH = new StringHeaderKey("Accept-CH");
+    public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
-    public static @NotNull HeaderKey<?> ACCEPT_CH_LIFETIME = new StringHeaderKey("Accept-CH-Lifetime", Pattern.compile("^\\d+$"));
+    public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetime();
     public static @NotNull HeaderKey<?> ACCEPT_CHARSET = new StringHeaderKey("Accept-Charset");
     public static @NotNull HeaderKey<?> ACCEPT_ENCODING = new StringHeaderKey("Accept-Encoding");
     public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new StringHeaderKey("Accept-Language");
@@ -219,14 +222,20 @@ public abstract class HeaderKey<T> {
     // Object
 
     private final @NotNull String name;
+    private final @NotNull Target target;
 
-    private HeaderKey(@NotNull String name) {
+    private HeaderKey(@NotNull String name, @NotNull Target target) {
         this.name = name;
+        this.target = target;
     }
 
     @Contract(pure = true)
-    public @NotNull String getName() {
-        return name;
+    public final @NotNull String getName() {
+        return this.name;
+    }
+
+    public final @NotNull Target getTarget() {
+        return this.target;
     }
 
     // Modules
@@ -241,33 +250,39 @@ public abstract class HeaderKey<T> {
     // Implementations
 
     @Override
-    public boolean equals(Object object) {
+    public final boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof HeaderKey)) return false;
         HeaderKey<?> that = (HeaderKey<?>) object;
         return getName().equalsIgnoreCase(that.getName());
     }
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(getName().toLowerCase());
     }
     @Override
-    public @NotNull String toString() {
+    public final @NotNull String toString() {
         return getName();
     }
 
     // Classes
 
+    public enum Target {
+        REQUEST,
+        RESPONSE,
+        BOTH
+    }
+
     private static final class StringHeaderKey extends HeaderKey<String> {
 
         private final @Nullable Pattern pattern;
 
-        private StringHeaderKey(@NotNull String name) {
-            super(name);
+        private StringHeaderKey(@NotNull String name, @NotNull Target target) {
+            super(name, target);
             this.pattern = null;
         }
-        private StringHeaderKey(@NotNull String name, @Nullable Pattern pattern) {
-            super(name);
+        private StringHeaderKey(@NotNull String name, @NotNull Target target, @Nullable Pattern pattern) {
+            super(name, target);
             this.pattern = pattern;
         }
 
@@ -293,9 +308,64 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AcceptCHLifetime extends HeaderKey<Integer> {
+        private AcceptCHLifetime() {
+            super("Accept-CH-Lifetime", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Integer> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(Integer.parseInt(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Integer> header) {
+            return String.valueOf(header.getValue());
+        }
+    }
+    private static final class AcceptCHHeaderKey extends HeaderKey<HeaderKey<?>[]> {
+        private AcceptCHHeaderKey() {
+            super("Accept-CH", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<HeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
+            @NotNull HeaderKey<?>[] keys = new HeaderKey[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                @NotNull String name = matcher.group(group);
+                @NotNull HeaderKey<?> key = HeaderKey.create(name);
+
+                if (key.getTarget() == Target.RESPONSE) {
+                    // Ignore response headers
+                    continue;
+                }
+
+                keys[group] = key;
+            }
+
+            return create(keys);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<HeaderKey<?>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull HeaderKey<?> key : header.getValue()) {
+                if (key.getTarget() == Target.RESPONSE) {
+                    // Ignore response headers
+                    continue;
+                }
+
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(key.getName());
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class AcceptHeaderKey extends HeaderKey<ContentType[]> {
         private AcceptHeaderKey() {
-            super("Accept");
+            super("Accept", Target.REQUEST);
         }
 
         @Override
@@ -328,7 +398,7 @@ public abstract class HeaderKey<T> {
     }
     private static final class ContentTypeHeaderKey extends HeaderKey<ContentType> {
         private ContentTypeHeaderKey() {
-            super("Content-Type");
+            super("Content-Type", Target.BOTH);
         }
 
         @Override
@@ -347,7 +417,7 @@ public abstract class HeaderKey<T> {
     }
     private static final class TransferEncodingHeaderKey extends HeaderKey<TransferEncoding[]> {
         private TransferEncodingHeaderKey() {
-            super("Transfer-Encoding");
+            super("Transfer-Encoding", Target.BOTH);
         }
 
         @Override
