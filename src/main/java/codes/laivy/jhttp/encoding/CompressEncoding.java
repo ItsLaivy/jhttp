@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class CompressEncoding extends TransferEncoding {
+public class CompressEncoding extends Encoding {
 
     // Static initializers
 

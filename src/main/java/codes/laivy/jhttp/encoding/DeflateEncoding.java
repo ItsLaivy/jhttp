@@ -12,7 +12,7 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 
-public class DeflateEncoding extends TransferEncoding {
+public class DeflateEncoding extends Encoding {
 
     // Static initializers
 

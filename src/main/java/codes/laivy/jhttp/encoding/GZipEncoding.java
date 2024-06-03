@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class GZipEncoding extends TransferEncoding {
+public class GZipEncoding extends Encoding {
 
     // Static initializers
 

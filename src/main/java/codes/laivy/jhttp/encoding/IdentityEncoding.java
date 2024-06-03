@@ -4,7 +4,7 @@ import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
-public class IdentityEncoding extends TransferEncoding {
+public class IdentityEncoding extends Encoding {
 
     // Static initializers
 
