@@ -29,7 +29,9 @@ public final class StringUtils {
      * @param blockSize the size of each block
      * @return a two-dimensional byte array, where each sub-array is a block of the specified size
      * @throws IllegalArgumentException if blockSize is less than 1
+     *
      * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
      */
     public static byte[][] explode(byte[] bytes, int blockSize) {
         int numBlocks = (int) Math.ceil((double) bytes.length / blockSize);
@@ -54,7 +56,9 @@ public final class StringUtils {
      * @param limit the result threshold, as described above
      * @return an array of strings, split by the delimiter, including the delimiter in the same index of each segment
      * @throws IllegalArgumentException if the input or delimiter is null
+     *
      * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
      */
     public static @NotNull String[] splitAndKeepDelimiter(@NotNull String input, @NotNull String delimiter, int limit) {
         @NotNull List<String> result = new LinkedList<>();
@@ -86,6 +90,21 @@ public final class StringUtils {
      */
     public static @NotNull String[] splitAndKeepDelimiter(@NotNull String input, @NotNull String delimiter) {
         return splitAndKeepDelimiter(input, delimiter, 0);
+    }
+
+    /**
+     * Checks if a string is blank.
+     * <p>A string is considered blank if it is null, empty, or contains only whitespace characters.</p>
+     *
+     * @apiNote JHTTP was made on Java 8, so it doesn't have the String#isBlank method.
+     * @param str the string to check, may be null
+     * @return {@code true} if the string is null, empty, or contains only whitespace characters, {@code false} otherwise
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
+    public static boolean isBlank(@NotNull String str) {
+        return str.trim().isEmpty();
     }
 
 }

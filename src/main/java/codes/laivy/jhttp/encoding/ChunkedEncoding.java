@@ -2,7 +2,7 @@ package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Extension;
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Length;
-import codes.laivy.jhttp.exception.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.Contract;
@@ -258,9 +258,9 @@ public class ChunkedEncoding extends TransferEncoding {
             // Equals
 
             @Override
-            public boolean equals(@NotNull Object object) {
+            public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
-                if (getClass() != object.getClass()) return false;
+                if (object == null || getClass() != object.getClass()) return false;
                 Extension extension = (Extension) object;
                 return Objects.equals(getKey(), extension.getKey()) && Objects.equals(getValue(), extension.getValue());
             }

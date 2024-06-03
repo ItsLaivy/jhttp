@@ -1,7 +1,8 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,8 +19,8 @@ public abstract class TransferEncoding {
     protected TransferEncoding(@NotNull String name) {
         this.name = name;
 
-        if (name.contains(",") || name.contains(" ")) {
-            throw new IllegalArgumentException("transfer encoding name cannot have comma or space characters: '" + name + "'");
+        if (name.contains(",") || StringUtils.isBlank(name)) {
+            throw new IllegalArgumentException("illegal transfer encoding name '" + name + "'");
         }
     }
 

@@ -297,9 +297,9 @@ public abstract class HeaderKey<T> {
             @NotNull TransferEncoding[] encodings = new TransferEncoding[matcher.groupCount()];
 
             for (int group = 0; group < matcher.groupCount(); group++) {
-                @NotNull String encodingValue = matcher.group(group);
-                @NotNull Optional<TransferEncoding> optional = Arrays.stream(TransferEncoding.getEncodings()).filter(encoding -> encoding.getName().equalsIgnoreCase(encodingValue)).findFirst();
-                encodings[group] = optional.orElseThrow(() -> new HeaderFormatException("unknown transfer encoding with name '" + encodingValue + "'"));
+                @NotNull String name = matcher.group(group);
+                @NotNull Optional<TransferEncoding> optional = TransferEncoding.Encodings.retrieve(name);
+                encodings[group] = optional.orElseThrow(() -> new HeaderFormatException("there's no transfer encoding named '" + name + "' registered"));
             }
 
             return Header.create(this, encodings);

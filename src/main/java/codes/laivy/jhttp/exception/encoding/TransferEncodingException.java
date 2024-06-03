@@ -1,8 +1,8 @@
-package codes.laivy.jhttp.exception;
+package codes.laivy.jhttp.exception.encoding;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TransferEncodingException extends Exception {
+public class TransferEncodingException extends Exception {
     public TransferEncodingException(@NotNull Throwable cause) {
         super(cause);
     }

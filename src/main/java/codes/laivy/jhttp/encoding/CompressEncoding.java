@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 

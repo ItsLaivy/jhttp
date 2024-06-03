@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests;
 
-import codes.laivy.jhttp.exception.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.encoding.TransferEncoding;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
