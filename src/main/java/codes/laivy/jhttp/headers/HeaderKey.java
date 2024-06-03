@@ -35,7 +35,7 @@ public abstract class HeaderKey<T> {
 
     // Provided
 
-    public static @NotNull HeaderKey<?> ACCEPT = new StringHeaderKey("Accept");
+    public static @NotNull HeaderKey<ContentType[]> ACCEPT = new AcceptHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_CH = new StringHeaderKey("Accept-CH");
     @Deprecated
     public static @NotNull HeaderKey<?> ACCEPT_CH_LIFETIME = new StringHeaderKey("Accept-CH-Lifetime", Pattern.compile("^\\d+$"));
@@ -235,7 +235,7 @@ public abstract class HeaderKey<T> {
     public abstract @NotNull String write(@NotNull Header<T> header);
 
     public @NotNull Header<T> create(@NotNull T value) {
-        return Header
+        return Header.create(this, value);
     }
 
     // Implementations
@@ -293,6 +293,39 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AcceptHeaderKey extends HeaderKey<ContentType[]> {
+        private AcceptHeaderKey() {
+            super("Accept");
+        }
+
+        @Override
+        public @NotNull Header<ContentType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
+            @NotNull List<ContentType> types = new LinkedList<>();
+
+            try {
+                for (int group = 0; group < matcher.groupCount(); group++) {
+                    @NotNull String name = matcher.group(group);
+                    types.add(ContentType.parse(name));
+                }
+            } catch (@NotNull ParseException e) {
+                throw new HeaderFormatException("cannot parse Accept header's content types", e);
+            }
+
+            return create(types.toArray(new ContentType[0]));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentType[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull ContentType type : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(type);
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class ContentTypeHeaderKey extends HeaderKey<ContentType> {
         private ContentTypeHeaderKey() {
             super("Content-Type");
@@ -302,7 +335,7 @@ public abstract class HeaderKey<T> {
         public @NotNull Header<ContentType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
                 @NotNull ContentType type = ContentType.parse(value);
-                return Header.create(this, type);
+                return create(type);
             } catch (@NotNull ParseException e) {
                 throw new HeaderFormatException("cannot parse content type '" + value + "'", e);
             }
@@ -328,7 +361,7 @@ public abstract class HeaderKey<T> {
                 encodings[group] = optional.orElseThrow(() -> new HeaderFormatException("there's no transfer encoding named '" + name + "' registered"));
             }
 
-            return Header.create(this, encodings);
+            return create(encodings);
         }
         @Override
         public @NotNull String write(@NotNull Header<TransferEncoding[]> header) {

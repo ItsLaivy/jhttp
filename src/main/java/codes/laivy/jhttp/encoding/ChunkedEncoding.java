@@ -62,7 +62,7 @@ public class ChunkedEncoding extends TransferEncoding {
 
         for (byte[] block : StringUtils.explode(bytes, getBlockSize())) {
             // Length and extensions
-            @NotNull Length length = new Length(bytes.length, extensions(version, bytes));
+            @NotNull Length length = new Length(block.length, extensions(version, block));
             builder.append(length).append("\r\n");
 
             // Content

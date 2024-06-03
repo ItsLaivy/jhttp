@@ -134,6 +134,8 @@ public class ContentType {
 
         if (mimeType.toLowerCase().startsWith("multipart/") && parameters.length == 0) {
             throw new NullPointerException("the parameters cannot be empty for multipart media types!");
+        } else if (mimeType.contains(",") || (charset != null && charset.toString().contains(","))) {
+            throw new IllegalArgumentException("mime type or charset with illegal characters");
         }
 
         @Nullable ContentType implementation = Arrays.stream(initialized).filter(type -> type.mimeType.equalsIgnoreCase(mimeType)).findFirst().orElse(null);
@@ -211,6 +213,10 @@ public class ContentType {
         private Parameter(@NotNull String name, @NotNull String value) {
             this.name = name;
             this.value = value;
+
+            if (name.contains(",") || value.contains(",")) {
+                throw new IllegalArgumentException("content type parameter key or value with illegal characters");
+            }
         }
 
         public @NotNull String getName() {
