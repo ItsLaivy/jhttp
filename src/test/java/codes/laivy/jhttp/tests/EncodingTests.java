@@ -2,7 +2,7 @@ package codes.laivy.jhttp.tests;
 
 import codes.laivy.jhttp.exception.IllegalHttpVersionException;
 import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
-import codes.laivy.jhttp.encoding.TransferEncoding;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -10,9 +10,9 @@ import org.junit.jupiter.api.*;
 import java.nio.charset.StandardCharsets;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public final class TransferEncodingTests {
+public final class EncodingTests {
 
-    private TransferEncodingTests() {
+    private EncodingTests() {
     }
 
     @Test
@@ -21,7 +21,7 @@ public final class TransferEncodingTests {
         @NotNull String target = "Just a Cool Text with\r\n Some cool characteristics and formatting!";
 
         for (@NotNull HttpVersion version : HttpVersion.getVersions()) {
-            for (@NotNull TransferEncoding encoding : TransferEncoding.Encodings.toArray()) {
+            for (@NotNull Encoding encoding : Encoding.toArray()) {
                 if (!encoding.isCompatible(version)) {
                     continue;
                 }

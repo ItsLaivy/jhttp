@@ -23,10 +23,12 @@ import java.util.stream.Stream;
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
+// todo: 03/06/2023 add more tokens (See https://en.wikipedia.org/wiki/HTTP_compression)
 public abstract class Encoding {
 
     // Static initializers
 
+    // todo: multi threading
     private static final @NotNull Set<Encoding> collection = ConcurrentHashMap.newKeySet();
 
     /**
@@ -94,6 +96,17 @@ public abstract class Encoding {
     }
 
     /**
+     * Checks if a specific encoding is present in the collection by it's name.
+     *
+     * @param name the encoding name
+     * @return {@code true} if the encoding is present, {@code false} otherwise
+     * @author Daniel Richard (Laivy)
+     */
+    public static boolean contains(@NotNull String name) {
+        return retrieve(name).isPresent();
+    }
+
+    /**
      * Returns the number of encodings in the collection, including the default ones.
      *
      * @return the number of encodings in the collection
@@ -150,6 +163,7 @@ public abstract class Encoding {
     }
 
     public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
+
     public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
 
     public boolean isCompatible(@NotNull HttpVersion version) {
@@ -170,6 +184,7 @@ public abstract class Encoding {
         Encoding that = (Encoding) object;
         return Objects.equals(getName().toLowerCase(), that.getName().toLowerCase());
     }
+
     @Override
     public int hashCode() {
         return Objects.hashCode(getName().toLowerCase());

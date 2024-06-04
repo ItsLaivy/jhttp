@@ -2,16 +2,16 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.encoding.TransferEncoding;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.utilities.ContentType;
-import codes.laivy.jhttp.utilities.Pair;
+import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
+import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -44,8 +44,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetimeHeaderKey();
-    public static @NotNull HeaderKey<Pair<Charset, @Nullable Float>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_ENCODING = new StringHeaderKey("Accept-Encoding");
+    public static @NotNull HeaderKey<PseudoCharset[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
+    public static @NotNull HeaderKey<PseudoEncoding[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new StringHeaderKey("Accept-Language");
     public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch");
 
@@ -198,7 +198,7 @@ public abstract class HeaderKey<T> {
     @Deprecated
     public static @NotNull HeaderKey<?> TK = new StringHeaderKey("Tk");
     public static @NotNull HeaderKey<?> TRAILER = new StringHeaderKey("Trailer");
-    public static @NotNull HeaderKey<TransferEncoding[]> TRANSFER_ENCODING = new TransferEncodingHeaderKey();
+    public static @NotNull HeaderKey<PseudoEncoding[]> TRANSFER_ENCODING = new TransferEncodingHeaderKey();
     public static @NotNull HeaderKey<?> ANONYMOUS_HEADER = new StringHeaderKey("X-Anonymous", Pattern.compile("^(?i)(true|false)$"));
 
     /**
@@ -310,46 +310,70 @@ public abstract class HeaderKey<T> {
         }
     }
 
-    private static final class AcceptCharsetHeaderKey extends HeaderKey<Pair<@NotNull Charset, @Nullable Float>[]> {
+    private static final class AcceptEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {
+        private AcceptEncodingHeaderKey() {
+            super("Accept-Encoding", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull PseudoEncoding[] pairs = new PseudoEncoding[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                if (!matcher.find()) break;
+
+                @NotNull String encoding = matcher.group("encoding");
+                @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+
+                pairs[group] = PseudoEncoding.create(encoding, weight);
+            }
+
+            return create(pairs);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull PseudoEncoding pseudo : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(pseudo);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class AcceptCharsetHeaderKey extends HeaderKey<PseudoCharset[]> {
         private AcceptCharsetHeaderKey() {
             super("Accept-Charset", Target.REQUEST);
         }
 
         @Override
-        public @NotNull Header<Pair<Charset, Float>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-            @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[\\.,]\\d)?))?");
+        public @NotNull Header<PseudoCharset[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
             @NotNull Matcher matcher = pattern.matcher(value);
-
-            //noinspection unchecked
-            @NotNull Pair<Charset, Float>[] pairs = new Pair[matcher.groupCount()];
+            @NotNull PseudoCharset[] pairs = new PseudoCharset[matcher.groupCount()];
 
             for (int group = 0; group < matcher.groupCount(); group++) {
                 if (!matcher.find()) break;
 
-                try {
-                    @NotNull Charset charset = Charset.forName(matcher.group("charset"));
-                    @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+                @NotNull String charset = matcher.group("charset");
+                @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs[group] = Pair.create(charset, weight);
-                } catch (@NotNull IllegalArgumentException ignore) {
-                    // Ignore completely charsets that are unknown by the environment
-                }
+                pairs[group] = PseudoCharset.create(charset, weight);
             }
 
             return create(pairs);
         }
 
         @Override
-        public @NotNull String write(@NotNull Header<Pair<Charset, Float>[]> header) {
+        public @NotNull String write(@NotNull Header<PseudoCharset[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull Pair<Charset, Float> pair : header.getValue()) {
+            for (@NotNull PseudoCharset pseudo : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
-                builder.append(pair.getKey().name());
-
-                if (pair.getValue() != null) {
-                    builder.append(";q=").append(pair.getValue());
-                }
+                builder.append(pseudo);
             }
 
             return builder.toString();
@@ -462,31 +486,30 @@ public abstract class HeaderKey<T> {
             return header.getValue().toString();
         }
     }
-    private static final class TransferEncodingHeaderKey extends HeaderKey<TransferEncoding[]> {
+    private static final class TransferEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {
         private TransferEncodingHeaderKey() {
             super("Transfer-Encoding", Target.BOTH);
         }
 
         @Override
-        public @NotNull Header<TransferEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-            @NotNull TransferEncoding[] encodings = new TransferEncoding[matcher.groupCount()];
+            @NotNull PseudoEncoding[] encodings = new PseudoEncoding[matcher.groupCount()];
 
             for (int group = 0; group < matcher.groupCount(); group++) {
                 @NotNull String name = matcher.group(group);
-                @NotNull Optional<TransferEncoding> optional = TransferEncoding.Encodings.retrieve(name);
-                encodings[group] = optional.orElseThrow(() -> new HeaderFormatException("there's no transfer encoding named '" + name + "' registered"));
+                encodings[group] = PseudoEncoding.create(name);
             }
 
             return create(encodings);
         }
         @Override
-        public @NotNull String write(@NotNull Header<TransferEncoding[]> header) {
+        public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull TransferEncoding encoding : header.getValue()) {
+            for (@NotNull PseudoEncoding encoding : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
-                builder.append(encoding.getName());
+                builder.append(encoding.raw());
             }
 
             return builder.toString();
