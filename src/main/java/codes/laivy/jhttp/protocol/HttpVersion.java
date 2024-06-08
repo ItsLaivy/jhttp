@@ -30,15 +30,38 @@ public abstract class HttpVersion {
 
     // Object
 
+    private final byte[] id;
     private final int major;
     private final int minor;
 
-    protected HttpVersion(int major, int minor) {
+    protected HttpVersion(byte[] id, int major, int minor) {
+        this.id = id;
         this.major = major;
         this.minor = minor;
     }
 
     // Modules
+
+    /**
+     * Retrieves the byte identification sequence used in the Application-Layer Protocol Negotiation (ALPN).
+     * <p>
+     * The byte sequence returned by this method corresponds to the ALPN protocol ID sequence, which is used to
+     * identify the protocol to be used for communication over a given connection. This method plays a crucial
+     * role in ensuring that the correct protocol is negotiated between a client and a server during the
+     * establishment of a secure connection.
+     * </p>
+     * <p>
+     * For more details, refer to the <a href="https://developer.mozilla.org/en-US/docs/Glossary/ALPN">Mozilla ALPN Protocol ID Sequence</a> documentation.
+     * </p>
+     *
+     * @return a byte array representing the ALPN protocol identification sequence.
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
+    public byte[] getId() {
+        return id;
+    }
+
 
     @MustBeInvokedByOverriders
     public synchronized boolean init() {

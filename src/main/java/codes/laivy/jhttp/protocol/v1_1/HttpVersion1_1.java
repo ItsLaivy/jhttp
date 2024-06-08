@@ -11,7 +11,13 @@ final class HttpVersion1_1 extends HttpVersion {
     private final @NotNull HttpFactory factory = new HttpFactory1_1(this);
 
     public HttpVersion1_1() {
-        super(1, 1);
+        super(
+                new byte[] {
+                        0x68, 0x74, 0x74, 0x70, 0x2F, 0x31, 0x2E, 0x31
+                },
+                1,
+                1
+        );
     }
 
     @Override
