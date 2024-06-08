@@ -49,8 +49,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetimeHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch")
+    public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
+    public static @NotNull HeaderKey<MediaType[]> ACCEPT_PATCH = new AcceptPatchHeaderKey();
 
     /**
      * @see <a href="https://regexr.com/7sft5">RegExr Tests</a>
@@ -313,6 +313,42 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AcceptPatchHeaderKey extends HeaderKey<MediaType[]> {
+        private AcceptPatchHeaderKey() {
+            super("Accept-Patch", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<MediaType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull MediaType[] types = new MediaType[matcher.groupCount()];
+
+            int row = 0;
+            while (matcher.find()) {
+                try {
+                    types[row] = MediaType.parse(matcher.group());
+                } catch (@NotNull ParseException e) {
+                    throw new HeaderFormatException("cannot parse media type '" + matcher.group() + "'", e);
+                }
+
+                row++;
+            }
+
+            return create(types);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<MediaType[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull MediaType type : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(type);
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class AcceptLanguageHeaderKey extends HeaderKey<Weight<Locale>[]> {
         private AcceptLanguageHeaderKey() {
             super("Accept-Language", Target.REQUEST);

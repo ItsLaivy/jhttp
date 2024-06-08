@@ -127,7 +127,7 @@ public final class MediaType {
             this.type = type;
             this.subtype = subtype;
 
-            if (type.contains(";") || (subtype != null && subtype.equalsIgnoreCase(";"))) {
+            if ((type.contains(";") || type.contains(",")) || (subtype != null && (subtype.contains(";") || subtype.contains(",")))) {
                 throw new IllegalArgumentException("type or subtype with illegal characters");
             }
         }
@@ -188,7 +188,7 @@ public final class MediaType {
             this.key = key;
             this.value = value;
 
-            if (key.contains(";") || value.contains(";")) {
+            if (key.contains(";") || key.contains(",") || value.contains(";") || value.contains(",")) {
                 throw new IllegalArgumentException("content type parameter key or value with illegal characters");
             }
         }
