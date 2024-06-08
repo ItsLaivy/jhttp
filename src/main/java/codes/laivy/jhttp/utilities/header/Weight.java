@@ -2,6 +2,7 @@ package codes.laivy.jhttp.utilities.header;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
 
@@ -9,14 +10,14 @@ public interface Weight<T> {
 
     // Static initializers
 
-    static <E> @NotNull Weight<E> create(@Nullable Float weight, @NotNull E value) {
+    static <E> @NotNull Weight<E> create(@Nullable Float weight, @UnknownNullability E value) {
         return new Weight<E>() {
             @Override
             public @Nullable Float getWeight() {
                 return weight;
             }
             @Override
-            public @NotNull E getValue() {
+            public @UnknownNullability E getValue() {
                 return value;
             }
 
@@ -42,6 +43,6 @@ public interface Weight<T> {
     // Object
 
     @Nullable Float getWeight();
-    @NotNull T getValue();
+    @UnknownNullability T getValue();
 
 }

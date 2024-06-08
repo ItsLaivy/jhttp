@@ -3,6 +3,7 @@ package codes.laivy.jhttp.utilities.header;
 import codes.laivy.jhttp.exception.WildcardValueException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
 
@@ -40,14 +41,14 @@ public interface Wildcard<T> {
             }
         };
     }
-    static <E> @NotNull Wildcard<E> create(@NotNull E value) {
+    static <E> @NotNull Wildcard<E> create(@UnknownNullability E value) {
         return new Wildcard<E>() {
             @Override
             public boolean isWildcard() {
                 return false;
             }
             @Override
-            public @NotNull E getValue() throws WildcardValueException {
+            public @UnknownNullability E getValue() throws WildcardValueException {
                 return value;
             }
 
@@ -73,6 +74,6 @@ public interface Wildcard<T> {
     // Object
 
     boolean isWildcard();
-    @NotNull T getValue() throws WildcardValueException;
+    @UnknownNullability T getValue() throws WildcardValueException;
 
 }
