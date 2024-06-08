@@ -17,10 +17,7 @@ import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +47,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<MediaType[]> ACCEPT = new AcceptHeaderKey();
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
+    // todo: duration
     public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new IntegerHeaderKey("Accept-CH-Lifetime", Target.RESPONSE);
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
@@ -62,17 +60,14 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Wildcard<Method>[]> ACCEPT_CONTROL_ALLOW_METHODS = new AccessControlAllowMethodsHeaderKey();
     public static @NotNull HeaderKey<Wildcard<@Nullable URIAuthority>> ACCEPT_CONTROL_ALLOW_ORIGIN = new AccessControlAllowOriginHeaderKey();
     public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_EXPOSE_HEADERS = new AcceptControlExposeHeadersHeaderKey();
+    // todo: duration
     public static @NotNull HeaderKey<Integer> ACCEPT_CONTROL_MAX_AGE = new IntegerHeaderKey("Access-Control-Max-Age", Target.RESPONSE);
-    public static @NotNull HeaderKey<?> ACCEPT_CONTROL_REQUEST_HEADERS = new AcceptControlRequestHeadersHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_CONTROL_REQUEST_METHOD = new AccessControlRequestMethodHeaderKey();
-    public static @NotNull HeaderKey<?> AGE = new IntegerHeaderKey("Age", Target.RESPONSE);
-
-    /**
-     * @see <a href="https://regexr.com/7sftn">RegExr Tests</a>
-     * @apiNote Last change: 23/02/2024 | 19:38 (GMT-3)
-     */
-    public static @NotNull HeaderKey<?> ALLOW = new AllowHeaderKey();
-    public static @NotNull HeaderKey<?> ALT_SVC = new StringHeaderKey("Alt-Svc");
+    public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_REQUEST_HEADERS = new AcceptControlRequestHeadersHeaderKey();
+    public static @NotNull HeaderKey<Method[]> ACCEPT_CONTROL_REQUEST_METHOD = new AccessControlRequestMethodHeaderKey();
+    // todo: duration
+    public static @NotNull HeaderKey<Integer> AGE = new IntegerHeaderKey("Age", Target.RESPONSE);
+    public static @NotNull HeaderKey<Method[]> ALLOW = new AllowHeaderKey();
+    public static @NotNull HeaderKey<Optional<AlternativeService[]>> ALT_SVC = new AltSvcHeaderKey();
     public static @NotNull HeaderKey<?> ALT_USED = new StringHeaderKey("Alt-Used");
     public static @NotNull HeaderKey<?> AUTHORIZATION = new StringHeaderKey("Authorization");
     public static @NotNull HeaderKey<?> CACHE_CONTROL = new StringHeaderKey("Cache-Control");
@@ -301,6 +296,50 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AltSvcHeaderKey extends HeaderKey<Optional<AlternativeService[]>> {
+        private AltSvcHeaderKey() {
+            super("Alt-Svc", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Optional<AlternativeService[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equalsIgnoreCase("clear")) {
+                return create(Optional.empty());
+            }
+
+            @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull AlternativeService[] services = new AlternativeService[matcher.groupCount()];
+
+            int row = 0;
+            while (matcher.find()) {
+                @NotNull String group = matcher.group();
+
+                try {
+                    services[row] = AlternativeService.parse(group);
+                } catch (@NotNull ParseException e) {
+                    throw new HeaderFormatException("cannot parse alternative service '" + group + "'", e);
+                }
+            }
+
+            return create(Optional.of(services));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Optional<AlternativeService[]>> header) {
+            if (header.getValue().isPresent()) {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull AlternativeService service : header.getValue().get()) {
+                    if (builder.length() > 0) builder.append(", ");
+                    builder.append(service);
+                }
+
+                return builder.toString();
+            } else {
+                return "clear";
+            }
+        }
+    }
     private static final class AllowHeaderKey extends HeaderKey<Method[]> {
         private AllowHeaderKey() {
             super("Allow", Target.RESPONSE);
