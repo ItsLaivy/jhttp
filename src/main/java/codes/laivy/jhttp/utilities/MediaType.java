@@ -27,10 +27,7 @@ public final class MediaType {
         try {
             while (matcher.find()) {
                 if (matcher.group(2) != null) {
-                    @NotNull String[] split = matcher.group(2).split("/");
-
-                    if (split.length > 1) type = new Type(split[0], split[1]);
-                    else type = new Type(split[0], null);
+                    type = Type.parse(matcher.group(2));
                 } else {
                     @NotNull String[] split = matcher.group(1).split("\\s*=\\s*");
                     parameters.add(new Parameter(split[0], split[1]));
@@ -119,6 +116,20 @@ public final class MediaType {
     // Classes
 
     public static final class Type implements CharSequence {
+
+        // Static initializers
+
+        public static @NotNull Type parse(@NotNull String string) {
+            @NotNull String[] split = string.split("/", 2);
+
+            if (split.length > 1) {
+                return new Type(split[0], split[1]);
+            } else {
+                return new Type(split[0], null);
+            }
+        }
+
+        // Object
 
         private final @NotNull String type;
         private final @Nullable String subtype;

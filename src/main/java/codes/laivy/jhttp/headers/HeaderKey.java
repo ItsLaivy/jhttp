@@ -51,12 +51,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<MediaType[]> ACCEPT_PATCH = new AcceptPatchHeaderKey();
-
-    /**
-     * @see <a href="https://regexr.com/7sft5">RegExr Tests</a>
-     * @apiNote Last change: 23/02/2024 | 16:36 (GMT-3)
-     */
-    public static @NotNull HeaderKey<?> ACCEPT_POST = new StringHeaderKey("Accept-Post", Pattern.compile("^(?i)([a-zA-Z0-9+-.*]+/[a-zA-Z0-9+-.*]+(, *)?)+$"));
+    public static @NotNull HeaderKey<MediaType.Type[]> ACCEPT_POST = new AcceptPostHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_RANGES = new StringHeaderKey("Accept-Ranges");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new StringHeaderKey("Access-Control-Allow-Credentials");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_HEADERS = new StringHeaderKey("Access-Control-Allow-Headers");
@@ -313,6 +308,37 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AcceptPostHeaderKey extends HeaderKey<MediaType.Type[]> {
+        private AcceptPostHeaderKey() {
+            super("Accept-Post", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<MediaType.Type[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull MediaType.Type[] types = new MediaType.Type[matcher.groupCount()];
+
+            int row = 0;
+            while (matcher.find()) {
+                types[row] = MediaType.Type.parse(matcher.group());
+                row++;
+            }
+
+            return create(types);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<MediaType.Type[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull MediaType.Type type : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(type);
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class AcceptPatchHeaderKey extends HeaderKey<MediaType[]> {
         private AcceptPatchHeaderKey() {
             super("Accept-Patch", Target.RESPONSE);
