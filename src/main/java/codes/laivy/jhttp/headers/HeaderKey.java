@@ -2,8 +2,8 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.encoding.Encoding;
-import codes.laivy.jhttp.utilities.ContentType;
+import codes.laivy.jhttp.utilities.MediaType;
+import codes.laivy.jhttp.utilities.Weight;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.ApiStatus;
@@ -13,7 +13,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,14 +43,14 @@ public abstract class HeaderKey<T> {
 
     // Provided
 
-    public static @NotNull HeaderKey<ContentType[]> ACCEPT = new AcceptHeaderKey();
+    public static @NotNull HeaderKey<MediaType[]> ACCEPT = new AcceptHeaderKey();
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetimeHeaderKey();
     public static @NotNull HeaderKey<PseudoCharset[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<PseudoEncoding[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new StringHeaderKey("Accept-Language");
-    public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch");
+    public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
+    public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch")
 
     /**
      * @see <a href="https://regexr.com/7sft5">RegExr Tests</a>
@@ -90,7 +93,7 @@ public abstract class HeaderKey<T> {
      * @see <a href="https://regexr.com/7sfu0">RegExr Tests</a>
      * @apiNote Last change: 23/02/2024 | 19:06 (GMT-3)
      */
-    public static @NotNull HeaderKey<ContentType> CONTENT_TYPE = new ContentTypeHeaderKey();
+    public static @NotNull HeaderKey<MediaType> CONTENT_TYPE = new ContentTypeHeaderKey();
     public static @NotNull HeaderKey<?> COOKIE = new StringHeaderKey("Cookie");
     public static @NotNull HeaderKey<?> CRITICAL_CH = new StringHeaderKey("Critical-CH");
     public static @NotNull HeaderKey<?> CROSS_ORIGIN_EMBEDDER_POLICY = new StringHeaderKey("Cross-Origin-Embedder-Policy");
@@ -310,33 +313,35 @@ public abstract class HeaderKey<T> {
         }
     }
 
-    private static final class AcceptEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {
-        private AcceptEncodingHeaderKey() {
-            super("Accept-Encoding", Target.REQUEST);
+    private static final class AcceptLanguageHeaderKey extends HeaderKey<Weight<Locale>[]> {
+        private AcceptLanguageHeaderKey() {
+            super("Accept-Language", Target.REQUEST);
         }
 
         @Override
-        public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-            @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
+        public @NotNull Header<Weight<Locale>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<locale>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
             @NotNull Matcher matcher = pattern.matcher(value);
-            @NotNull PseudoEncoding[] pairs = new PseudoEncoding[matcher.groupCount()];
+
+            //noinspection unchecked
+            @NotNull Weight<Locale>[] pairs = new Weight[matcher.groupCount()];
 
             for (int group = 0; group < matcher.groupCount(); group++) {
                 if (!matcher.find()) break;
 
-                @NotNull String encoding = matcher.group("encoding");
+                @NotNull String locale = matcher.group("locale");
                 @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                pairs[group] = PseudoEncoding.create(encoding, weight);
+                pairs[group] = Weight.create(weight, Locale.forLanguageTag(locale));
             }
 
             return create(pairs);
         }
         @Override
-        public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
+        public @NotNull String write(@NotNull Header<Weight<Locale>[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull PseudoEncoding pseudo : header.getValue()) {
+            for (@NotNull Weight<Locale> pseudo : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
                 builder.append(pseudo);
             }
@@ -344,16 +349,54 @@ public abstract class HeaderKey<T> {
             return builder.toString();
         }
     }
-    private static final class AcceptCharsetHeaderKey extends HeaderKey<PseudoCharset[]> {
+    private static final class AcceptEncodingHeaderKey extends HeaderKey<Weight<PseudoEncoding>[]> {
+        private AcceptEncodingHeaderKey() {
+            super("Accept-Encoding", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Weight<PseudoEncoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
+            @NotNull Matcher matcher = pattern.matcher(value);
+
+            //noinspection unchecked
+            @NotNull Weight<PseudoEncoding>[] pairs = new Weight[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                if (!matcher.find()) break;
+
+                @NotNull String encoding = matcher.group("encoding");
+                @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+
+                pairs[group] = Weight.create(weight, PseudoEncoding.create(encoding));
+            }
+
+            return create(pairs);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Weight<PseudoEncoding>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(pseudo);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class AcceptCharsetHeaderKey extends HeaderKey<Weight<PseudoCharset>[]> {
         private AcceptCharsetHeaderKey() {
             super("Accept-Charset", Target.REQUEST);
         }
 
         @Override
-        public @NotNull Header<PseudoCharset[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<Weight<PseudoCharset>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
             @NotNull Matcher matcher = pattern.matcher(value);
-            @NotNull PseudoCharset[] pairs = new PseudoCharset[matcher.groupCount()];
+
+            //noinspection unchecked
+            @NotNull Weight<PseudoCharset>[] pairs = new Weight[matcher.groupCount()];
 
             for (int group = 0; group < matcher.groupCount(); group++) {
                 if (!matcher.find()) break;
@@ -361,17 +404,17 @@ public abstract class HeaderKey<T> {
                 @NotNull String charset = matcher.group("charset");
                 @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                pairs[group] = PseudoCharset.create(charset, weight);
+                pairs[group] = Weight.create(weight, PseudoCharset.create(charset));
             }
 
             return create(pairs);
         }
 
         @Override
-        public @NotNull String write(@NotNull Header<PseudoCharset[]> header) {
+        public @NotNull String write(@NotNull Header<Weight<PseudoCharset>[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull PseudoCharset pseudo : header.getValue()) {
+            for (@NotNull Weight<PseudoCharset> pseudo : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
                 builder.append(pseudo);
             }
@@ -434,32 +477,32 @@ public abstract class HeaderKey<T> {
             return builder.toString();
         }
     }
-    private static final class AcceptHeaderKey extends HeaderKey<ContentType[]> {
+    private static final class AcceptHeaderKey extends HeaderKey<MediaType[]> {
         private AcceptHeaderKey() {
             super("Accept", Target.REQUEST);
         }
 
         @Override
-        public @NotNull Header<ContentType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<MediaType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-            @NotNull List<ContentType> types = new LinkedList<>();
+            @NotNull List<MediaType> types = new LinkedList<>();
 
             try {
                 for (int group = 0; group < matcher.groupCount(); group++) {
                     @NotNull String name = matcher.group(group);
-                    types.add(ContentType.parse(name));
+                    types.add(MediaType.parse(name));
                 }
             } catch (@NotNull ParseException e) {
                 throw new HeaderFormatException("cannot parse Accept header's content types", e);
             }
 
-            return create(types.toArray(new ContentType[0]));
+            return create(types.toArray(new MediaType[0]));
         }
         @Override
-        public @NotNull String write(@NotNull Header<ContentType[]> header) {
+        public @NotNull String write(@NotNull Header<MediaType[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull ContentType type : header.getValue()) {
+            for (@NotNull MediaType type : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
                 builder.append(type);
             }
@@ -467,22 +510,22 @@ public abstract class HeaderKey<T> {
             return builder.toString();
         }
     }
-    private static final class ContentTypeHeaderKey extends HeaderKey<ContentType> {
+    private static final class ContentTypeHeaderKey extends HeaderKey<MediaType> {
         private ContentTypeHeaderKey() {
             super("Content-Type", Target.BOTH);
         }
 
         @Override
-        public @NotNull Header<ContentType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<MediaType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                @NotNull ContentType type = ContentType.parse(value);
+                @NotNull MediaType type = MediaType.parse(value);
                 return create(type);
             } catch (@NotNull ParseException e) {
                 throw new HeaderFormatException("cannot parse content type '" + value + "'", e);
             }
         }
         @Override
-        public @NotNull String write(@NotNull Header<ContentType> header) {
+        public @NotNull String write(@NotNull Header<MediaType> header) {
             return header.getValue().toString();
         }
     }

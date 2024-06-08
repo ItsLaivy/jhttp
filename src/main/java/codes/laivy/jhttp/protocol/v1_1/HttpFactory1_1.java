@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
@@ -12,8 +13,8 @@ import codes.laivy.jhttp.protocol.impl.HttpRequestImpl;
 import codes.laivy.jhttp.protocol.impl.HttpResponseImpl;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
-import codes.laivy.jhttp.utilities.ContentType;
 import codes.laivy.jhttp.utilities.HttpStatus;
+import codes.laivy.jhttp.utilities.MediaType;
 import codes.laivy.jhttp.utilities.Method;
 import codes.laivy.jhttp.utilities.URIAuthority;
 import org.jetbrains.annotations.ApiStatus;
@@ -134,11 +135,14 @@ final class HttpFactory1_1 implements HttpFactory {
             // Charset
             @NotNull Charset charset = StandardCharsets.UTF_8;
 
-            @NotNull Optional<Header<ContentType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
+            @NotNull Optional<Header<MediaType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
             if (optional.isPresent()) {
                 try {
-                    @NotNull ContentType type = optional.get().getValue();
-                    charset = type.getCharset() != null ? type.getCharset() : StandardCharsets.UTF_8;
+                    @NotNull MediaType type = optional.get().getValue();
+
+                    if (type.getCharset() != null && type.getCharset().available()) {
+                        charset = type.getCharset().retrieve();
+                    }
                 } catch (@NotNull Throwable throwable) {
                     throw new ParseException("cannot parse content type: " + throwable.getMessage(), 0);
                 }
@@ -237,11 +241,15 @@ final class HttpFactory1_1 implements HttpFactory {
             // Charset
             @NotNull Charset charset = StandardCharsets.UTF_8;
 
-            @NotNull Optional<Header<ContentType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
+            @NotNull Optional<Header<MediaType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
             if (optional.isPresent()) {
-                @NotNull ContentType type = optional.get().getValue();
-                charset = type.getCharset() != null ? type.getCharset() : StandardCharsets.UTF_8;
+                @NotNull MediaType type = optional.get().getValue();
+
+                if (type.getCharset() != null && type.getCharset().available()) {
+                    charset = type.getCharset().retrieve();
+                }
             }
+
             // Message
             @Nullable Message message = null;
             if (content.length == 2) {
@@ -302,7 +310,7 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Headers headers = new Headers() {
         @Override
-        public @NotNull Header<?> parse(byte[] data) throws ParseException {
+        public <T> @NotNull Header<T> parse(byte[] data) throws ParseException, HeaderFormatException {
             @NotNull String string = new String(data);
 
             if (!isCompatible(data)) {
@@ -313,13 +321,14 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull String name = parts[0];
             @NotNull String value = parts[1];
 
-            @NotNull HeaderKey<?> key = HeaderKey.create(name);
-            return Header.create(key, value);
+            //noinspection unchecked
+            @NotNull HeaderKey<T> key = (HeaderKey<T>) HeaderKey.create(name);
+            return key.read(getVersion(), value);
         }
 
         @Override
-        public byte[] wrap(@NotNull Header<?> header) {
-            return (header.getName() + ": " + header.getValue()).getBytes();
+        public <T> byte[] wrap(@NotNull Header<T> header) {
+            return header.getKey().write(header).getBytes();
         }
 
         @Override

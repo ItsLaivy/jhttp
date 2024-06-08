@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.protocol;
 
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.request.HttpRequest;
@@ -39,8 +40,8 @@ public interface HttpFactory {
         boolean isCompatible(@NotNull HttpClient client, byte[] data);
     }
     interface Headers {
-        @NotNull Header<?> parse(byte[] data) throws ParseException;
-        byte[] wrap(@NotNull Header<?> header);
+        <T> @NotNull Header<T> parse(byte[] data) throws ParseException, HeaderFormatException;
+        <T> byte[] wrap(@NotNull Header<T> header);
 
         boolean isCompatible(byte[] data);
     }
