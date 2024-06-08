@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.headers;
 
+import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.*;
@@ -68,8 +69,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Integer> AGE = new IntegerHeaderKey("Age", Target.RESPONSE);
     public static @NotNull HeaderKey<Method[]> ALLOW = new AllowHeaderKey();
     public static @NotNull HeaderKey<Optional<AlternativeService[]>> ALT_SVC = new AltSvcHeaderKey();
-    public static @NotNull HeaderKey<?> ALT_USED = new StringHeaderKey("Alt-Used");
-    public static @NotNull HeaderKey<?> AUTHORIZATION = new StringHeaderKey("Authorization");
+    public static @NotNull HeaderKey<URIAuthority> ALT_USED = new AltUsedHeaderKey();
+    public static @NotNull HeaderKey<Credentials> AUTHORIZATION = new AuthorizationHeaderKey();
     public static @NotNull HeaderKey<?> CACHE_CONTROL = new StringHeaderKey("Cache-Control");
     public static @NotNull HeaderKey<?> CLEAR_SITE_DATA = new StringHeaderKey("Clear-Site-Data");
     public static @NotNull HeaderKey<?> CONNECTION = new StringHeaderKey("Connection", Pattern.compile("^(?i)(keep-alive|close)(,\\s?[a-zA-Z0-9!#$%&'*+.^_`|~-]+)*$"));
@@ -215,7 +216,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<?> WARNING = new StringHeaderKey("Warning");
     @Deprecated
     public static @NotNull HeaderKey<?> WIDTH = new StringHeaderKey("Width");
-    public static @NotNull StringHeaderKey WWW_AUTHENTICATE = new StringHeaderKey("WWW-Authenticate");
+    public static @NotNull HeaderKey<?> WWW_AUTHENTICATE = new StringHeaderKey("WWW-Authenticate");
     public static @NotNull HeaderKey<?> PROXY_CONNECTION = new StringHeaderKey("Proxy-Connection", Pattern.compile("^(?i)(keep-alive|close)(,\\s?[a-zA-Z0-9!#$%&'*+.^_`|~-]+)*$"));
 
     // Object
@@ -296,6 +297,54 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AuthorizationHeaderKey extends HeaderKey<Credentials> {
+        private AuthorizationHeaderKey() {
+            super("Authorization", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull String[] split = value.split(" ", 2);
+            @NotNull Credentials credentials;
+
+            try {
+                if (split[0].equalsIgnoreCase("Bearer")) {
+                    credentials = new Credentials.Bearer(split[1].toLowerCase());
+                } else if (split[0].equalsIgnoreCase("Basic")) {
+                    credentials = Credentials.Basic.parse(split[1]);
+                } else {
+                    credentials = Credentials.Unknown.create(value.toCharArray());
+                }
+            } catch (@NotNull ParseException e) {
+                throw new HeaderFormatException("cannot parse credentials '" + value + "'", e);
+            }
+
+            return create(credentials);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Credentials> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class AltUsedHeaderKey extends HeaderKey<URIAuthority> {
+        private AltUsedHeaderKey() {
+            super("Alt-Used", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<URIAuthority> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(URIAuthority.parse(value));
+            } catch (URISyntaxException | UnknownHostException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a valid uri authority in header '" + getName() + "'", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<URIAuthority> header) {
+            @NotNull URIAuthority authority = header.getValue();
+            return authority.getHostName() + ":" + authority.getPort();
+        }
+    }
     private static final class AltSvcHeaderKey extends HeaderKey<Optional<AlternativeService[]>> {
         private AltSvcHeaderKey() {
             super("Alt-Svc", Target.RESPONSE);
@@ -311,6 +360,7 @@ public abstract class HeaderKey<T> {
             @NotNull Matcher matcher = pattern.matcher(value);
             @NotNull AlternativeService[] services = new AlternativeService[matcher.groupCount()];
 
+            // todo: row never updated
             int row = 0;
             while (matcher.find()) {
                 @NotNull String group = matcher.group();

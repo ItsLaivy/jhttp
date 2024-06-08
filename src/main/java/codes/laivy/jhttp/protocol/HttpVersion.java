@@ -62,7 +62,6 @@ public abstract class HttpVersion {
         return id;
     }
 
-
     @MustBeInvokedByOverriders
     public synchronized boolean init() {
         return versions.add(this);
