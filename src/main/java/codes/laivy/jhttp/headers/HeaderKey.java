@@ -2,8 +2,11 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.utilities.AcceptRange;
 import codes.laivy.jhttp.utilities.MediaType;
-import codes.laivy.jhttp.utilities.Weight;
+import codes.laivy.jhttp.utilities.header.Weight;
+import codes.laivy.jhttp.utilities.header.Wildcard;
+import codes.laivy.jhttp.utilities.pseudo.PseudoString;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.ApiStatus;
@@ -52,9 +55,9 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<MediaType[]> ACCEPT_PATCH = new AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType.Type[]> ACCEPT_POST = new AcceptPostHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_RANGES = new StringHeaderKey("Accept-Ranges");
-    public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new StringHeaderKey("Access-Control-Allow-Credentials");
-    public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_HEADERS = new StringHeaderKey("Access-Control-Allow-Headers");
+    public static @NotNull HeaderKey<AcceptRange> ACCEPT_RANGES = new AcceptRangesHeaderKey();
+    public static @NotNull HeaderKey<Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new BooleanHeaderKey("Access-Control-Allow-Credentials", Target.RESPONSE);
+    public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_ALLOW_HEADERS = new AcceptControlAllowHeadersHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_METHODS = new StringHeaderKey("Access-Control-Allow-Methods");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_ORIGIN = new StringHeaderKey("Access-Control-Allow-Origin");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_EXPOSE_HEADERS = new StringHeaderKey("Access-Control-Expose-Headers");
@@ -273,6 +276,20 @@ public abstract class HeaderKey<T> {
         BOTH
     }
 
+    private static final class BooleanHeaderKey extends HeaderKey<Boolean> {
+        private BooleanHeaderKey(@NotNull String name, @NotNull Target target) {
+            super(name, target);
+        }
+
+        @Override
+        public @NotNull Header<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(Boolean.parseBoolean(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Boolean> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class StringHeaderKey extends HeaderKey<String> {
 
         private final @Nullable Pattern pattern;
@@ -308,6 +325,53 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AcceptControlAllowHeadersHeaderKey extends HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> {
+        private AcceptControlAllowHeadersHeaderKey() {
+            super("Access-Control-Allow-Headers", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+
+            //noinspection unchecked
+            @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] types = new Wildcard[matcher.groupCount()];
+
+            int row = 0;
+            while (matcher.find()) {
+                types[row] = Wildcard.create();
+                row++;
+            }
+
+            return create(types);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> type : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(type);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class AcceptRangesHeaderKey extends HeaderKey<AcceptRange> {
+        private AcceptRangesHeaderKey() {
+            super("Accept-Ranges", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<AcceptRange> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(AcceptRange.valueOf(value.toUpperCase()));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<AcceptRange> header) {
+            return header.getValue().name().toLowerCase();
+        }
+    }
     private static final class AcceptPostHeaderKey extends HeaderKey<MediaType.Type[]> {
         private AcceptPostHeaderKey() {
             super("Accept-Post", Target.RESPONSE);

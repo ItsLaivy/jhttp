@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.utilities.header;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
