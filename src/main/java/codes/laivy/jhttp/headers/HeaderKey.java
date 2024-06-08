@@ -4,6 +4,7 @@ import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.AcceptRange;
 import codes.laivy.jhttp.utilities.MediaType;
+import codes.laivy.jhttp.utilities.Method;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
 import codes.laivy.jhttp.utilities.pseudo.PseudoString;
@@ -58,7 +59,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<AcceptRange> ACCEPT_RANGES = new AcceptRangesHeaderKey();
     public static @NotNull HeaderKey<Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new BooleanHeaderKey("Access-Control-Allow-Credentials", Target.RESPONSE);
     public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_ALLOW_HEADERS = new AcceptControlAllowHeadersHeaderKey();
-    public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_METHODS = new StringHeaderKey("Access-Control-Allow-Methods");
+    public static @NotNull HeaderKey<Wildcard<Method>[]> ACCEPT_CONTROL_ALLOW_METHODS = new StringHeaderKey("Access-Control-Allow-Methods");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_ALLOW_ORIGIN = new StringHeaderKey("Access-Control-Allow-Origin");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_EXPOSE_HEADERS = new StringHeaderKey("Access-Control-Expose-Headers");
     public static @NotNull HeaderKey<?> ACCEPT_CONTROL_MAX_AGE = new StringHeaderKey("Access-Control-Max-Age");
@@ -325,6 +326,45 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class AccessControlAllowMethodsHeaderKey extends HeaderKey<Wildcard<Method>[]> {
+        private AccessControlAllowMethodsHeaderKey() {
+            super("Access-Control-Allow-Methods", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<Method>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+
+            //noinspection unchecked
+            @NotNull Wildcard<Method>[] methods = new Wildcard[matcher.groupCount()];
+
+            int row = 0;
+            while (matcher.find()) {
+                @NotNull String group = matcher.group();
+
+                try {
+                    methods[row] = group.trim().equals("*") ? Wildcard.create() : Wildcard.create(Method.valueOf(group.toUpperCase()));
+                    row++;
+                } catch (@NotNull IllegalArgumentException ignore) {
+                    throw new HeaderFormatException("cannot parse method '" + group + "'");
+                }
+            }
+
+            return create(methods);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<Method>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Wildcard<Method> method : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(method);
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class AcceptControlAllowHeadersHeaderKey extends HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> {
         private AcceptControlAllowHeadersHeaderKey() {
             super("Access-Control-Allow-Headers", Target.RESPONSE);
@@ -336,23 +376,27 @@ public abstract class HeaderKey<T> {
             @NotNull Matcher matcher = pattern.matcher(value);
 
             //noinspection unchecked
-            @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] types = new Wildcard[matcher.groupCount()];
+            @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] headers = new Wildcard[matcher.groupCount()];
 
             int row = 0;
             while (matcher.find()) {
-                types[row] = Wildcard.create();
+                @NotNull String group = matcher.group();
+                headers[row] = (group.trim().equals("*") ?
+                        Wildcard.create() :
+                        Wildcard.create(PseudoString.create(group, () -> true, () -> HeaderKey.create(group)))
+                );
                 row++;
             }
 
-            return create(types);
+            return create(headers);
         }
         @Override
         public @NotNull String write(@NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
             @NotNull StringBuilder builder = new StringBuilder();
 
-            for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> type : header.getValue()) {
+            for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> header : header.getValue()) {
                 if (builder.length() > 0) builder.append(", ");
-                builder.append(type);
+                builder.append(header);
             }
 
             return builder.toString();
