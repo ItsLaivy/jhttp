@@ -47,8 +47,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new AcceptCHLifetimeHeaderKey();
-    public static @NotNull HeaderKey<PseudoCharset[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
-    public static @NotNull HeaderKey<PseudoEncoding[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
+    public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
+    public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<?> ACCEPT_PATCH = new StringHeaderKey("Accept-Patch")
 

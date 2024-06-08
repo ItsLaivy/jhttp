@@ -13,32 +13,22 @@ public final class PseudoEncoding implements PseudoString<Encoding> {
 
     // Static initializers
 
-    public static @NotNull PseudoEncoding create(@NotNull String name, @Nullable Float weight) {
-        return new PseudoEncoding(name, weight);
+    public static @NotNull PseudoEncoding create(@NotNull String name) {
+        return new PseudoEncoding(name);
     }
-    public static @NotNull PseudoEncoding create(@NotNull Encoding encoding, @Nullable Float weight) {
-        return new PseudoEncoding(encoding.getName(), weight);
+    public static @NotNull PseudoEncoding create(@NotNull Encoding encoding) {
+        return new PseudoEncoding(encoding.getName());
     }
 
     // Object
 
     private final @NotNull PseudoString<Encoding> pseudo;
-    private final @Nullable Float weight;
 
-    private PseudoEncoding(@NotNull String name, @Nullable Float weight) {
+    private PseudoEncoding(@NotNull String name) {
         this.pseudo = PseudoString.create(name, () -> Encoding.contains(name), () -> Encoding.retrieve(name).orElseThrow(() -> new NullPointerException("there's no encoding with name '" + name + "' registered")));
-        this.weight = weight;
     }
-    private PseudoEncoding(@NotNull Encoding encoding, @Nullable Float weight) {
+    private PseudoEncoding(@NotNull Encoding encoding) {
         this.pseudo = PseudoString.create(encoding.getName(), () -> true, () -> encoding);
-        this.weight = weight;
-    }
-
-    // Getters
-
-    @Contract(pure = true)
-    public @Nullable Float getWeight() {
-        return weight;
     }
 
     // Pseudo Getters
@@ -66,17 +56,17 @@ public final class PseudoEncoding implements PseudoString<Encoding> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PseudoEncoding that = (PseudoEncoding) o;
-        return Objects.equals(pseudo.raw(), that.pseudo.raw()) && Objects.equals(weight, that.weight);
+        return Objects.equals(pseudo.raw(), that.pseudo.raw());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(pseudo.raw(), weight);
+        return Objects.hash(pseudo.raw());
     }
 
     @Override
     @Contract(pure = true)
     public @NotNull String toString() {
-        return pseudo.raw() + (weight != null ? ";q=" + weight : "");
+        return pseudo.raw();
     }
 
 }

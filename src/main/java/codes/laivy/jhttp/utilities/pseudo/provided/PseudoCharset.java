@@ -13,19 +13,18 @@ public final class PseudoCharset implements PseudoString<Charset> {
 
     // Static initializers
 
-    public static @NotNull PseudoCharset create(@NotNull String name, @Nullable Float weight) {
-        return new PseudoCharset(name, weight);
+    public static @NotNull PseudoCharset create(@NotNull String name) {
+        return new PseudoCharset(name);
     }
-    public static @NotNull PseudoCharset create(@NotNull Charset charset, @Nullable Float weight) {
-        return new PseudoCharset(charset.name(), weight);
+    public static @NotNull PseudoCharset create(@NotNull Charset charset) {
+        return new PseudoCharset(charset.name());
     }
 
     // Object
 
     private final @NotNull PseudoString<Charset> pseudo;
-    private final @Nullable Float weight;
 
-    private PseudoCharset(@NotNull String id, @Nullable Float weight) {
+    private PseudoCharset(@NotNull String id) {
         this.pseudo = PseudoString.create(id, () -> {
             try {
                 Charset.forName(id);
@@ -40,19 +39,9 @@ public final class PseudoCharset implements PseudoString<Charset> {
                 throw new NullPointerException("there's no charset named '" + id + "' registered");
             }
         });
-
-        this.weight = weight;
     }
-    private PseudoCharset(@NotNull Charset charset, @Nullable Float weight) {
+    private PseudoCharset(@NotNull Charset charset) {
         this.pseudo = PseudoString.create(charset.name(), () -> true, () -> charset);
-        this.weight = weight;
-    }
-
-    // Getters
-
-    @Contract(pure = true)
-    public @Nullable Float getWeight() {
-        return weight;
     }
 
     // Pseudo Getters
@@ -80,17 +69,17 @@ public final class PseudoCharset implements PseudoString<Charset> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PseudoCharset that = (PseudoCharset) o;
-        return Objects.equals(pseudo.raw(), that.pseudo.raw()) && Objects.equals(weight, that.weight);
+        return Objects.equals(pseudo.raw(), that.pseudo.raw());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(pseudo.raw(), weight);
+        return Objects.hash(pseudo.raw());
     }
 
     @Override
     @Contract(pure = true)
     public @NotNull String toString() {
-        return pseudo.raw() + (weight != null ? ";q=" + weight : "");
+        return pseudo.raw();
     }
 
 }
