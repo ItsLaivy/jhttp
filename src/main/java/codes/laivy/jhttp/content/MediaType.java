@@ -1,5 +1,6 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.content;
 
+import codes.laivy.jhttp.utilities.Pair;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;

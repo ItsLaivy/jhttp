@@ -1,9 +1,11 @@
 package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
+import codes.laivy.jhttp.content.*;
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.*;
+import codes.laivy.jhttp.utilities.content.*;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
 import codes.laivy.jhttp.utilities.pseudo.PseudoString;
@@ -74,13 +76,13 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<CacheControl> CACHE_CONTROL = new CacheControlHeaderKey();
     public static @NotNull HeaderKey<Wildcard<SiteData>[]> CLEAR_SITE_DATA = new ClearSiteDataHeaderKey();
     public static @NotNull HeaderKey<Connection> CONNECTION = new ConnectionHeaderKey();
-    public static @NotNull HeaderKey<?> CONTENT_DISPOSITION = new ContentDispositionHeaderKey();
+    public static @NotNull HeaderKey<ContentDisposition> CONTENT_DISPOSITION = new ContentDispositionHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<?> CONTENT_DPR = new StringHeaderKey("Content-DPR");
-    public static @NotNull HeaderKey<?> CONTENT_ENCODING = new StringHeaderKey("Content-Encoding");
+    public static @NotNull HeaderKey<PseudoEncoding[]> CONTENT_ENCODING = new ContentEncodingHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_LANGUAGE = new StringHeaderKey("Content-Language");
-    public static @NotNull HeaderKey<?> CONTENT_LENGTH = new StringHeaderKey("Content-Length");
-    public static @NotNull HeaderKey<?> CONTENT_LOCATION = new StringHeaderKey("Content-Location");
+    public static @NotNull HeaderKey<?> CONTENT_LENGTH = new IntegerHeaderKey("Content-Length", Target.BOTH);
+    public static @NotNull HeaderKey<?> CONTENT_LOCATION = new ContentLocationHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_RANGE = new StringHeaderKey("Content-Range");
     public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY = new StringHeaderKey("Content-Security-Policy");
     public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY_REPORT_ONLY = new StringHeaderKey("Content-Security-Policy-Report-Only");
@@ -297,6 +299,53 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class ContentLocationHeaderKey extends HeaderKey<ContentLocation> {
+        private ContentLocationHeaderKey() {
+            super("Content-Location", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<ContentLocation> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(ContentLocation.parse(value));
+            } catch (ParseException | UnknownHostException | URISyntaxException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentLocation> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class ContentEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {
+        private ContentEncodingHeaderKey() {
+            super("Content-Encoding", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
+            @NotNull List<PseudoEncoding> encodings = new ArrayList<>();
+
+            while (matcher.find()) {
+                @NotNull String name = matcher.group(matcher.group());
+                encodings.add(PseudoEncoding.create(name));
+            }
+
+            return create(encodings.toArray(new PseudoEncoding[0]));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull PseudoEncoding encoding : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(encoding.raw());
+            }
+
+            return builder.toString();
+        }
+    }
     private static final class ContentDispositionHeaderKey extends HeaderKey<ContentDisposition> {
         private ContentDispositionHeaderKey() {
             super("Content-Disposition", Target.RESPONSE);
@@ -812,6 +861,8 @@ public abstract class HeaderKey<T> {
             return builder.toString();
         }
     }
+
+    // todo: accept language pseudo locale
     private static final class AcceptLanguageHeaderKey extends HeaderKey<Weight<Locale>[]> {
         private AcceptLanguageHeaderKey() {
             super("Accept-Language", Target.REQUEST);
@@ -1022,14 +1073,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-            @NotNull PseudoEncoding[] encodings = new PseudoEncoding[matcher.groupCount()];
+            @NotNull List<PseudoEncoding> encodings = new ArrayList<>();
 
-            for (int group = 0; group < matcher.groupCount(); group++) {
-                @NotNull String name = matcher.group(group);
-                encodings[group] = PseudoEncoding.create(name);
+            while (matcher.find()) {
+                @NotNull String name = matcher.group(matcher.group());
+                encodings.add(PseudoEncoding.create(name));
             }
 
-            return create(encodings);
+            return create(encodings.toArray(new PseudoEncoding[0]));
         }
         @Override
         public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {

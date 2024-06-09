@@ -1,5 +1,6 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.content;
 
+import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

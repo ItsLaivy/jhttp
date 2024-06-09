@@ -1,7 +1,7 @@
-package codes.laivy.jhttp.tests;
+package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.utilities.ContentDisposition;
-import codes.laivy.jhttp.utilities.ContentDisposition.Property;
+import codes.laivy.jhttp.content.ContentDisposition;
+import codes.laivy.jhttp.content.ContentDisposition.Property;
 import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.*;
 import java.text.ParseException;
 import java.time.Instant;
 
-import static codes.laivy.jhttp.utilities.ContentDisposition.Type.ATTACHMENT;
+import static codes.laivy.jhttp.content.ContentDisposition.Type.ATTACHMENT;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public final class ContentDispositionTests {

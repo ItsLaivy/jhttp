@@ -1,6 +1,7 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.utilities.URIAuthority;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

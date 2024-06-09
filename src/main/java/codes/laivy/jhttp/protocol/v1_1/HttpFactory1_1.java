@@ -14,7 +14,7 @@ import codes.laivy.jhttp.protocol.impl.HttpResponseImpl;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
 import codes.laivy.jhttp.utilities.HttpStatus;
-import codes.laivy.jhttp.utilities.MediaType;
+import codes.laivy.jhttp.content.MediaType;
 import codes.laivy.jhttp.utilities.Method;
 import codes.laivy.jhttp.utilities.URIAuthority;
 import org.jetbrains.annotations.ApiStatus;
