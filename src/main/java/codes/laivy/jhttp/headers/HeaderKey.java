@@ -74,7 +74,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<CacheControl> CACHE_CONTROL = new CacheControlHeaderKey();
     public static @NotNull HeaderKey<Wildcard<SiteData>[]> CLEAR_SITE_DATA = new ClearSiteDataHeaderKey();
     public static @NotNull HeaderKey<Connection> CONNECTION = new ConnectionHeaderKey();
-    public static @NotNull HeaderKey<?> CONTENT_DISPOSITION = new StringHeaderKey("Content-Disposition");
+    public static @NotNull HeaderKey<?> CONTENT_DISPOSITION = new ContentDispositionHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<?> CONTENT_DPR = new StringHeaderKey("Content-DPR");
     public static @NotNull HeaderKey<?> CONTENT_ENCODING = new StringHeaderKey("Content-Encoding");
@@ -297,8 +297,23 @@ public abstract class HeaderKey<T> {
         }
     }
 
-    private static final class ContentDispositionHeaderKey extends HeaderKey<> {
+    private static final class ContentDispositionHeaderKey extends HeaderKey<ContentDisposition> {
+        private ContentDispositionHeaderKey() {
+            super("Content-Disposition", Target.RESPONSE);
+        }
 
+        @Override
+        public @NotNull Header<ContentDisposition> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(ContentDisposition.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException("cannot parse content disposition '" + value + "'", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentDisposition> header) {
+            return header.getValue().toString();
+        }
     }
     private static final class ConnectionHeaderKey extends HeaderKey<Connection> {
         private ConnectionHeaderKey() {
