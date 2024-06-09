@@ -20,9 +20,10 @@ public final class CacheControlTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(CacheControl.isCacheControl(valid));
+            Assertions.assertEquals(CacheControl.parse(VALIDS[0]), CacheControl.parse(CacheControl.parse(VALIDS[0]).toString()));
         }
     }
     @Test

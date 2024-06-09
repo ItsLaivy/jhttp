@@ -20,9 +20,10 @@ public final class ContentRangeTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(ContentRange.isContentRange(valid));
+            Assertions.assertEquals(ContentRange.parse(VALIDS[0]), ContentRange.parse(ContentRange.parse(VALIDS[0]).toString()));
         }
     }
     @Test

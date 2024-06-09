@@ -20,9 +20,10 @@ public final class ConnectionTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(Connection.isConnection(valid));
+            Assertions.assertEquals(Connection.parse(VALIDS[0]), Connection.parse(Connection.parse(VALIDS[0]).toString()));
         }
     }
     @Test

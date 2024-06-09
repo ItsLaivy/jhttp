@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.content.AlternativeService;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -24,9 +24,10 @@ public final class AlternativeServiceTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(AlternativeService.isAlternativeService(valid));
+            Assertions.assertEquals(AlternativeService.parse(VALIDS[0]), AlternativeService.parse(AlternativeService.parse(VALIDS[0]).toString()));
         }
     }
     @Test

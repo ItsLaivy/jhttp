@@ -26,9 +26,10 @@ public final class ContentDispositionTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(ContentDisposition.isContentDisposition(valid));
+            Assertions.assertEquals(ContentDisposition.parse(VALIDS[0]), ContentDisposition.parse(ContentDisposition.parse(VALIDS[0]).toString()));
         }
     }
     @Test

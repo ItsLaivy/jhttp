@@ -23,9 +23,10 @@ public final class ContentLocationTests {
 
     @Test
     @Order(value = 0)
-    void validate() {
+    void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(ContentLocation.isContentLocation(valid));
+            Assertions.assertEquals(ContentLocation.parse(VALIDS[0]), ContentLocation.parse(ContentLocation.parse(VALIDS[0]).toString()));
         }
     }
     @Test
