@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.authorization.Credentials.Basic;
 import org.jetbrains.annotations.*;
@@ -21,6 +21,7 @@ public final class URIAuthority {
 
     public static final int DEFAULT_HTTP_PORT = 80;
     public static final int DEFAULT_HTTPS_PORT = 443;
+    public static final int DEFAULT_WEB_SOCKET_PORT = 80;
 
     public static boolean isUriAuthority(@NotNull String uri) {
         return PARSE_PATTERN.matcher(uri).matches();

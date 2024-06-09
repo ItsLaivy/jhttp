@@ -4,8 +4,10 @@ import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.content.*;
 import codes.laivy.jhttp.exception.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.utilities.*;
-import codes.laivy.jhttp.utilities.content.*;
+import codes.laivy.jhttp.utilities.Connection;
+import codes.laivy.jhttp.utilities.Method;
+import codes.laivy.jhttp.utilities.Target;
+import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
 import codes.laivy.jhttp.utilities.pseudo.PseudoString;
@@ -81,9 +83,9 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<?> CONTENT_DPR = new StringHeaderKey("Content-DPR");
     public static @NotNull HeaderKey<PseudoEncoding[]> CONTENT_ENCODING = new ContentEncodingHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_LANGUAGE = new StringHeaderKey("Content-Language");
-    public static @NotNull HeaderKey<?> CONTENT_LENGTH = new IntegerHeaderKey("Content-Length", Target.BOTH);
-    public static @NotNull HeaderKey<?> CONTENT_LOCATION = new ContentLocationHeaderKey();
-    public static @NotNull HeaderKey<?> CONTENT_RANGE = new StringHeaderKey("Content-Range");
+    public static @NotNull HeaderKey<Integer> CONTENT_LENGTH = new IntegerHeaderKey("Content-Length", Target.BOTH);
+    public static @NotNull HeaderKey<ContentLocation> CONTENT_LOCATION = new ContentLocationHeaderKey();
+    public static @NotNull HeaderKey<ContentRange> CONTENT_RANGE = new ContentRangeHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY = new StringHeaderKey("Content-Security-Policy");
     public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY_REPORT_ONLY = new StringHeaderKey("Content-Security-Policy-Report-Only");
     /**
@@ -299,6 +301,31 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class ContentSecurityPolicyHeaderKey extends HeaderKey<> {
+        private ContentSecurityPolicyHeaderKey() {
+            super("Content-Security-Policy", Target.RESPONSE);
+        }
+
+
+    }
+    private static final class ContentRangeHeaderKey extends HeaderKey<ContentRange> {
+        private ContentRangeHeaderKey() {
+            super("Content-Range", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<ContentRange> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(ContentRange.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a valid content range", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentRange> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class ContentLocationHeaderKey extends HeaderKey<ContentLocation> {
         private ContentLocationHeaderKey() {
             super("Content-Location", Target.RESPONSE);

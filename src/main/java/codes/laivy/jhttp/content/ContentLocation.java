@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.content;
 
-import codes.laivy.jhttp.utilities.URIAuthority;
+import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
