@@ -18,6 +18,7 @@ public final class CacheControl {
 
     // Static initializers
 
+    // todo 08/06/2024: regex performance improvement
     public static boolean isCacheControl(@NotNull String string) {
         try {
             parse(string);
