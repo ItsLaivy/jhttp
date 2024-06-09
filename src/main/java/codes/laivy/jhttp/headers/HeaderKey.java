@@ -71,9 +71,9 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Optional<AlternativeService[]>> ALT_SVC = new AltSvcHeaderKey();
     public static @NotNull HeaderKey<URIAuthority> ALT_USED = new AltUsedHeaderKey();
     public static @NotNull HeaderKey<Credentials> AUTHORIZATION = new AuthorizationHeaderKey();
-    public static @NotNull HeaderKey<?> CACHE_CONTROL = new StringHeaderKey("Cache-Control");
-    public static @NotNull HeaderKey<?> CLEAR_SITE_DATA = new StringHeaderKey("Clear-Site-Data");
-    public static @NotNull HeaderKey<?> CONNECTION = new StringHeaderKey("Connection", Pattern.compile("^(?i)(keep-alive|close)(,\\s?[a-zA-Z0-9!#$%&'*+.^_`|~-]+)*$"));
+    public static @NotNull HeaderKey<CacheControl> CACHE_CONTROL = new CacheControlHeaderKey();
+    public static @NotNull HeaderKey<Wildcard<SiteData>[]> CLEAR_SITE_DATA = new ClearSiteDataHeaderKey();
+    public static @NotNull HeaderKey<Connection> CONNECTION = new ConnectionHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_DISPOSITION = new StringHeaderKey("Content-Disposition");
     @Deprecated
     public static @NotNull HeaderKey<?> CONTENT_DPR = new StringHeaderKey("Content-DPR");
@@ -297,6 +297,84 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class ContentDispositionHeaderKey extends HeaderKey<> {
+
+    }
+    private static final class ConnectionHeaderKey extends HeaderKey<Connection> {
+        private ConnectionHeaderKey() {
+            super("Connection", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<Connection> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Connection.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a valid connection", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Connection> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class ClearSiteDataHeaderKey extends HeaderKey<Wildcard<SiteData>[]> {
+        private ClearSiteDataHeaderKey() {
+            super("Clear-Site-Data", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<SiteData>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\"(.*?)\"");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull Set<Wildcard<SiteData>> data = new LinkedHashSet<>();
+
+            while (matcher.find()) {
+                @NotNull String name = matcher.group(1);
+
+                if (name.trim().equals("*")) {
+                    data.add(Wildcard.create());
+                } else {
+                    @NotNull Optional<SiteData> optional = Arrays.stream(SiteData.values()).filter(s -> s.getId().equalsIgnoreCase(name)).findFirst();
+
+                    if (optional.isPresent()) data.add(Wildcard.create(optional.get()));
+                    else throw new NullPointerException("there's no site data named '" + name + "'");
+                }
+            }
+
+            //noinspection unchecked
+            return create(data.toArray(new Wildcard[0]));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<SiteData>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Wildcard<SiteData> data : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(data);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class CacheControlHeaderKey extends HeaderKey<CacheControl> {
+        private CacheControlHeaderKey() {
+            super("Cache-Control", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<CacheControl> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(CacheControl.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException("cannot parse cache control '" + value + "'", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<CacheControl> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class AuthorizationHeaderKey extends HeaderKey<Credentials> {
         private AuthorizationHeaderKey() {
             super("Authorization", Target.REQUEST);
