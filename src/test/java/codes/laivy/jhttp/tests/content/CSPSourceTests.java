@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
+import codes.laivy.jhttp.url.CSPSource.Data;
 import codes.laivy.jhttp.url.CSPSource.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -46,6 +47,33 @@ public final class CSPSourceTests {
             // Subdomains
             Assertions.assertEquals(1, domain.getSubdomains().length);
             Assertions.assertTrue(domain.getSubdomains()[0].isWildcard());
+        }
+    }
+
+    @Nested
+    @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
+    final class Datas {
+
+        private final @NotNull String[] VALIDS = new String[] {
+                "data:text/plain;charset=utf-8;base64,SGVsbG8lMjBXb3JsZCE=",
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA",
+                "data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==",
+                "data:;base64,SGVsbG8=",
+                "data:,Hello%20World!"
+        };
+
+        @Test
+        @Order(value = 0)
+        void validate() throws ParseException {
+            for (@NotNull String valid : VALIDS) {
+                Assertions.assertTrue(Data.validate(valid));
+                Assertions.assertEquals(Data.parse(VALIDS[0]), Data.parse(Data.parse(VALIDS[0]).toString()));
+            }
+        }
+        @Test
+        @Order(value = 1)
+        void assertions() throws ParseException {
+
         }
     }
 
