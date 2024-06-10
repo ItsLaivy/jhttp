@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.exception;
+package codes.laivy.jhttp.exception.parser;
 
 import org.jetbrains.annotations.NotNull;
 

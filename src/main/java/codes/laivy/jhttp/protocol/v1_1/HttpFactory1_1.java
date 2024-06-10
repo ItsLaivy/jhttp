@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.connection.HttpClient;
-import codes.laivy.jhttp.exception.HeaderFormatException;
+import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;

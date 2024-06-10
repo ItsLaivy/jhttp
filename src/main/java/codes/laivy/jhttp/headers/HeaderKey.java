@@ -2,7 +2,7 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.content.*;
-import codes.laivy.jhttp.exception.HeaderFormatException;
+import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.Connection;
 import codes.laivy.jhttp.utilities.Method;

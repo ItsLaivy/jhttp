@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.exception.IllegalHttpVersionException;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.protocol.HttpVersion;

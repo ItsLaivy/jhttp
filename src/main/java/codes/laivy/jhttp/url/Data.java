@@ -21,7 +21,6 @@ public final class Data implements ContentSecurityPolicy.Source {
     public static boolean validate(@NotNull String string) {
         return DATA_URL_PATTERN.matcher(string).matches();
     }
-
     public static @NotNull Data parse(@NotNull String string) throws ParseException {
         @NotNull Matcher matcher = DATA_URL_PATTERN.matcher(string);
 
