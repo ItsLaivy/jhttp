@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url.domain;
 
-import codes.laivy.jhttp.url.csp.CSPSource;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
 import codes.laivy.jhttp.utilities.header.Wildcard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class Domain implements CSPSource {
+public final class Domain implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
@@ -32,7 +32,7 @@ public final class Domain implements CSPSource {
         }
     }
 
-    public static @NotNull Domain create(@NotNull InetSocketAddress address, @NotNull Wildcard<Subdomain> @NotNull [] subdomains, @Nullable URI uri) {
+    public static @NotNull Domain create(@NotNull InetSocketAddress address, @NotNull Subdomain @NotNull [] subdomains, @Nullable URI uri) {
         @NotNull String protocol = (address.getPort() == URIAuthority.DEFAULT_HTTP_PORT) ? "http://" : (address.getPort() == URIAuthority.DEFAULT_HTTPS_PORT) ? "https://" : "";
         @NotNull String port = !protocol.isEmpty() ? ":" + address.getPort() : "";
         @NotNull String path = "";
@@ -111,21 +111,20 @@ public final class Domain implements CSPSource {
         return port;
     }
 
-    public @NotNull Wildcard<Subdomain> @NotNull [] getSubdomains() {
+    public @NotNull Subdomain @NotNull [] getSubdomains() {
         @NotNull Matcher matcher = DOMAIN_URL_PATTERN.matcher(toString());
         @NotNull String subdomainStr = matcher.group(2);
 
         @NotNull String[] parts = subdomainStr.split("\\.");
         @NotNull String[] subdomains = Arrays.copyOf(parts, parts.length - 2);
 
-        //noinspection unchecked
         return Arrays.stream(subdomains).map(subdomain -> {
             if (!subdomain.trim().equals("*")) {
-                return Wildcard.create(Subdomain.create(subdomain));
+                return Subdomain.create(subdomain);
             } else {
-                return Wildcard.create();
+                return Subdomain.wildcard();
             }
-        }).toArray(Wildcard[]::new);
+        }).toArray(Subdomain[]::new);
     }
 
     public @Nullable URI getUri() {

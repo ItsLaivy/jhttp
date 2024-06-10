@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.content.MediaType;
-import codes.laivy.jhttp.url.csp.CSPSource;
+import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,17 +12,13 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Data implements CSPSource {
+public final class Data implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
     public static final @NotNull Pattern DATA_URL_PATTERN = Pattern.compile("^data:(?:(.*?)(;base64)?)?,(.*)$", Pattern.CASE_INSENSITIVE);
 
     public static boolean validate(@NotNull String string) {
-        if (!string.startsWith("data:")) {
-            return false;
-        }
-
         return DATA_URL_PATTERN.matcher(string).matches();
     }
 

@@ -9,9 +9,9 @@ import java.net.URI;
 import java.text.ParseException;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public final class CSPSourceTests {
+public final class SourceTests {
 
-    private CSPSourceTests() {
+    private SourceTests() {
     }
 
     @Nested
