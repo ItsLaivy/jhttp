@@ -4,6 +4,7 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Blob;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.FileSystem;
+import codes.laivy.jhttp.url.MediaStream;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,13 +16,15 @@ public class ContentSecurityPolicy {
 
         // Static initializers
 
-        static @NotNull ContentSecurityPolicy.Source parse(@NotNull String string) throws ParseException, FilesystemProtocolException {
+        static @NotNull Source parse(@NotNull String string) throws ParseException, FilesystemProtocolException {
             if (Data.validate(string)) {
                 return Data.parse(string);
             } else if (Blob.validate(string)) {
                 return Blob.parse(string);
             } else if (FileSystem.validate(string)) {
                 return FileSystem.parse(string);
+            } else if (MediaStream.validate(string)) {
+                return MediaStream.parse(string);
             } else if (Domain.validate(string)) {
                 return Domain.parse(string);
             } else {
@@ -29,34 +32,14 @@ public class ContentSecurityPolicy {
             }
         }
 
-        // Getters
-
-        @NotNull Type getType();
-
-        // Classes
-
         /**
-         * Enumeration representing various types of sources for Content Security Policy (CSP).
+         * Enumeration representing various types of schemes for Content Security Policy (CSP).
          * These sources define the allowed locations from which resources can be loaded and executed.
          *
          * @author Daniel Richard (Laivy)
          * @since 1.0-SNAPSHOT
          */
-        enum Type {
-
-            /**
-             * Internet host by name or IP address. The URL scheme, port number, and path are optional.
-             * Wildcards ('*') can be used for subdomains, host address, and port number, indicating that all
-             * legal values of each are valid. When matching schemes, secure upgrades are allowed (e.g.,
-             * specifying <a href="http://example.com">.<a href="..</a>">will match h</a>ttps://example.com).
-             * That type matches with WebSocket URLs also. These URLs use the ws: or wss: schemes for WebSocket connections.
-             * <p>
-             * Example: example.com, *.example.com:80, 192.168.0.1
-             * </p>
-             *
-             * @see <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL">URL Scheme</a>
-             */
-            DOMAIN,
+        enum Scheme {
 
             /**
              * Data URLs. These URLs embed small data directly in the URL and use the data: scheme.

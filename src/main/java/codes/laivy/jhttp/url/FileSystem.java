@@ -2,6 +2,7 @@ package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
+import codes.laivy.jhttp.url.csp.ContentSecurityPolicy.Source.Scheme;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,16 +19,14 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
     // Static initializers
 
     public static boolean validate(@NotNull String string) {
-        return string.contains("filesystem:") && string.split(":").length >= 2;
+        return string.contains("filesystem:") && string.split(":", 3).length >= 3;
     }
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static @NotNull FileSystem<?> parse(@NotNull String string) throws FilesystemProtocolException, ParseException {
         if (validate(string)) {
-            string = string.substring("filesystem:".length());
-
-            @NotNull String[] parts = string.split(":", 2);
-            @NotNull String name = parts[0];
-            @NotNull String data = parts[1];
+            @NotNull String[] parts = string.split(":", 3);
+            @NotNull String name = parts[1];
+            @NotNull String data = parts[2];
 
             @NotNull Optional<Protocol<?>> optional = Protocol.retrieve(name);
 
@@ -69,9 +68,8 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
         return value;
     }
 
-    @Override
-    public @NotNull Type getType() {
-        return Type.FILESYSTEM;
+    public @NotNull Scheme getType() {
+        return Scheme.FILESYSTEM;
     }
 
     // Implementations
@@ -171,6 +169,10 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
 
         protected Protocol(@NotNull String name) {
             this.name = name;
+
+            if (name.contains(":")) {
+                throw new IllegalArgumentException("protocol name cannot have ':' characters");
+            }
         }
 
         // Getters

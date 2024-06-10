@@ -2,7 +2,6 @@ package codes.laivy.jhttp.url.domain;
 
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.utilities.header.Wildcard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,11 +57,6 @@ public final class Domain implements ContentSecurityPolicy.Source {
     }
 
     // Getters
-
-    @Override
-    public @NotNull Type getType() {
-        return Type.DOMAIN;
-    }
 
     public boolean isSecure() {
         @NotNull Matcher matcher = DOMAIN_URL_PATTERN.matcher(toString());
