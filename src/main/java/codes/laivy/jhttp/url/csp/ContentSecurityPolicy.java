@@ -1,7 +1,9 @@
 package codes.laivy.jhttp.url.csp;
 
+import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Blob;
 import codes.laivy.jhttp.url.Data;
+import codes.laivy.jhttp.url.FileSystem;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,17 +11,17 @@ import java.text.ParseException;
 
 public class ContentSecurityPolicy {
 
-
-
     public interface Source {
 
         // Static initializers
 
-        static @NotNull ContentSecurityPolicy.Source parse(@NotNull String string) throws ParseException {
+        static @NotNull ContentSecurityPolicy.Source parse(@NotNull String string) throws ParseException, FilesystemProtocolException {
             if (Data.validate(string)) {
                 return Data.parse(string);
             } else if (Blob.validate(string)) {
                 return Blob.parse(string);
+            } else if (FileSystem.validate(string)) {
+                return FileSystem.parse(string);
             } else if (Domain.validate(string)) {
                 return Domain.parse(string);
             } else {
@@ -27,12 +29,11 @@ public class ContentSecurityPolicy {
             }
         }
 
-        // Object
-
         // Getters
 
-        @NotNull
-        ContentSecurityPolicy.Source.Type getType();
+        @NotNull Type getType();
+
+        // Classes
 
         /**
          * Enumeration representing various types of sources for Content Security Policy (CSP).
