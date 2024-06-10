@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.url;
+package codes.laivy.jhttp.url.domain;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

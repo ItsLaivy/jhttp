@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.url.CSPSource.Data;
-import codes.laivy.jhttp.url.CSPSource.Domain;
+import codes.laivy.jhttp.url.Data;
+import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
