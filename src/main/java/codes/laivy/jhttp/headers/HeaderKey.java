@@ -6,6 +6,8 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
+import codes.laivy.jhttp.url.domain.Domain;
+import codes.laivy.jhttp.url.domain.Domain.Host;
 import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.header.Weight;
@@ -115,8 +117,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<OffsetDateTime> EXPIRES = new ExpiresHeaderKey();
     public static @NotNull HeaderKey<Forwarded> FORWARDED = new ForwardedHeaderKey();
     public static @NotNull HeaderKey<Email> FROM = new FromHeaderKey();
-    public static @NotNull HeaderKey<?> HOST = new StringHeaderKey("Host");
-    public static @NotNull HeaderKey<?> IF_MATCH = new StringHeaderKey("If-Match");
+    public static @NotNull HeaderKey<Host> HOST = new HostHeaderKey();
+    public static @NotNull HeaderKey<Wildcard<EntityTag[]>> IF_MATCH = new IfMatchHeaderKey();
     public static @NotNull HeaderKey<?> IF_MODIFIED_SINCE = new StringHeaderKey("If-Modified-Since");
     public static @NotNull HeaderKey<?> IF_NONE_MATCH = new StringHeaderKey("If-None-Match");
     public static @NotNull HeaderKey<?> IF_RANGE = new StringHeaderKey("If-Range");
@@ -294,6 +296,67 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class IfMatchHeaderKey extends HeaderKey<Wildcard<EntityTag[]>> {
+        private IfMatchHeaderKey() {
+            super("If-Match", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equals("*")) {
+                return create(Wildcard.create());
+            } else {
+                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+                @NotNull Matcher matcher = pattern.matcher(value);
+                @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
+
+                while (matcher.find()) {
+                    try {
+                        tag.add(EntityTag.parse(matcher.group()));
+                    } catch (ParseException e) {
+                        throw new HeaderFormatException(e);
+                    }
+                }
+
+                return create(Wildcard.create(tag.toArray(new EntityTag[0])));
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<EntityTag[]>> header) {
+            @NotNull Wildcard<EntityTag[]> wildcard = header.getValue();
+
+            if (wildcard.isWildcard()) {
+                return "*";
+            } else {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull EntityTag tag : header.getValue().getValue()) {
+                    if (builder.length() > 0) builder.append(", ");
+                    builder.append(tag);
+                }
+
+                return builder.toString();
+            }
+        }
+    }
+    private static final class HostHeaderKey extends HeaderKey<Host> {
+        private HostHeaderKey() {
+            super("Host", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Host> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Host.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Host> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class FromHeaderKey extends HeaderKey<Email> {
         private FromHeaderKey() {
             super("From", Target.REQUEST);
