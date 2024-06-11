@@ -26,7 +26,7 @@ public interface Wildcard<T> {
             @Override
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
-                if (!(object instanceof Weight<?>)) return false;
+                if (!(object instanceof Wildcard<?>)) return false;
                 Wildcard<?> that = (Wildcard<?>) object;
                 return that.isWildcard();
             }
@@ -55,7 +55,7 @@ public interface Wildcard<T> {
             @Override
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
-                if (!(object instanceof Weight<?>)) return false;
+                if (!(object instanceof Wildcard<?>)) return false;
                 Wildcard<?> that = (Wildcard<?>) object;
                 return !that.isWildcard() && that.getValue() == getValue();
             }

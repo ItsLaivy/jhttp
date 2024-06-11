@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.authorization.Credentials.Basic;
+import codes.laivy.jhttp.utilities.HttpProtocol;
 import org.jetbrains.annotations.*;
 
 import java.net.IDN;
@@ -18,10 +19,6 @@ public final class URIAuthority {
 
     @ApiStatus.Internal
     public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(https?://)?(([^:@]*:[^@]*)@)?([^:/]*)(:[0-9]+)?(/.*)?$");
-
-    public static final int DEFAULT_HTTP_PORT = 80;
-    public static final int DEFAULT_HTTPS_PORT = 443;
-    public static final int DEFAULT_WEB_SOCKET_PORT = 80;
 
     public static boolean isUriAuthority(@NotNull String uri) {
         return PARSE_PATTERN.matcher(uri).matches();
@@ -59,12 +56,10 @@ public final class URIAuthority {
                 if (port < 0 || port > 65535) {
                     throw new URISyntaxException(uri, "port out of range '" + port + "'", matcher.start(5) + 1);
                 }
+            } else if ("https://".equals(scheme)) {
+                port = HttpProtocol.HTTPS.getPort();
             } else {
-                if ("https://".equals(scheme)) {
-                    port = DEFAULT_HTTPS_PORT;
-                } else {
-                    port = DEFAULT_HTTP_PORT;
-                }
+                port = HttpProtocol.HTTP.getPort();
             }
         } else {
             throw new URISyntaxException(uri, "cannot parse into a valid uri authority", matcher.start());

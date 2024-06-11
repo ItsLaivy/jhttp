@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.utilities;
 
-import codes.laivy.jhttp.utilities.header.Weight;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +22,7 @@ public interface NetworkSpeed {
             @Contract(pure = true)
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
-                if (!(object instanceof Weight<?>)) return false;
+                if (!(object instanceof NetworkSpeed)) return false;
                 @NotNull NetworkSpeed that = (NetworkSpeed) object;
                 return that.getBits() == bits;
             }
@@ -40,70 +39,41 @@ public interface NetworkSpeed {
             }
         };
     }
+    static @NotNull NetworkSpeed create(@NotNull Category category, double value) {
+        return create((long) (value * category.getMultiplier()));
+    }
 
     // Getters
 
     long getBits();
 
     default double getBits(@NotNull Category category) {
-        return category.convert(getBits());
+        return getBits() / category.getMultiplier();
     }
 
     // Classes
 
     enum Category {
-        KILOBITS() {
-            @Override
-            public double convert(long bits) {
-                return bits / 1_000D;
-            }
-        },
-        MEGABITS() {
-            @Override
-            public double convert(long bits) {
-                return bits / 1_000_000D;
-            }
-        },
-        GIGABITS() {
-            @Override
-            public double convert(long bits) {
-                return bits / 1_000_000_000D;
-            }
-        },
-        TERABITS() {
-            @Override
-            public double convert(long bits) {
-                return bits / 1_000_000_000_000D;
-            }
-        },
+        KILOBITS(1_000D),
+        MEGABITS(1_000_000D),
+        GIGABITS(1_000_000_000D),
+        TERABITS(1_000_000_000_000D),
 
-        KILOBYTES {
-            @Override
-            public double convert(long bits) {
-                return bits / (8 * 1_000D);
-            }
-        },
-        MEGABYTES {
-            @Override
-            public double convert(long bits) {
-                return bits / (8 * 1_000_000D);
-            }
-        },
-        GIGABYTES {
-            @Override
-            public double convert(long bits) {
-                return bits / (8 * 1_000_000_000D);
-            }
-        },
-        TERABYTES {
-            @Override
-            public double convert(long bits) {
-                return bits / (8 * 1_000_000_000_000D);
-            }
-        }
+        KILOBYTES(8 * 1_000D),
+        MEGABYTES(8 * 1_000_000D),
+        GIGABYTES(8 * 1_000_000_000D),
+        TERABYTES(8 * 1_000_000_000_000D),
         ;
 
-        public abstract double convert(long bits);
+        private final double multiplier;
+
+        Category(double multiplier) {
+            this.multiplier = multiplier;
+        }
+
+        public double getMultiplier() {
+            return multiplier;
+        }
 
     }
 

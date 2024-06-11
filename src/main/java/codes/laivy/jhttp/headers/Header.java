@@ -3,13 +3,14 @@ package codes.laivy.jhttp.headers;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Objects;
 
 public interface Header<T> {
 
     @NotNull HeaderKey<T> getKey();
-    @NotNull T getValue();
+    @UnknownNullability T getValue();
 
     default @NotNull String getName() {
         return getKey().getName();
@@ -20,7 +21,7 @@ public interface Header<T> {
     @Override
     int hashCode();
 
-    static <E> @NotNull Header<E> create(final @NotNull HeaderKey<E> key, final @NotNull E value) {
+    static <E> @NotNull Header<E> create(final @NotNull HeaderKey<E> key, final @UnknownNullability E value) {
         return new Header<E>() {
             @Override
             public @NotNull HeaderKey<E> getKey() {
@@ -28,7 +29,7 @@ public interface Header<T> {
             }
             @Override
             @Contract(pure = true)
-            public @NotNull E getValue() {
+            public @UnknownNullability E getValue() {
                 return value;
             }
             @Override

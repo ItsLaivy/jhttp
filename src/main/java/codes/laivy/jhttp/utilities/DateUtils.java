@@ -37,7 +37,7 @@ public final class DateUtils {
          * @throws NullPointerException if the {@code dateTime} is {@code null}
          * @since 1.0-SNAPSHOT
          */
-        public static @NotNull String convert(@NotNull OffsetDateTime dateTime) {
+        public static @NotNull String convert(@NotNull OffsetDateTime dateTime) throws NullPointerException {
             @NotNull DateTimeFormatter rfc822Formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
             return dateTime.withOffsetSameInstant(ZoneOffset.UTC).format(rfc822Formatter);
         }
@@ -54,7 +54,7 @@ public final class DateUtils {
          * @throws DateTimeParseException if the date string cannot be parsed
          * @throws IllegalArgumentException if the input is null or empty
          */
-        public static @NotNull OffsetDateTime convert(@NotNull String date) {
+        public static @NotNull OffsetDateTime convert(@NotNull String date) throws DateTimeParseException, IllegalArgumentException {
             @NotNull DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.ENGLISH);
             return OffsetDateTime.parse(date, formatter);
         }
