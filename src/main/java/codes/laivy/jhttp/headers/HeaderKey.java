@@ -6,9 +6,7 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.utilities.Connection;
-import codes.laivy.jhttp.utilities.Method;
-import codes.laivy.jhttp.utilities.Target;
+import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
@@ -25,6 +23,8 @@ import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +56,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new AcceptCHHeaderKey();
     @Deprecated
     // todo: duration
-    public static @NotNull HeaderKey<Integer> ACCEPT_CH_LIFETIME = new IntegerHeaderKey("Accept-CH-Lifetime", Target.RESPONSE);
+    public static @NotNull HeaderKey<Duration> ACCEPT_CH_LIFETIME = new IntegerHeaderKey("Accept-CH-Lifetime", Target.RESPONSE);
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new AcceptLanguageHeaderKey();
@@ -69,11 +69,11 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Wildcard<@Nullable URIAuthority>> ACCEPT_CONTROL_ALLOW_ORIGIN = new AccessControlAllowOriginHeaderKey();
     public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_EXPOSE_HEADERS = new AcceptControlExposeHeadersHeaderKey();
     // todo: duration
-    public static @NotNull HeaderKey<Integer> ACCEPT_CONTROL_MAX_AGE = new IntegerHeaderKey("Access-Control-Max-Age", Target.RESPONSE);
+    public static @NotNull HeaderKey<Duration> ACCEPT_CONTROL_MAX_AGE = new IntegerHeaderKey("Access-Control-Max-Age", Target.RESPONSE);
     public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_REQUEST_HEADERS = new AcceptControlRequestHeadersHeaderKey();
     public static @NotNull HeaderKey<Method[]> ACCEPT_CONTROL_REQUEST_METHOD = new AccessControlRequestMethodHeaderKey();
     // todo: duration
-    public static @NotNull HeaderKey<Integer> AGE = new IntegerHeaderKey("Age", Target.RESPONSE);
+    public static @NotNull HeaderKey<Duration> AGE = new IntegerHeaderKey("Age", Target.RESPONSE);
     public static @NotNull HeaderKey<Method[]> ALLOW = new AllowHeaderKey();
     public static @NotNull HeaderKey<Optional<AlternativeService[]>> ALT_SVC = new AltSvcHeaderKey();
     public static @NotNull HeaderKey<URIAuthority> ALT_USED = new AltUsedHeaderKey();
@@ -90,29 +90,21 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<ContentLocation> CONTENT_LOCATION = new ContentLocationHeaderKey();
     public static @NotNull HeaderKey<ContentRange> CONTENT_RANGE = new ContentRangeHeaderKey();
     public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY = new ContentSecurityPolicyHeaderKey();
-    public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY_REPORT_ONLY = new StringHeaderKey("Content-Security-Policy-Report-Only");
-    /**
-     * @see <a href="https://regexr.com/7sfu0">RegExr Tests</a>
-     * @apiNote Last change: 23/02/2024 | 19:06 (GMT-3)
-     */
+    public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY_REPORT_ONLY = new ContentSecurityPolicyReportOnlyeHeaderKey();
     public static @NotNull HeaderKey<MediaType> CONTENT_TYPE = new ContentTypeHeaderKey();
-    public static @NotNull HeaderKey<?> COOKIE = new StringHeaderKey("Cookie");
+    public static @NotNull HeaderKey<Cookie[]> COOKIE = new CookieHeaderKey();
     public static @NotNull HeaderKey<?> CRITICAL_CH = new StringHeaderKey("Critical-CH");
-    public static @NotNull HeaderKey<?> CROSS_ORIGIN_EMBEDDER_POLICY = new StringHeaderKey("Cross-Origin-Embedder-Policy");
-    public static @NotNull HeaderKey<?> CROSS_ORIGIN_OPENER_POLICY = new StringHeaderKey("Cross-Origin-Opener-Policy");
-    public static @NotNull HeaderKey<?> CROSS_ORIGIN_RESOURCE_POLICY = new StringHeaderKey("Cross-Origin-Resource-Policy");
-    /**
-     * @see <a href="https://regexr.com/7sgub">RegExr Tests</a>
-     * @apiNote Last change: 25/02/2024 | 01:43 (GMT-3)
-     */
-    public static @NotNull HeaderKey<?> DATE = new StringHeaderKey("Date", Pattern.compile("(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-2][0-9]|3[0-1]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (19[0-9]{2}|20[0-9]{2}) ([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT"));
-    public static @NotNull HeaderKey<?> DEVICE_MEMORY = new StringHeaderKey("Device-Memory");
+    public static @NotNull HeaderKey<CrossOrigin.EmbedderPolicy> CROSS_ORIGIN_EMBEDDER_POLICY = new CrossOriginEmbedderPolicyHeaderKey();
+    public static @NotNull HeaderKey<CrossOrigin.OpenerPolicy> CROSS_ORIGIN_OPENER_POLICY = new CrossOriginOpenerPolicyHeaderKey();
+    public static @NotNull HeaderKey<CrossOrigin.ResourcePolicy> CROSS_ORIGIN_RESOURCE_POLICY = new CrossOriginResourcePolicyHeaderKey();
+    public static @NotNull HeaderKey<OffsetDateTime> DATE = new DateHeaderKey();
+    public static @NotNull HeaderKey<Float> DEVICE_MEMORY = new DeviceMemoryHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<?> DIGEST = new StringHeaderKey("Digest");
     @Deprecated
-    public static @NotNull HeaderKey<?> DNT = new StringHeaderKey("DNT");
+    public static @NotNull HeaderKey<Boolean> DNT = new DNTHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> DOWNLINK = new StringHeaderKey("Downlink");
+    public static @NotNull HeaderKey<NetworkSpeed> DOWNLINK = new DownlinkHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<?> DPR = new StringHeaderKey("DPR");
     @ApiStatus.Experimental
@@ -304,6 +296,157 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class DownlinkHeaderKey extends HeaderKey<NetworkSpeed> {
+        private DownlinkHeaderKey() {
+            super("Downlink", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<NetworkSpeed> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(NetworkSpeed.create((long) (Double.parseDouble(value) * 1_000_000D)));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<NetworkSpeed> header) {
+            return String.valueOf(header.getValue().getBits(NetworkSpeed.Category.MEGABITS));
+        }
+    }
+    private static final class DNTHeaderKey extends HeaderKey<Boolean> {
+        private DNTHeaderKey() {
+            super("DNT", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(value.trim().equals("1"));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Boolean> header) {
+            return header.getValue() ? "1" : "0";
+        }
+    }
+    private static final class DeviceMemoryHeaderKey extends HeaderKey<Float> {
+        private DeviceMemoryHeaderKey() {
+            super("Device-Memory", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Float> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(Float.parseFloat(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Float> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class DateHeaderKey extends HeaderKey<OffsetDateTime> {
+        private DateHeaderKey() {
+            super("Date", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(DateUtils.RFC822.convert(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            return DateUtils.RFC822.convert(header.getValue());
+        }
+    }
+    private static final class CrossOriginResourcePolicyHeaderKey extends HeaderKey<CrossOrigin.ResourcePolicy> {
+        private CrossOriginResourcePolicyHeaderKey() {
+            super("Cross-Origin-Resource-Policy", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<CrossOrigin.ResourcePolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(CrossOrigin.ResourcePolicy.getById(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<CrossOrigin.ResourcePolicy> header) {
+            return header.getValue().getId();
+        }
+    }
+    private static final class CrossOriginOpenerPolicyHeaderKey extends HeaderKey<CrossOrigin.OpenerPolicy> {
+        private CrossOriginOpenerPolicyHeaderKey() {
+            super("Cross-Origin-Opener-Policy", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<CrossOrigin.OpenerPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(CrossOrigin.OpenerPolicy.getById(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<CrossOrigin.OpenerPolicy> header) {
+            return header.getValue().getId();
+        }
+    }
+    private static final class CrossOriginEmbedderPolicyHeaderKey extends HeaderKey<CrossOrigin.EmbedderPolicy> {
+        private CrossOriginEmbedderPolicyHeaderKey() {
+            super("Cross-Origin-Embedder-Policy", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<CrossOrigin.EmbedderPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(CrossOrigin.EmbedderPolicy.getById(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<CrossOrigin.EmbedderPolicy> header) {
+            return header.getValue().getId();
+        }
+    }
+    private static final class CookieHeaderKey extends HeaderKey<Cookie[]> {
+        private CookieHeaderKey() {
+            super("Cookie", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Cookie[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("\\s*;\\s*");
+            @NotNull Matcher matcher = pattern.matcher(value);
+            @NotNull List<Cookie> cookies = new LinkedList<>();
+
+            while (matcher.find()) {
+                try {
+                    @NotNull Cookie cookie = Cookie.parse(matcher.group());
+                    cookies.add(cookie);
+                } catch (ParseException e) {
+                    throw new HeaderFormatException(e);
+                }
+            }
+
+            return create(cookies.toArray(new Cookie[0]));
+        }
+
+        @Override
+        public @NotNull String write(@NotNull Header<Cookie[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Cookie cookie : header.getValue()) {
+                if (builder.length() > 0) builder.append("; ");
+                builder.append(cookie.getKey()).append("=").append(cookie.getValue());
+            }
+            
+            return builder.toString();
+        }
+    }
+    private static final class ContentSecurityPolicyReportOnlyeHeaderKey extends HeaderKey<ContentSecurityPolicy> {
+        private ContentSecurityPolicyReportOnlyeHeaderKey() {
+            super("Content-Security-Policy-Report-Only", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(ContentSecurityPolicy.parse(value));
+            } catch (ParseException | UnsupportedEncodingException | FilesystemProtocolException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentSecurityPolicy> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class ContentSecurityPolicyHeaderKey extends HeaderKey<ContentSecurityPolicy> {
         private ContentSecurityPolicyHeaderKey() {
             super("Content-Security-Policy", Target.RESPONSE);
@@ -1095,8 +1238,7 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<MediaType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                @NotNull MediaType type = MediaType.parse(value);
-                return create(type);
+                return create(MediaType.parse(value));
             } catch (@NotNull ParseException e) {
                 throw new HeaderFormatException("cannot parse content type '" + value + "'", e);
             }
