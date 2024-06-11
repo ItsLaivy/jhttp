@@ -119,11 +119,14 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Email> FROM = new FromHeaderKey();
     public static @NotNull HeaderKey<Host> HOST = new HostHeaderKey();
     public static @NotNull HeaderKey<Wildcard<EntityTag[]>> IF_MATCH = new IfMatchHeaderKey();
-    public static @NotNull HeaderKey<?> IF_MODIFIED_SINCE = new StringHeaderKey("If-Modified-Since");
-    public static @NotNull HeaderKey<?> IF_NONE_MATCH = new StringHeaderKey("If-None-Match");
+    public static @NotNull HeaderKey<OffsetDateTime> IF_MODIFIED_SINCE = new IfModifiedSinceHeaderKey();
+    public static @NotNull HeaderKey<Wildcard<EntityTag[]>> IF_NONE_MATCH = new IfNoneMatchHeaderKey();
+    // todo: this header doesn't supports weak entity tags
+    //  IF-RANGE header can return an entity tag or an OffsetDateTime, multiples returns from the same header.
+    //  It's a bit confusing to create, give me some time :)
     public static @NotNull HeaderKey<?> IF_RANGE = new StringHeaderKey("If-Range");
-    public static @NotNull HeaderKey<?> IF_UNMODIFIED_SINCE = new StringHeaderKey("If-Unmodified-Since");
-    public static @NotNull HeaderKey<?> KEEP_ALIVE = new StringHeaderKey("Keep-Alive");
+    public static @NotNull HeaderKey<OffsetDateTime> IF_UNMODIFIED_SINCE = new IfUnmodifiedSinceHeaderKey();
+    public static @NotNull HeaderKey<KeepAlive> KEEP_ALIVE = new KeepAliveHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<?> LARGE_ALLOCATION = new StringHeaderKey("Large-Allocation");
     public static @NotNull HeaderKey<?> LAST_MODIFIED = new StringHeaderKey("Last-Modified");
@@ -296,6 +299,95 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class KeepAliveHeaderKey extends HeaderKey<KeepAlive> {
+        private KeepAliveHeaderKey() {
+            super("Keep-Alive", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<KeepAlive> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(KeepAlive.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<KeepAlive> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class IfUnmodifiedSinceHeaderKey extends HeaderKey<OffsetDateTime> {
+        private IfUnmodifiedSinceHeaderKey() {
+            super("If-Unmodified-Since", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(DateUtils.RFC822.convert(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            return DateUtils.RFC822.convert(header.getValue());
+        }
+    }
+    private static final class IfNoneMatchHeaderKey extends HeaderKey<Wildcard<EntityTag[]>> {
+        private IfNoneMatchHeaderKey() {
+            super("If-None-Match", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equals("*")) {
+                return create(Wildcard.create());
+            } else {
+                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
+                @NotNull Matcher matcher = pattern.matcher(value);
+                @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
+
+                while (matcher.find()) {
+                    try {
+                        tag.add(EntityTag.parse(matcher.group()));
+                    } catch (ParseException e) {
+                        throw new HeaderFormatException(e);
+                    }
+                }
+
+                return create(Wildcard.create(tag.toArray(new EntityTag[0])));
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<EntityTag[]>> header) {
+            @NotNull Wildcard<EntityTag[]> wildcard = header.getValue();
+
+            if (wildcard.isWildcard()) {
+                return "*";
+            } else {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull EntityTag tag : header.getValue().getValue()) {
+                    if (builder.length() > 0) builder.append(", ");
+                    builder.append(tag);
+                }
+
+                return builder.toString();
+            }
+        }
+    }
+    private static final class IfModifiedSinceHeaderKey extends HeaderKey<OffsetDateTime> {
+        private IfModifiedSinceHeaderKey() {
+            super("If-Modified-Since", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(DateUtils.RFC822.convert(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            return DateUtils.RFC822.convert(header.getValue());
+        }
+    }
     private static final class IfMatchHeaderKey extends HeaderKey<Wildcard<EntityTag[]>> {
         private IfMatchHeaderKey() {
             super("If-Match", Target.REQUEST);
