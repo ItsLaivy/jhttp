@@ -2,8 +2,10 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.content.*;
+import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
 import codes.laivy.jhttp.utilities.Connection;
 import codes.laivy.jhttp.utilities.Method;
 import codes.laivy.jhttp.utilities.Target;
@@ -18,6 +20,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -86,7 +89,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Integer> CONTENT_LENGTH = new IntegerHeaderKey("Content-Length", Target.BOTH);
     public static @NotNull HeaderKey<ContentLocation> CONTENT_LOCATION = new ContentLocationHeaderKey();
     public static @NotNull HeaderKey<ContentRange> CONTENT_RANGE = new ContentRangeHeaderKey();
-    public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY = new StringHeaderKey("Content-Security-Policy");
+    public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY = new ContentSecurityPolicyHeaderKey();
     public static @NotNull HeaderKey<?> CONTENT_SECURITY_POLICY_REPORT_ONLY = new StringHeaderKey("Content-Security-Policy-Report-Only");
     /**
      * @see <a href="https://regexr.com/7sfu0">RegExr Tests</a>
@@ -301,12 +304,23 @@ public abstract class HeaderKey<T> {
         }
     }
 
-    private static final class ContentSecurityPolicyHeaderKey extends HeaderKey<> {
+    private static final class ContentSecurityPolicyHeaderKey extends HeaderKey<ContentSecurityPolicy> {
         private ContentSecurityPolicyHeaderKey() {
             super("Content-Security-Policy", Target.RESPONSE);
         }
 
-
+        @Override
+        public @NotNull Header<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(ContentSecurityPolicy.parse(value));
+            } catch (ParseException | UnsupportedEncodingException | FilesystemProtocolException e) {
+                throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<ContentSecurityPolicy> header) {
+            return header.getValue().toString();
+        }
     }
     private static final class ContentRangeHeaderKey extends HeaderKey<ContentRange> {
         private ContentRangeHeaderKey() {
