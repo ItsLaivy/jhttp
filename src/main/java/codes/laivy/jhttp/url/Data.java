@@ -2,10 +2,12 @@ package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.content.MediaType;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.url.csp.ContentSecurityPolicy.Source.Scheme;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Base64;
@@ -17,20 +19,22 @@ public final class Data implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
-    public static final @NotNull Pattern DATA_URL_PATTERN = Pattern.compile("^data:(?:(.*?)(;base64)?)?,(.*)$", Pattern.CASE_INSENSITIVE);
+    public static final @NotNull Pattern DATA_URL_PATTERN = Pattern.compile("^data:(?:(\\S*?)(;base64)?)?,(\\S*)$", Pattern.CASE_INSENSITIVE);
 
     public static boolean validate(@NotNull String string) {
         return DATA_URL_PATTERN.matcher(string).matches();
     }
-    public static @NotNull Data parse(@NotNull String string) throws ParseException {
+    public static @NotNull Data parse(@NotNull String string) throws ParseException, UnsupportedEncodingException {
         @NotNull Matcher matcher = DATA_URL_PATTERN.matcher(string);
 
         if (validate(string)) {
             @Nullable MediaType type = matcher.group(1) != null ? MediaType.parse(matcher.group(1)) : null;
+            @NotNull String encoding = type != null && type.getCharset() != null ? type.getCharset().raw() : "UTF-8";
+
             boolean base64 = matcher.group(2) != null;
 
             byte[] data = matcher.group(3).getBytes();
-            byte[] decoded = base64 ? Base64.getDecoder().decode(data) : null;
+            byte[] decoded = base64 ? URLDecoder.decode(new String(Base64.getDecoder().decode(data)), encoding).getBytes() : null;
 
             return new Data(type, base64, decoded, data);
         } else {
@@ -125,7 +129,12 @@ public final class Data implements ContentSecurityPolicy.Source {
             builder.append(";base64");
         }
 
-        builder.append(",").append(new String(getRawData()));
+        try {
+            @NotNull String encoding = getMediaType() != null && getMediaType().getCharset() != null ? getMediaType().getCharset().raw() : "UTF-8";
+            builder.append(",").append(URLEncoder.encode(new String(getRawData()), encoding));
+        } catch (@NotNull UnsupportedEncodingException e) {
+            throw new RuntimeException("cannot encode url '" + new String(getRawData()) + "'", e);
+        }
 
         return builder.toString();
     }

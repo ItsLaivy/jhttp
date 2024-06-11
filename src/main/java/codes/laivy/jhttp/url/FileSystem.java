@@ -2,7 +2,6 @@ package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.url.csp.ContentSecurityPolicy.Source.Scheme;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +18,7 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
     // Static initializers
 
     public static boolean validate(@NotNull String string) {
-        return string.contains("filesystem:") && string.split(":", 3).length >= 3;
+        return string.contains("filesystem:") && string.split(":", 3).length >= 3 && !string.contains(" ");
     }
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static @NotNull FileSystem<?> parse(@NotNull String string) throws FilesystemProtocolException, ParseException {
@@ -87,7 +86,14 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
     }
     @Override
     public @NotNull String toString() {
-        return "filesystem:" + getProtocol().getName() + ":" + getProtocol().write(getValue());
+        @NotNull String data = getProtocol().write(getValue());
+
+        // Check if it's url encoded
+        if (!data.matches("^[a-zA-Z0-9-_.~%!*'();:@&=+$,/?#\\[\\]]*$")) {
+            throw new IllegalArgumentException("protocol '" + getProtocol().getName() + "' returning an invalid http value data '" + data + "'");
+        }
+
+        return "filesystem:" + getProtocol().getName() + ":" + data;
     }
 
     // Classes
@@ -188,18 +194,18 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
         // Implementations
 
         @Override
-        public boolean equals(@Nullable Object object) {
+        public final boolean equals(@Nullable Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
             @NotNull Protocol<?> protocol = (Protocol<?>) object;
             return Objects.equals(name, protocol.name);
         }
         @Override
-        public int hashCode() {
+        public final int hashCode() {
             return Objects.hashCode(name);
         }
         @Override
-        public @NotNull String toString() {
+        public final @NotNull String toString() {
             return name;
         }
 

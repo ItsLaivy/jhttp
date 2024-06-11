@@ -1,7 +1,6 @@
 package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.url.csp.ContentSecurityPolicy.Source.Scheme;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +15,7 @@ public final class Blob implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
-    public static final @NotNull Pattern BLOB_URL_PATTERN = Pattern.compile("^blob:([a-zA-Z0-9.-]+)/([0-9a-fA-F-]{36})$");
+    public static final @NotNull Pattern BLOB_URL_PATTERN = Pattern.compile("^blob:((?:https?://)?(?:[\\w.-]+\\.)?[^/]+)/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$");
 
     public static boolean validate(@NotNull String string) {
         return BLOB_URL_PATTERN.matcher(string).matches();
@@ -25,8 +24,8 @@ public final class Blob implements ContentSecurityPolicy.Source {
         @NotNull Matcher matcher = BLOB_URL_PATTERN.matcher(string);
 
         if (validate(string)) {
-            @NotNull Domain domain = Domain.parse(matcher.group(1));
-            @NotNull UUID uuid = UUID.fromString(matcher.group(2));
+            @NotNull Domain domain = Domain.parse(matcher.group(0));
+            @NotNull UUID uuid = UUID.fromString(matcher.group(1));
 
             return new Blob(domain, uuid);
         } else {
