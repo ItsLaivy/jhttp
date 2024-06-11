@@ -13,15 +13,13 @@ import codes.laivy.jhttp.utilities.header.Wildcard;
 import codes.laivy.jhttp.utilities.pseudo.PseudoString;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -106,16 +104,17 @@ public abstract class HeaderKey<T> {
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<NetworkSpeed> DOWNLINK = new DownlinkHeaderKey();
     @Deprecated
-    public static @NotNull HeaderKey<?> DPR = new StringHeaderKey("DPR");
+    public static @NotNull HeaderKey<Float> DPR = new DPRHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> EARLY_DATA = new StringHeaderKey("Early-Data");
+    public static @NotNull HeaderKey<Void> EARLY_DATA = new EarlyDataHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> ECT = new StringHeaderKey("ECT");
-    public static @NotNull HeaderKey<?> ETAG = new StringHeaderKey("ETag");
-    public static @NotNull HeaderKey<?> EXPECT = new StringHeaderKey("Expect");
+    public static @NotNull HeaderKey<EffectiveConnectionType> ECT = new ECTHeaderKey();
+    public static @NotNull HeaderKey<EntityTag> ETAG = new ETagHeaderKey();
+    public static @NotNull HeaderKey<HttpStatus> EXPECT = new ExpectHeaderKey();
+    @Deprecated
     public static @NotNull HeaderKey<?> EXPECT_CT = new StringHeaderKey("Expect-CT");
-    public static @NotNull HeaderKey<?> EXPIRES = new StringHeaderKey("Expires");
-    public static @NotNull HeaderKey<?> FORWARDED = new StringHeaderKey("Forwarded");
+    public static @NotNull HeaderKey<OffsetDateTime> EXPIRES = new ExpiresHeaderKey();
+    public static @NotNull HeaderKey<Forwarded> FORWARDED = new ForwardedHeaderKey();
     public static @NotNull HeaderKey<?> FROM = new StringHeaderKey("From");
     public static @NotNull HeaderKey<?> HOST = new StringHeaderKey("Host");
     public static @NotNull HeaderKey<?> IF_MATCH = new StringHeaderKey("If-Match");
@@ -242,7 +241,7 @@ public abstract class HeaderKey<T> {
     public abstract @NotNull Header<T> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException;
     public abstract @NotNull String write(@NotNull Header<T> header);
 
-    public @NotNull Header<T> create(@NotNull T value) {
+    public @NotNull Header<T> create(@UnknownNullability T value) {
         return Header.create(this, value);
     }
 
@@ -296,6 +295,126 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class ForwardedHeaderKey extends HeaderKey<Forwarded> {
+        private ForwardedHeaderKey() {
+            super("Forwarded", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Forwarded> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Forwarded.parse(value));
+            } catch (@NotNull ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Forwarded> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class ExpiresHeaderKey extends HeaderKey<OffsetDateTime> {
+        private ExpiresHeaderKey() {
+            super("Expires", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equals("0")) {
+                return create(OffsetDateTime.MIN);
+            } else {
+                return create(DateUtils.RFC822.convert(value));
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            if (header.getValue().isBefore(OffsetDateTime.now())) {
+                return "0";
+            } else {
+                return DateUtils.RFC822.convert(header.getValue());
+            }
+        }
+    }
+    private static final class ExpectHeaderKey extends HeaderKey<HttpStatus> {
+        private ExpectHeaderKey() {
+            super("Expect", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<HttpStatus> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                int code = Integer.parseInt(value.split("-", 2)[0]);
+                return create(HttpStatus.getByCode(code));
+            } catch (@NotNull NumberFormatException ignore) {
+                throw new HeaderFormatException("cannot parse '" + value.split("-", 2)[0] + "' as a valid http status code");
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<HttpStatus> header) {
+            @NotNull HttpStatus status = header.getValue();
+            return status.getCode() + "-" + status.getMessage().replace(" ", "_").toLowerCase();
+        }
+    }
+    private static final class ETagHeaderKey extends HeaderKey<EntityTag> {
+        private ETagHeaderKey() {
+            super("ETag", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<EntityTag> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(EntityTag.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<EntityTag> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class ECTHeaderKey extends HeaderKey<EffectiveConnectionType> {
+        private ECTHeaderKey() {
+            super("ECT", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<EffectiveConnectionType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(EffectiveConnectionType.getById(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<EffectiveConnectionType> header) {
+            return header.getValue().getId();
+        }
+    }
+    private static final class EarlyDataHeaderKey extends HeaderKey<Void> {
+        private EarlyDataHeaderKey() {
+            super("Early-Data", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Void> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create((Void) null);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Void> header) {
+            return "1";
+        }
+    }
+    private static final class DPRHeaderKey extends HeaderKey<Float> {
+        private DPRHeaderKey() {
+            super("DPR", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Float> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(Float.parseFloat(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Float> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class DownlinkHeaderKey extends HeaderKey<NetworkSpeed> {
         private DownlinkHeaderKey() {
             super("Downlink", Target.REQUEST);
