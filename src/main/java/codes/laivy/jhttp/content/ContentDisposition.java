@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,9 +41,9 @@ public final class ContentDisposition {
             @Nullable Property property = null;
 
             @Nullable String filename = matcher.group(2);
-            @Nullable Instant creationDate = matcher.group(4) != null ? DateUtils.RFC822.convert(matcher.group(4)) : null;
-            @Nullable Instant modificationDate = matcher.group(5) != null ? DateUtils.RFC822.convert(matcher.group(5)) : null;
-            @Nullable Instant readDate = matcher.group(6) != null ? DateUtils.RFC822.convert(matcher.group(6)) : null;
+            @Nullable OffsetDateTime creationDate = matcher.group(4) != null ? DateUtils.RFC822.convert(matcher.group(4)) : null;
+            @Nullable OffsetDateTime modificationDate = matcher.group(5) != null ? DateUtils.RFC822.convert(matcher.group(5)) : null;
+            @Nullable OffsetDateTime readDate = matcher.group(6) != null ? DateUtils.RFC822.convert(matcher.group(6)) : null;
             @Nullable Long size = matcher.group(7) != null ? Long.parseLong(matcher.group(7)) : null;
 
             if (filename != null || creationDate != null || modificationDate != null || readDate != null || size != null) {
@@ -161,16 +161,16 @@ public final class ContentDisposition {
         // Object
 
         private final @Nullable String name;
-        private final @Nullable Instant creation;
-        private final @Nullable Instant modification;
-        private final @Nullable Instant read;
+        private final @Nullable OffsetDateTime creation;
+        private final @Nullable OffsetDateTime modification;
+        private final @Nullable OffsetDateTime read;
         private final @Nullable Long size;
 
         private Property(
                 @Nullable String name,
-                @Nullable Instant creation,
-                @Nullable Instant modification,
-                @Nullable Instant read,
+                @Nullable OffsetDateTime creation,
+                @Nullable OffsetDateTime modification,
+                @Nullable OffsetDateTime read,
                 @Nullable Long size
         ) {
             this.name = name;
@@ -191,13 +191,13 @@ public final class ContentDisposition {
         public @Nullable String getName() {
             return name;
         }
-        public @Nullable Instant getCreation() {
+        public @Nullable OffsetDateTime getCreation() {
             return creation;
         }
-        public @Nullable Instant getModification() {
+        public @Nullable OffsetDateTime getModification() {
             return modification;
         }
-        public @Nullable Instant getRead() {
+        public @Nullable OffsetDateTime getRead() {
             return read;
         }
         public @Nullable Long getSize() {
@@ -246,9 +246,9 @@ public final class ContentDisposition {
         public static final class Builder {
 
             private @Nullable String name;
-            private @Nullable Instant creation;
-            private @Nullable Instant modification;
-            private @Nullable Instant read;
+            private @Nullable OffsetDateTime creation;
+            private @Nullable OffsetDateTime modification;
+            private @Nullable OffsetDateTime read;
             private @Nullable Long size;
 
             private Builder() {
@@ -262,17 +262,17 @@ public final class ContentDisposition {
                 return this;
             }
             @Contract("_->this")
-            public @NotNull Builder creation(@Nullable Instant creation) {
+            public @NotNull Builder creation(@Nullable OffsetDateTime creation) {
                 this.creation = creation;
                 return this;
             }
             @Contract("_->this")
-            public @NotNull Builder modification(@Nullable Instant modification) {
+            public @NotNull Builder modification(@Nullable OffsetDateTime modification) {
                 this.modification = modification;
                 return this;
             }
             @Contract("_->this")
-            public @NotNull Builder read(@Nullable Instant read) {
+            public @NotNull Builder read(@Nullable OffsetDateTime read) {
                 this.read = read;
                 return this;
             }

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.text.ParseException;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 import static codes.laivy.jhttp.content.ContentDisposition.Type.ATTACHMENT;
 
@@ -36,7 +36,7 @@ public final class ContentDispositionTests {
     @Order(value = 1)
     void assertions() throws ParseException {
         @NotNull ContentDisposition service = ContentDisposition.parse("attachment  ;   name    =  \"test\"  ; filename  =  \"example.txt\"    ;   creation-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; read-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; size  =  12345");
-        @NotNull Instant instant = DateUtils.RFC822.convert("Wed, 12 Feb 1997 16:29:51 -0500");
+        @NotNull OffsetDateTime instant = DateUtils.RFC822.convert("Wed, 12 Feb 1997 16:29:51 -0500");
 
         Assertions.assertNotNull(service.getProperty());
         Assertions.assertEquals(service.getType(), ATTACHMENT);

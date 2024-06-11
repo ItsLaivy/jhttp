@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -121,7 +122,7 @@ public class Cookie {
                 @NotNull String value = matcher.group("value");
 
                 @Nullable Domain domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
-                @Nullable Instant expires = matcher.group("expires") != null ? DateUtils.RFC822.convert(matcher.group("domain")) : null;
+                @Nullable OffsetDateTime expires = matcher.group("expires") != null ? DateUtils.RFC822.convert(matcher.group("domain")) : null;
                 @Nullable Duration maxAge = matcher.group("maxage") != null ? Duration.ofSeconds(Long.parseLong(matcher.group("maxage"))) : null;
                 @Nullable Path path = matcher.group("path") != null ? new File(matcher.group("path")).toPath() : null;
                 @Nullable SameSite sameSite = matcher.group("samesite") != null ? SameSite.getById(matcher.group("samesite")) : null;
@@ -146,7 +147,7 @@ public class Cookie {
         // Object
 
         private final @Nullable Domain domain;
-        private final @Nullable Instant expires;
+        private final @Nullable OffsetDateTime expires;
         private final @Nullable Duration maxAge;
         private final @Nullable Path path;
         private final @Nullable SameSite sameSite;
@@ -155,7 +156,7 @@ public class Cookie {
         private final boolean partitioned;
         private final boolean secure;
 
-        private Request(@NotNull String key, @NotNull String value, @Nullable Domain domain, @Nullable Instant expires, @Nullable Duration maxAge, @Nullable Path path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
+        private Request(@NotNull String key, @NotNull String value, @Nullable Domain domain, @Nullable OffsetDateTime expires, @Nullable Duration maxAge, @Nullable Path path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
             super(key, value);
             this.domain = domain;
             this.expires = expires;
@@ -172,7 +173,7 @@ public class Cookie {
         public @Nullable Domain getDomain() {
             return domain;
         }
-        public @Nullable Instant getExpires() {
+        public @Nullable OffsetDateTime getExpires() {
             return expires;
         }
         public @Nullable Duration getMaxAge() {
@@ -271,7 +272,7 @@ public class Cookie {
             private final @NotNull String value;
 
             private @Nullable Domain domain;
-            private @Nullable Instant expires;
+            private @Nullable OffsetDateTime expires;
             private @Nullable Duration maxAge;
             private @Nullable Path path;
             private @Nullable SameSite sameSite;
@@ -308,7 +309,7 @@ public class Cookie {
                 return this;
             }
             @Contract("_->this")
-            public @NotNull Builder expires(@NotNull Instant expires) {
+            public @NotNull Builder expires(@NotNull OffsetDateTime expires) {
                 this.expires = expires;
                 return this;
             }
