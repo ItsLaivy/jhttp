@@ -40,10 +40,12 @@ public final class SourceTests {
         void assertions() throws ParseException {
             @NotNull Domain domain = Domain.parse("https://*.example.com:12/path/to/file.js");
 
-            Assertions.assertEquals(domain.getPort(), 12);
-            Assertions.assertEquals(domain.getHostname(), "example.com");
-            Assertions.assertEquals(domain.getUri(), URI.create("/path/to/file.js"));
-            Assertions.assertTrue(domain.isSecure());
+            Assertions.assertNotNull(domain.getProtocol());
+
+            Assertions.assertEquals(domain.getHost().getPort(), 12);
+            Assertions.assertEquals(domain.getName(), "example.com");
+            Assertions.assertEquals(domain.getPath(), URI.create("/path/to/file.js"));
+            Assertions.assertTrue(domain.getProtocol().isSecure());
 
             // Subdomains
             Assertions.assertEquals(1, domain.getSubdomains().length);

@@ -19,7 +19,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -115,7 +114,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<?> EXPECT_CT = new StringHeaderKey("Expect-CT");
     public static @NotNull HeaderKey<OffsetDateTime> EXPIRES = new ExpiresHeaderKey();
     public static @NotNull HeaderKey<Forwarded> FORWARDED = new ForwardedHeaderKey();
-    public static @NotNull HeaderKey<?> FROM = new StringHeaderKey("From");
+    public static @NotNull HeaderKey<Email> FROM = new FromHeaderKey();
     public static @NotNull HeaderKey<?> HOST = new StringHeaderKey("Host");
     public static @NotNull HeaderKey<?> IF_MATCH = new StringHeaderKey("If-Match");
     public static @NotNull HeaderKey<?> IF_MODIFIED_SINCE = new StringHeaderKey("If-Modified-Since");
@@ -295,6 +294,24 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class FromHeaderKey extends HeaderKey<Email> {
+        private FromHeaderKey() {
+            super("From", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Email> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Email.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Email> header) {
+            return header.getValue().toString();
+        }
+    }
     private static final class ForwardedHeaderKey extends HeaderKey<Forwarded> {
         private ForwardedHeaderKey() {
             super("Forwarded", Target.REQUEST);

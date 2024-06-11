@@ -10,7 +10,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Objects;
@@ -217,7 +216,7 @@ public class Cookie {
 
             if (getDomain() != null) {
                 @NotNull String subdomains = Arrays.stream(getDomain().getSubdomains()).map(s -> s + ".").collect(Collectors.joining());
-                @NotNull String domain = subdomains + getDomain().getHostname();
+                @NotNull String domain = subdomains + getDomain().getName();
 
                 builder.append("Domain=").append(domain).append("; ");
             } if (getExpires() != null) {
