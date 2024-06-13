@@ -14,7 +14,7 @@ public class HttpStatus implements Comparable<Integer> {
     // Static initializers
 
     public static final @NotNull HttpStatus CONTINUE = new HttpStatus(100, "Continue");
-    public static final @NotNull HttpStatus SWITCHING_PROTOCOLS = new HttpStatus(101, "Switching Protocols", HeaderKey.UPGRADE);
+    public static final @NotNull HttpStatus SWITCHING_PROTOCOLS = new HttpStatus(101, "Switching Protocols");
     @Deprecated
     public static final @NotNull HttpStatus PROCESSING = new HttpStatus(102, "Processing");
     public static final @NotNull HttpStatus EARLY_HINTS = new HttpStatus(103, "Early Hints");
@@ -39,13 +39,13 @@ public class HttpStatus implements Comparable<Integer> {
     public static final @NotNull HttpStatus PERMANENT_REDIRECT = new HttpStatus(308, "Permanent Redirect", HeaderKey.LOCATION);
 
     public static final @NotNull HttpStatus BAD_REQUEST = new HttpStatus(400, "Bad Request");
-    public static final @NotNull HttpStatus UNAUTHORIZED = new HttpStatus(401, "Unauthorized", HeaderKey.WWW_AUTHENTICATE);
+    public static final @NotNull HttpStatus UNAUTHORIZED = new HttpStatus(401, "Unauthorized");
     public static final @NotNull HttpStatus PAYMENT_REQUIRED = new HttpStatus(402, "Payment Required");
     public static final @NotNull HttpStatus FORBIDDEN = new HttpStatus(403, "Forbidden");
     public static final @NotNull HttpStatus NOT_FOUND = new HttpStatus(404, "Not Found");
     public static final @NotNull HttpStatus METHOD_NOT_ALLOWED = new HttpStatus(405, "Method Not Allowed", HeaderKey.ALLOW);
     public static final @NotNull HttpStatus NOT_ACCEPTABLE = new HttpStatus(406, "Not Acceptable", HeaderKey.ALLOW);
-    public static final @NotNull HttpStatus PROXY_AUTHENTICATION_REQUIRED = new HttpStatus(407, "Proxy Authentication Required", HeaderKey.PROXY_AUTHENTICATE);
+    public static final @NotNull HttpStatus PROXY_AUTHENTICATION_REQUIRED = new HttpStatus(407, "Proxy Authentication Required");
     public static final @NotNull HttpStatus REQUEST_TIMEOUT = new HttpStatus(408, "Request Timeout", HeaderKey.CONNECTION);
     public static final @NotNull HttpStatus CONFLICT = new HttpStatus(409, "Conflict");
     public static final @NotNull HttpStatus GONE = new HttpStatus(410, "Gone");
@@ -62,7 +62,7 @@ public class HttpStatus implements Comparable<Integer> {
     public static final @NotNull HttpStatus LOCKED = new HttpStatus(423, "Locked");
     public static final @NotNull HttpStatus FAILED_DEPENDENCY = new HttpStatus(424, "Failed Dependency");
     public static final @NotNull HttpStatus TOO_EARLY = new HttpStatus(425, "Too Early");
-    public static final @NotNull HttpStatus UPGRADE_REQUIRED = new HttpStatus(426, "Upgrade Required", HeaderKey.UPGRADE);
+    public static final @NotNull HttpStatus UPGRADE_REQUIRED = new HttpStatus(426, "Upgrade Required");
     public static final @NotNull HttpStatus PRECONDITION_REQUIRED = new HttpStatus(428, "Precondition Required");
     public static final @NotNull HttpStatus TOO_MANY_REQUESTS = new HttpStatus(429, "Too Many Requests");
     public static final @NotNull HttpStatus REQUEST_HEADER_FIELDS_TOO_LARGE = new HttpStatus(431, "Request Header Fields Too Large");

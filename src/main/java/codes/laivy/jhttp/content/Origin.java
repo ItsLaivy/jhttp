@@ -9,71 +9,69 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public final class Origin {
+public interface Origin {
 
-    // Static initializers
+    @Nullable Domain<?> getDomain();
+    @NotNull URI getURI();
 
-    public static boolean isContentLocation(@NotNull String string) {
-        try {
-            parse(string);
-            return true;
-        } catch (UnknownHostException | ParseException | URISyntaxException e) {
-            return false;
+    // Classes
+
+    final class Parser {
+        private Parser() {
+            throw new UnsupportedOperationException("this class cannot be instantiated");
         }
-    }
-    public static @NotNull Origin parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
-        try {
-            // todo: content location parser
 
-            return new Origin(authority, path);
-        } catch (@NotNull URISyntaxException syntax) {
-            throw new ParseException("cannot parse '" + string + "' into a valid location uri", 0);
+        public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}))?(?<path>/\\S*)?$");
+
+        public static boolean validate(@NotNull String string) {
+            return ORIGIN_PATTERN.matcher(string).matches();
         }
-    }
-    public static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI path) {
-        return new Origin(domain, path);
-    }
+        public static @NotNull Origin parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+            @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
 
-    // Object
+            if (matcher.matches()) {
+                @NotNull Domain<?> domain = Domain.parse(matcher.group("domain"));
+                @NotNull URI uri = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
 
-    private final @Nullable Domain<?> domain;
-    private final @NotNull URI uri;
+                return create(domain, uri);
+            } else {
+                throw new ParseException("cannot parse '" + string + "' into a valid origin", 0);
+            }
+        }
+        public static @NotNull String serialize(@NotNull Origin origin) {
+            if (origin.getDomain() != null) {
+                return origin.getDomain() + "/" + origin.getURI().getPath();
+            } else {
+                return origin.getURI().toString();
+            }
+        }
 
-    private Origin(@Nullable Domain<?> domain, @NotNull URI uri) {
-        this.domain = domain;
-        this.uri = uri;
-    }
+        public static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI uri) {
+            return new Origin() {
+                @Override
+                public @Nullable Domain<?> getDomain() {
+                    return domain;
+                }
+                @Override
+                public @NotNull URI getURI() {
+                    return uri;
+                }
 
-    // Getters
-
-    public @Nullable Domain<?> getDomain() {
-        return domain;
-    }
-    public @NotNull URI getURI() {
-        return uri;
-    }
-
-    // Implementations
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        @NotNull Origin origin = (Origin) o;
-        return Objects.equals(domain, origin.domain) && Objects.equals(uri, origin.uri);
-    }
-    @Override
-    public int hashCode() {
-        return Objects.hash(domain, uri);
-    }
-
-    @Override
-    public @NotNull String toString() {
-        if (getDomain() != null) {
-            return getDomain() + "/" + getURI().getPath();
-        } else {
-            return getURI().toString();
+                @Override
+                public boolean equals(@Nullable Object o) {
+                    if (this == o) return true;
+                    if (o == null || getClass() != o.getClass()) return false;
+                    @NotNull Origin origin = (Origin) o;
+                    return Objects.equals(domain, origin.getDomain()) && Objects.equals(uri, origin.getURI());
+                }
+                @Override
+                public int hashCode() {
+                    return Objects.hash(domain, uri);
+                }
+            };
         }
     }
 

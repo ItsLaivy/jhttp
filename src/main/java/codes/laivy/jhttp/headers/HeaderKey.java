@@ -354,14 +354,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(Origin.parse(value));
+                return create(Origin.Parser.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException(e);
             }
         }
         @Override
         public @NotNull String write(@NotNull Header<Origin> header) {
-            return header.getValue().toString();
+            return Origin.Parser.serialize(header.getValue());
         }
     }
     private static final class SaveDataHeaderKey extends HeaderKey<Boolean> {
@@ -400,14 +400,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(Origin.parse(value));
+                return create(Origin.Parser.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException(e);
             }
         }
         @Override
         public @NotNull String write(@NotNull Header<Origin> header) {
-            return header.getValue().toString();
+            return Origin.Parser.serialize(header.getValue());
         }
     }
     private static final class ProxyAuthorizationHeaderKey extends HeaderKey<Credentials> {
@@ -723,14 +723,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(Origin.parse(value));
+                return create(Origin.Parser.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException(e);
             }
         }
         @Override
         public @NotNull String write(@NotNull Header<Origin> header) {
-            return header.getValue().toString();
+            return Origin.Parser.serialize(header.getValue());
         }
     }
     private static final class LastModifiedHeaderKey extends HeaderKey<OffsetDateTime> {
@@ -1252,14 +1252,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(Origin.parse(value));
+                return create(Origin.Parser.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
             }
         }
         @Override
         public @NotNull String write(@NotNull Header<Origin> header) {
-            return header.getValue().toString();
+            return Origin.Parser.serialize(header.getValue());
         }
     }
     private static final class ContentEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {
@@ -1971,7 +1971,10 @@ public abstract class HeaderKey<T> {
             try {
                 for (int group = 0; group < matcher.groupCount(); group++) {
                     @NotNull String name = matcher.group(group);
-                    types.add(MediaType.parse(name));
+
+                    if (!name.isEmpty()) {
+                        types.add(MediaType.parse(name));
+                    }
                 }
             } catch (@NotNull ParseException e) {
                 throw new HeaderFormatException("cannot parse Accept header's content types", e);
@@ -2001,7 +2004,7 @@ public abstract class HeaderKey<T> {
             try {
                 return create(MediaType.parse(value));
             } catch (@NotNull ParseException e) {
-                throw new HeaderFormatException("cannot parse content type '" + value + "'", e);
+                throw new HeaderFormatException(e);
             }
         }
         @Override
@@ -2017,11 +2020,14 @@ public abstract class HeaderKey<T> {
         @Override
         public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-            @NotNull List<PseudoEncoding> encodings = new ArrayList<>();
+            @NotNull List<PseudoEncoding> encodings = new LinkedList<>();
 
             while (matcher.find()) {
                 @NotNull String name = matcher.group(matcher.group());
-                encodings.add(PseudoEncoding.create(name));
+
+                if (!name.isEmpty()) {
+                    encodings.add(PseudoEncoding.create(name));
+                }
             }
 
             return create(encodings.toArray(new PseudoEncoding[0]));

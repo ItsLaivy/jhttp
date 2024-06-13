@@ -6,7 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 @ApiStatus.Internal
-final class HttpVersion1_1 extends HttpVersion {
+public final class HttpVersion1_1 extends HttpVersion {
 
     private final @NotNull HttpFactory factory = new HttpFactory1_1(this);
 

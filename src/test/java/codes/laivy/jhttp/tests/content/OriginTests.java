@@ -25,22 +25,24 @@ public final class OriginTests {
     @Order(value = 0)
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Origin.isContentLocation(valid));
-            Assertions.assertEquals(Origin.parse(VALIDS[0]), Origin.parse(Origin.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(Origin.Parser.validate(valid));
+            Assertions.assertEquals(Origin.Parser.parse(VALIDS[0]), Origin.Parser.parse(Origin.Parser.parse(VALIDS[0]).toString()));
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Origin location = Origin.parse("localhost:80/test/excellent");
+        @NotNull Origin location = Origin.Parser.parse("localhost:80/test/excellent");
 
         // Path
         Assertions.assertEquals(location.getURI().getPath(), URI.create("/test/excellent").getPath());
 
         // Authority
-        Assertions.assertNotNull(location.getAuthority());
-        Assertions.assertEquals(location.getAuthority().getPort(), 80);
-        Assertions.assertEquals(location.getAuthority().getHostName(), "localhost");
+        Assertions.assertNotNull(location.getDomain());
+        Assertions.assertNotNull(location.getDomain().getHost().getPort());
+
+        Assertions.assertEquals(location.getDomain().getHost().getPort(), 80);
+        Assertions.assertEquals(location.getDomain().getHost().getName(), "localhost");
     }
 
 }
