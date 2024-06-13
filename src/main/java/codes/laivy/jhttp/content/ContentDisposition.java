@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.utilities.DateUtils;
+import codes.laivy.jhttp.utilities.KeyReader;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,51 +9,49 @@ import org.jetbrains.annotations.Nullable;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class ContentDisposition {
 
     // Static initializers
 
-    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(inline|attachment|form-data)"
-            + "(?:\\s*;\\s*filename\\s*=\\s*\"([^\"]*)\""
-            + "|\\s*;\\s*name\\s*=\\s*\"([^\"]*)\""
-            + "|\\s*;\\s*creation-date\\s*=\\s*\"([^\"]*)\""
-            + "|\\s*;\\s*modification-date\\s*=\\s*\"([^\"]*)\""
-            + "|\\s*;\\s*read-date\\s*=\\s*\"([^\"]*)\""
-            + "|\\s*;\\s*size\\s*=\\s*([0-9]+)"
-            + ")*");
-
-    public static boolean isContentDisposition(@NotNull String string) {
-        return PARSE_PATTERN.matcher(string).matches();
+    public static boolean validate(@NotNull String string) {
+        try {
+            parse(string);
+            return true;
+        } catch (@NotNull ParseException e) {
+            return false;
+        }
     }
     public static @NotNull ContentDisposition parse(@NotNull String string) throws ParseException {
-        @NotNull Matcher matcher = PARSE_PATTERN.matcher(string);
+        @NotNull Map<String, String> keys = KeyReader.read(string, '=', ';');
 
-        if (matcher.find() && matcher.groupCount() == 7) {
-            @NotNull Optional<Type> optional = Arrays.stream(Type.values()).filter(t -> t.getId().equalsIgnoreCase(matcher.group(1))).findFirst();
-            @NotNull Type type = optional.orElseThrow(() -> new ParseException("unknown content disposition type '" + matcher.group(1) + "'", matcher.start(1)));
-            @Nullable String name = matcher.group(3);
+        try {
+            // Type
+            @NotNull Type type = Type.getById(keys.keySet().stream().findFirst().orElseThrow(() -> new ParseException("cannot find connection type", 0)));
+            keys.remove(type.getId().toLowerCase());
+
+            // Name
+            @Nullable String name = keys.getOrDefault("name", null);
 
             // Property
             @Nullable Property property = null;
 
-            @Nullable String filename = matcher.group(2);
-            @Nullable OffsetDateTime creationDate = matcher.group(4) != null ? DateUtils.RFC822.convert(matcher.group(4)) : null;
-            @Nullable OffsetDateTime modificationDate = matcher.group(5) != null ? DateUtils.RFC822.convert(matcher.group(5)) : null;
-            @Nullable OffsetDateTime readDate = matcher.group(6) != null ? DateUtils.RFC822.convert(matcher.group(6)) : null;
-            @Nullable Long size = matcher.group(7) != null ? Long.parseLong(matcher.group(7)) : null;
+            @Nullable String filename = keys.getOrDefault("filename", null);
+            @Nullable OffsetDateTime creationDate = keys.containsKey("creation-date") ? DateUtils.RFC822.convert(keys.get("creation-date")) : null;
+            @Nullable OffsetDateTime modificationDate = keys.containsKey("modification-date") ? DateUtils.RFC822.convert(keys.get("modification-date")) : null;
+            @Nullable OffsetDateTime readDate = keys.containsKey("read-date") ? DateUtils.RFC822.convert(keys.get("read-date")) : null;
+            @Nullable Long size = keys.containsKey("size") ? Long.parseLong(keys.get("size")) : null;
 
             if (filename != null || creationDate != null || modificationDate != null || readDate != null || size != null) {
                 property = new Property(filename, creationDate, modificationDate, readDate, size);
             }
 
             return new ContentDisposition(type, name, property);
-        } else {
-            throw new ParseException("cannot parse content disposition '" + string + "'", 0);
+        } catch (@NotNull Throwable throwable) {
+            throw new ParseException("cannot parse '" + string + "' as a valid content disposition: " + throwable.getMessage(), 0);
         }
     }
 
@@ -104,10 +103,10 @@ public final class ContentDisposition {
     // Implementations
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ContentDisposition that = (ContentDisposition) o;
+    public boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        @NotNull ContentDisposition that = (ContentDisposition) object;
         return type == that.type && Objects.equals(name, that.name) && Objects.equals(property, that.property);
     }
     @Override
@@ -122,7 +121,7 @@ public final class ContentDisposition {
         if (getName() != null) {
             builder.append("; name=\"").append(getName()).append("\"");
         } if (getProperty() != null) {
-            builder.append("; ").append(getProperty());
+            builder.append(getProperty());
         }
 
         return builder.toString();
@@ -147,6 +146,13 @@ public final class ContentDisposition {
 
         public @NotNull String getId() {
             return id;
+        }
+
+        // Static initializers
+
+        public static @NotNull Type getById(@NotNull String id) {
+            @NotNull Optional<Type> optional = Arrays.stream(values()).filter(type -> type.getId().equalsIgnoreCase(id)).findFirst();
+            return optional.orElseThrow(() -> new NullPointerException("there's no content disposition type with id '" + id + "'"));
         }
 
     }
@@ -207,10 +213,10 @@ public final class ContentDisposition {
         // Implementations
 
         @Override
-        public boolean equals(@Nullable Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Property property = (Property) o;
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            @NotNull Property property = (Property) object;
             return Objects.equals(name, property.name) && Objects.equals(creation, property.creation) && Objects.equals(modification, property.modification) && Objects.equals(read, property.read) && Objects.equals(size, property.size);
         }
         @Override
@@ -223,19 +229,15 @@ public final class ContentDisposition {
             @NotNull StringBuilder builder = new StringBuilder();
 
             if (getName() != null) {
-                builder.append("filename=\"").append(getName()).append("\"");
+                builder.append("; filename=\"").append(getName()).append("\"");
             } if (getCreation() != null) {
-                if (builder.length() > 0) builder.append("; ");
-                builder.append("creation-date=\"").append(DateUtils.RFC822.convert(getCreation())).append("\"");
+                builder.append("; creation-date=\"").append(DateUtils.RFC822.convert(getCreation())).append("\"");
             } if (getModification() != null) {
-                if (builder.length() > 0) builder.append("; ");
-                builder.append("modification-date=\"").append(DateUtils.RFC822.convert(getModification())).append("\"");
+                builder.append("; modification-date=\"").append(DateUtils.RFC822.convert(getModification())).append("\"");
             } if (getRead() != null) {
-                if (builder.length() > 0) builder.append("; ");
-                builder.append("read-date=\"").append(DateUtils.RFC822.convert(getRead())).append("\"");
+                builder.append("; read-date=\"").append(DateUtils.RFC822.convert(getRead())).append("\"");
             } if (getSize() != null) {
-                if (builder.length() > 0) builder.append("; ");
-                builder.append("size-date=\"").append(getSize()).append("\"");
+                builder.append("; size=\"").append(getSize()).append("\"");
             }
 
             return builder.toString();
