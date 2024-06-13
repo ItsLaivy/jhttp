@@ -6,15 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class Connection {
 
     // Static initializers
 
     // todo 08/06/2024: regex performance improvement
-    public static boolean isConnection(@NotNull String string) {
+    public static boolean validate(@NotNull String string) {
         try {
             parse(string);
             return true;
@@ -23,30 +21,18 @@ public final class Connection {
         }
     }
     public static @NotNull Connection parse(@NotNull String string) throws ParseException {
-        @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-        @NotNull Matcher matcher = pattern.matcher(string);
+        @NotNull Map<String, String> keys = KeyReader.read(string, null, ',');
 
-        @NotNull Type type;
-        @NotNull Set<HeaderKey<?>> keys = new LinkedHashSet<>();
+        // Type
+        @NotNull Type type = Type.getById(keys.keySet().stream().findFirst().orElseThrow(() -> new ParseException("cannot find connection type", 0)));
+        keys.remove(type.getId().toLowerCase());
 
-        if (!matcher.find()) {
-            throw new ParseException("cannot parse '" + string + "' into a valid connection", 0);
-        } else {
-            @NotNull Optional<Type> optional = Arrays.stream(Type.values()).filter(t -> t.getId().equalsIgnoreCase(matcher.group())).findFirst();
+        // Headers
+        @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
+        for (@NotNull String name : keys.keySet()) headers.add(HeaderKey.create(name));
 
-            if (optional.isPresent()) {
-                type = optional.get();
-            } else {
-                throw new ParseException("unknown connection type '" + matcher.group() + "'", matcher.start());
-            }
-        }
-
-        while (matcher.find()) {
-            @NotNull String name = matcher.group();
-            keys.add(HeaderKey.create(name));
-        }
-
-        return new Connection(type, keys.toArray(new HeaderKey[0]));
+        // Finish
+        return new Connection(type, headers.toArray(new HeaderKey[0]));
     }
 
     public static @NotNull Connection create(@NotNull Type type) {
@@ -118,6 +104,13 @@ public final class Connection {
 
         public @NotNull String getId() {
             return id;
+        }
+
+        // Static initializers
+
+        public static @NotNull Type getById(@NotNull String id) {
+            @NotNull Optional<Type> optional = Arrays.stream(values()).filter(type -> type.getId().equalsIgnoreCase(id)).findFirst();
+            return optional.orElseThrow(() -> new NullPointerException("there's no connection type with id '" + id + "'"));
         }
 
     }

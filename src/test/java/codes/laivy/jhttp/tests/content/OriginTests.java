@@ -18,6 +18,7 @@ public final class OriginTests {
     private static final @NotNull String[] VALIDS = new String[] {
             "http://example.com/documents/1234",
             "localhost:80/test",
+            "https://localhost:501/test",
             "/just/test"
     };
 
@@ -25,8 +26,8 @@ public final class OriginTests {
     @Order(value = 0)
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Origin.Parser.validate(valid));
-            Assertions.assertEquals(Origin.Parser.parse(VALIDS[0]), Origin.Parser.parse(Origin.Parser.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(Origin.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
+            Assertions.assertEquals(Origin.Parser.parse(valid), Origin.Parser.parse(Origin.Parser.serialize(Origin.Parser.parse(valid))), "Original origin: '" + valid + "'");
         }
     }
     @Test

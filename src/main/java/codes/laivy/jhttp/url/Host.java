@@ -49,7 +49,7 @@ public interface Host {
 
         // Static initializers
 
-        public static final @NotNull Pattern NAME_PARSE_PATTERN = Pattern.compile("^(?!https?://)(?<host>(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}):?(?<port>\\d{1,5})?$");
+        public static final @NotNull Pattern NAME_PARSE_PATTERN = Pattern.compile("^(?:https?://)?(?:[^@/\\n]+@)?(?:(?:\\*|[a-zA-Z0-9-]+)\\.)*(?<host>(localhost|[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}))(?::(?<port>\\d{1,5}))?$");
 
         public static boolean validate(@NotNull String string) {
             return NAME_PARSE_PATTERN.matcher(string).matches();
@@ -127,9 +127,7 @@ public interface Host {
 
         public static boolean validate(@NotNull String string) {
             @NotNull Matcher matcher = IPV4_PATTERN.matcher(string);
-            @NotNull IPAddressString address = new IPAddressString(matcher.group("bytes"));
-
-            return matcher.matches() && address.isIPv4();
+            return matcher.matches() && new IPAddressString(matcher.group("bytes")).isIPv4();
         }
         public static @NotNull IPv4 parse(@NotNull String string) throws ParseException {
             @NotNull Matcher matcher = IPV4_PATTERN.matcher(string);
@@ -200,9 +198,7 @@ public interface Host {
 
         public static boolean validate(@NotNull String string) {
             @NotNull Matcher matcher = IPV6_PATTERN.matcher(string);
-            @NotNull IPAddressString address = new IPAddressString(matcher.group("bytes"));
-
-            return matcher.matches() && address.isIPv6();
+            return matcher.matches() && new IPAddressString(matcher.group("bytes")).isIPv6();
         }
         public static @NotNull IPv6 parse(@NotNull String string) throws ParseException {
             @NotNull Matcher matcher = IPV6_PATTERN.matcher(string);

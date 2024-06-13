@@ -24,14 +24,16 @@ public final class SourceTests {
                 "https://store.example.com",
                 "*.example.com",
                 "https://*.example.com:12",
-                "ws://example.com/"
+                "*.example.com:12",
+                "localhost:12",
+                "https://localhost:12"
         };
 
         @Test
         @Order(value = 0)
         void validate() {
             for (@NotNull String valid : VALIDS) {
-                Assertions.assertTrue(Domain.validate(valid));
+                Assertions.assertTrue(Domain.validate(valid), "cannot validate domain '" + valid + "'");
             }
         }
         @Test
@@ -41,8 +43,8 @@ public final class SourceTests {
 
             Assertions.assertNotNull(domain.getProtocol());
 
-            Assertions.assertEquals(domain.getHost().getPort(), 12);
-            Assertions.assertEquals(domain.getName(), "example.com");
+            Assertions.assertEquals(12, domain.getHost().getPort());
+            Assertions.assertEquals("example.com", domain.getName());
             Assertions.assertTrue(domain.getProtocol().isSecure());
 
             // Subdomains
@@ -56,7 +58,7 @@ public final class SourceTests {
     final class DataUri {
 
         private final @NotNull String[] VALIDS = new String[] {
-                "data:text/plain;charset=utf-8;base64,SGVsbG8lMjBXb3JsZCE=",
+                "data:text/plain;charset=utf-8;base64,SGV5IQ==",
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA",
                 "data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==",
                 "data:;base64,SGVsbG8=",
@@ -68,7 +70,7 @@ public final class SourceTests {
         void validate() throws ParseException, UnsupportedEncodingException {
             for (@NotNull String valid : VALIDS) {
                 Assertions.assertTrue(Data.validate(valid));
-                Assertions.assertEquals(Data.parse(VALIDS[0]), Data.parse(Data.parse(VALIDS[0]).toString()));
+                Assertions.assertEquals(Data.parse(valid), Data.parse(Data.parse(valid).toString()));
             }
         }
         @Test

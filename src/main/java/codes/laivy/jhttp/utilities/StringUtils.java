@@ -107,4 +107,13 @@ public final class StringUtils {
         return str.trim().isEmpty();
     }
 
+    public static boolean isInteger(@NotNull String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (@NotNull NumberFormatException ignore) {
+            return false;
+        }
+    }
+
 }

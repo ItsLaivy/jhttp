@@ -24,13 +24,13 @@ public final class URIAuthority {
         return PARSE_PATTERN.matcher(uri).matches();
     }
 
-    public static @NotNull URIAuthority parse(@NotNull String uri) throws URISyntaxException, UnknownHostException {
+    public static @NotNull URIAuthority parse(@NotNull String string) throws URISyntaxException, UnknownHostException {
         @Nullable Basic userInfo = null;
         @NotNull String hostName;
         int port;
 
         @NotNull Pattern pattern = PARSE_PATTERN;
-        @NotNull Matcher matcher = pattern.matcher(uri);
+        @NotNull Matcher matcher = pattern.matcher(string);
 
         if (matcher.find()) {
             @NotNull String scheme = matcher.group(1);
@@ -39,13 +39,13 @@ public final class URIAuthority {
                 @Nullable String temp = matcher.group(3);
                 if (temp != null) userInfo = Basic.parse(temp);
             } catch (@NotNull ParseException throwable) {
-                throw new URISyntaxException(uri, throwable.getMessage(), matcher.start(3));
+                throw new URISyntaxException(string, throwable.getMessage(), matcher.start(3));
             }
 
             @NotNull String hostGroup = matcher.group(4);
 
             if (hostGroup.contains("@")) {
-                throw new URISyntaxException(uri, "invalid user info information", matcher.start(4));
+                throw new URISyntaxException(string, "invalid user info information", matcher.start(4));
             }
 
             hostName = IDN.toASCII(hostGroup);
@@ -54,7 +54,7 @@ public final class URIAuthority {
                 port = Integer.parseInt(matcher.group(5).substring(1));
 
                 if (port < 0 || port > 65535) {
-                    throw new URISyntaxException(uri, "port out of range '" + port + "'", matcher.start(5) + 1);
+                    throw new URISyntaxException(string, "port out of range '" + port + "'", matcher.start(5) + 1);
                 }
             } else if ("https://".equals(scheme)) {
                 port = HttpProtocol.HTTPS.getPort();
@@ -62,7 +62,7 @@ public final class URIAuthority {
                 port = HttpProtocol.HTTP.getPort();
             }
         } else {
-            throw new URISyntaxException(uri, "cannot parse into a valid uri authority", matcher.start());
+            throw new URISyntaxException(string, "cannot parse into a valid uri authority", 0);
         }
 
         return new URIAuthority(userInfo, InetSocketAddress.createUnresolved(hostName, port));

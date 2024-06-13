@@ -28,8 +28,8 @@ public final class ContentDispositionTests {
     @Order(value = 0)
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(ContentDisposition.isContentDisposition(valid));
-            Assertions.assertEquals(ContentDisposition.parse(VALIDS[0]), ContentDisposition.parse(ContentDisposition.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(ContentDisposition.validate(valid), "cannot verify '" + valid + "' as a valid content disposition");
+            Assertions.assertEquals(ContentDisposition.parse(valid), ContentDisposition.parse(ContentDisposition.parse(valid).toString()));
         }
     }
     @Test

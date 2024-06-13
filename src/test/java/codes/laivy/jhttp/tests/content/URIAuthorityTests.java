@@ -15,6 +15,7 @@ public final class URIAuthorityTests {
     }
 
     private static final @NotNull String[] VALIDS = new String[] {
+            ":443",
             "/",
             "/index.php",
             "localhost/index.php",

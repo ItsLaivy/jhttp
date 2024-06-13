@@ -22,31 +22,32 @@ public final class CacheControlTests {
     @Order(value = 0)
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(CacheControl.isCacheControl(valid));
-            Assertions.assertEquals(CacheControl.parse(VALIDS[0]), CacheControl.parse(CacheControl.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(CacheControl.validate(valid), "cannot verify '" + valid + "' as a valid alternative service");
+            Assertions.assertEquals(CacheControl.parse(valid), CacheControl.parse(CacheControl.parse(valid).toString()), "cannot parse-obtain '" + valid + "' as a cache control");
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException {
-        @NotNull CacheControl control = CacheControl.parse("max-age=60,s-maxage=60,no-cache,must-revalidate,proxy-revalidate,no-store,private,public,must-understand,no-transform,immutable,stale-while-revalidate=60,stale-if-error=60,max-stale=60,min-fresh=60,no-transform,only-if-cached");
+        @NotNull CacheControl control = CacheControl.parse("max-age=60,s-maxage=61,no-cache,must-revalidate,proxy-revalidate,no-store,private,public,must-understand,no-transform,immutable,stale-while-revalidate=65,stale-if-error=62,max-stale=63,min-fresh=64,no-transform,only-if-cached");
 
-        Assertions.assertEquals(control.get(CacheControl.Key.MAX_AGE).orElseThrow(IllegalStateException::new), 60L);
-        Assertions.assertEquals(control.get(CacheControl.Key.S_MAXAGE).orElseThrow(IllegalStateException::new), 60L);
-        Assertions.assertNull(control.get(CacheControl.Key.NO_CACHE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.MUST_REVALIDATE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.PROXY_REVALIDATE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.NO_STORE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.PRIVATE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.PUBLIC).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.MUST_UNDERSTAND).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.NO_TRANSFORM).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.IMMUTABLE).orElseThrow(IllegalStateException::new));
-        Assertions.assertNull(control.get(CacheControl.Key.STALE_WHILE_REVALIDATE).orElseThrow(IllegalStateException::new));
-        Assertions.assertEquals(control.get(CacheControl.Key.STALE_IF_ERROR).orElseThrow(IllegalStateException::new), 60L);
-        Assertions.assertEquals(control.get(CacheControl.Key.MAX_STALE).orElseThrow(IllegalStateException::new), 60L);
-        Assertions.assertEquals(control.get(CacheControl.Key.MIN_FRESH).orElseThrow(IllegalStateException::new), 60L);
-        Assertions.assertNull(control.get(CacheControl.Key.ONLY_IF_CACHED).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(60L, control.get(CacheControl.Key.MAX_AGE).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(61L, control.get(CacheControl.Key.S_MAXAGE).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(62L, control.get(CacheControl.Key.STALE_IF_ERROR).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(63L, control.get(CacheControl.Key.MAX_STALE).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(64L, control.get(CacheControl.Key.MIN_FRESH).orElseThrow(IllegalStateException::new));
+        Assertions.assertEquals(65L, control.get(CacheControl.Key.STALE_WHILE_REVALIDATE).orElseThrow(IllegalStateException::new));
+
+        Assertions.assertTrue(control.has(CacheControl.Key.NO_CACHE));
+        Assertions.assertTrue(control.has(CacheControl.Key.MUST_REVALIDATE));
+        Assertions.assertTrue(control.has(CacheControl.Key.PROXY_REVALIDATE));
+        Assertions.assertTrue(control.has(CacheControl.Key.NO_STORE));
+        Assertions.assertTrue(control.has(CacheControl.Key.PRIVATE));
+        Assertions.assertTrue(control.has(CacheControl.Key.PUBLIC));
+        Assertions.assertTrue(control.has(CacheControl.Key.MUST_UNDERSTAND));
+        Assertions.assertTrue(control.has(CacheControl.Key.NO_TRANSFORM));
+        Assertions.assertTrue(control.has(CacheControl.Key.IMMUTABLE));
+        Assertions.assertTrue(control.has(CacheControl.Key.ONLY_IF_CACHED));
     }
 
 }

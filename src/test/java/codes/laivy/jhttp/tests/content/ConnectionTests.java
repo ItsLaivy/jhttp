@@ -15,15 +15,18 @@ public final class ConnectionTests {
 
     private static final @NotNull String[] VALIDS = new String[] {
             "keep-alive, Upgrade, Authorization",
-            "keep-alive,Upgrade  , Authorization"
+            "keep-alive,Upgrade  , Authorization, Forwarded, Content-Digest",
+            "keep-alive",
+            "close",
+            "close  ,  Upgrade  , Authorization  , Forwarded  ,  Content-Digest"
     };
 
     @Test
     @Order(value = 0)
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Connection.isConnection(valid));
-            Assertions.assertEquals(Connection.parse(VALIDS[0]), Connection.parse(Connection.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(Connection.validate(valid));
+            Assertions.assertEquals(Connection.parse(valid), Connection.parse(Connection.parse(valid).toString()));
         }
     }
     @Test

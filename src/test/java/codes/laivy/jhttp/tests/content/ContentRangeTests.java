@@ -22,8 +22,8 @@ public final class ContentRangeTests {
     @Order(value = 0)
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(ContentRange.isContentRange(valid));
-            Assertions.assertEquals(ContentRange.parse(VALIDS[0]), ContentRange.parse(ContentRange.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(ContentRange.isContentRange(valid), "cannot parse '" + valid + "' as a valid content range");
+            Assertions.assertEquals(ContentRange.parse(valid), ContentRange.parse(ContentRange.parse(valid).toString()));
         }
     }
     @Test
@@ -31,12 +31,10 @@ public final class ContentRangeTests {
     void assertions() throws ParseException {
         @NotNull ContentRange range = ContentRange.parse("bytes 0-50/100");
 
-        Assertions.assertFalse(range.getRange().isWildcard());
         Assertions.assertFalse(range.getSize().isWildcard());
-
         Assertions.assertEquals(range.getUnit(), "bytes");
-        Assertions.assertEquals(range.getRange().getValue().getMinimum(), 0L);
-        Assertions.assertEquals(range.getRange().getValue().getMinimum(), 50L);
+        Assertions.assertEquals(range.getRange().getMinimum(), 0L);
+        Assertions.assertEquals(range.getRange().getMaximum(), 50L);
         Assertions.assertEquals(range.getSize().getValue(), 100L);
     }
 

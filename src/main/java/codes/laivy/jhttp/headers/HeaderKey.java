@@ -1454,7 +1454,7 @@ public abstract class HeaderKey<T> {
 
                 try {
                     services[row] = AlternativeService.parse(group);
-                } catch (@NotNull ParseException e) {
+                } catch (@NotNull ParseException | @NotNull UnknownHostException | @NotNull URISyntaxException e) {
                     throw new HeaderFormatException("cannot parse alternative service '" + group + "'", e);
                 }
             }
