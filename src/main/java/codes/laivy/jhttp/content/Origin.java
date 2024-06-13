@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Objects;
 
-public final class ContentLocation {
+public final class Origin {
 
     // Static initializers
 
@@ -22,17 +22,17 @@ public final class ContentLocation {
             return false;
         }
     }
-    public static @NotNull ContentLocation parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+    public static @NotNull Origin parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
         try {
             // todo: content location parser
 
-            return new ContentLocation(authority, path);
+            return new Origin(authority, path);
         } catch (@NotNull URISyntaxException syntax) {
             throw new ParseException("cannot parse '" + string + "' into a valid location uri", 0);
         }
     }
-    public static @NotNull ContentLocation create(@Nullable Domain<?> domain, @NotNull URI path) {
-        return new ContentLocation(domain, path);
+    public static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI path) {
+        return new Origin(domain, path);
     }
 
     // Object
@@ -40,7 +40,7 @@ public final class ContentLocation {
     private final @Nullable Domain<?> domain;
     private final @NotNull URI uri;
 
-    private ContentLocation(@Nullable Domain<?> domain, @NotNull URI uri) {
+    private Origin(@Nullable Domain<?> domain, @NotNull URI uri) {
         this.domain = domain;
         this.uri = uri;
     }
@@ -60,8 +60,8 @@ public final class ContentLocation {
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        @NotNull ContentLocation contentLocation = (ContentLocation) o;
-        return Objects.equals(domain, contentLocation.domain) && Objects.equals(uri, contentLocation.uri);
+        @NotNull Origin origin = (Origin) o;
+        return Objects.equals(domain, origin.domain) && Objects.equals(uri, origin.uri);
     }
     @Override
     public int hashCode() {

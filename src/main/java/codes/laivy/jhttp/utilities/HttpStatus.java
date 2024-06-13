@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -80,7 +81,22 @@ public class HttpStatus implements Comparable<Integer> {
     public static final @NotNull HttpStatus LOOP_DETECTED = new HttpStatus(508, "Loop Detected");
     public static final @NotNull HttpStatus NOT_EXTENDED = new HttpStatus(510, "Not Extended");
     public static final @NotNull HttpStatus NETWORK_AUTHENTICATION_REQUIRED = new HttpStatus(511, "Network Authentication Required");
-    
+
+    public static @NotNull HttpStatus getByCode(int code) {
+        try {
+            for (@NotNull Field field : HttpStatus.class.getDeclaredFields()) {
+                @NotNull HttpStatus status = (HttpStatus) field.get(null);
+
+                if (status.getCode() == code) {
+                    return status;
+                }
+            }
+        } catch (@NotNull IllegalAccessException ignore) {
+        }
+
+        throw new NullPointerException("cannot find a http status with code '" + code + "'");
+    }
+
     // Object
 
     private final int code;

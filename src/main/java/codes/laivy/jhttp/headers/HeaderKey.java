@@ -33,9 +33,6 @@ public abstract class HeaderKey<T> {
 
     public static final @NotNull Pattern NAME_FORMAT_REGEX = Pattern.compile("^[A-Za-z][A-Za-z0-9-]*$");
 
-    // todo: remove
-    @ApiStatus.ScheduledForRemoval
-    @Deprecated
     public static @NotNull HeaderKey<?> create(@NotNull String name) {
         try {
             @NotNull Field field = HeaderKey.class.getDeclaredField(name.replace("-", "_").toLowerCase());
@@ -82,7 +79,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<PseudoEncoding[]> CONTENT_ENCODING = new ContentEncodingHeaderKey();
     public static @NotNull HeaderKey<Locale[]> CONTENT_LANGUAGE = new ContentLanguageHeaderKey();
     public static @NotNull HeaderKey<BitMeasure> CONTENT_LENGTH = new ContentLengthHeaderKey();
-    public static @NotNull HeaderKey<ContentLocation> CONTENT_LOCATION = new ContentLocationHeaderKey();
+    public static @NotNull HeaderKey<Origin> CONTENT_LOCATION = new ContentLocationHeaderKey();
     public static @NotNull HeaderKey<ContentRange> CONTENT_RANGE = new ContentRangeHeaderKey();
     public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY = new ContentSecurityPolicyHeaderKey();
     public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY_REPORT_ONLY = new ContentSecurityPolicyReportOnlyeHeaderKey();
@@ -115,106 +112,33 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Wildcard<EntityTag[]>> IF_MATCH = new IfMatchHeaderKey();
     public static @NotNull HeaderKey<OffsetDateTime> IF_MODIFIED_SINCE = new IfModifiedSinceHeaderKey();
     public static @NotNull HeaderKey<Wildcard<EntityTag[]>> IF_NONE_MATCH = new IfNoneMatchHeaderKey();
-    // todo: this header doesn't supports weak entity tags
-    //  IF-RANGE header can return an entity tag or an OffsetDateTime, multiples returns from the same header.
-    //  It's a bit confusing to create, give me some time :)
-    public static @NotNull HeaderKey<?> IF_RANGE = new StringHeaderKey("If-Range");
     public static @NotNull HeaderKey<OffsetDateTime> IF_UNMODIFIED_SINCE = new IfUnmodifiedSinceHeaderKey();
     public static @NotNull HeaderKey<KeepAlive> KEEP_ALIVE = new KeepAliveHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Optional<BitMeasure>> LARGE_ALLOCATION = new LargeAllocationHeaderKey();
     public static @NotNull HeaderKey<OffsetDateTime> LAST_MODIFIED = new LastModifiedHeaderKey();
-    public static @NotNull HeaderKey<?> LINK = new StringHeaderKey("Link");
-    public static @NotNull HeaderKey<ContentLocation> LOCATION = new LocationHeaderKey();
+    public static @NotNull HeaderKey<Origin> LOCATION = new LocationHeaderKey();
     public static @NotNull HeaderKey<Integer> MAX_FORWARDS = new MaxForwardsHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> NEL = new StringHeaderKey("NEL");
-    public static @NotNull HeaderKey<?> OBSERVE_BROWSING_TOPICS = new StringHeaderKey("Observe-Browsing-Topics");
-    public static @NotNull HeaderKey<?> ORIGIN = new StringHeaderKey("Origin");
+    public static @NotNull HeaderKey<NetworkErrorLogging> NEL = new NetworkErrorLoggingHeaderKey();
+    public static @NotNull HeaderKey<@Nullable Host> ORIGIN = new OriginHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> ORIGIN_AGENT_CLUSTER = new StringHeaderKey("Origin-Agent-Cluster");
-    public static @NotNull HeaderKey<?> PERMISSIONS_POLICY = new StringHeaderKey("Permissions-Policy");
+    public static @NotNull HeaderKey<Boolean> ORIGIN_AGENT_CLUSTER = new OriginAgentClusterHeaderKey();
     @Deprecated
-    public static @NotNull HeaderKey<?> PRAGMA = new StringHeaderKey("Pragma");
-    public static @NotNull HeaderKey<?> PROXY_AUTHENTICATE = new StringHeaderKey("Proxy-Authenticate");
-    public static @NotNull HeaderKey<?> PROXY_AUTHORIZATION = new StringHeaderKey("Proxy-Authorization");
-    public static @NotNull HeaderKey<?> RANGE = new StringHeaderKey("Range");
-    public static @NotNull HeaderKey<?> REFERER = new StringHeaderKey("Referer");
-    public static @NotNull HeaderKey<?> REFERRER_POLICY = new StringHeaderKey("Referrer-Policy");
+    public static @NotNull HeaderKey<Void> PRAGMA = new PragmaHeaderKey();
+    public static @NotNull HeaderKey<Credentials> PROXY_AUTHORIZATION = new ProxyAuthorizationHeaderKey();
+    public static @NotNull HeaderKey<Origin> REFERER = new RefererHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> RTT = new StringHeaderKey("RTT");
-    public static @NotNull HeaderKey<?> SAVE_DATA = new StringHeaderKey("Save-Data");
-    public static @NotNull HeaderKey<?> SEC_BROWSING_TOPICS = new StringHeaderKey("Sec-Browsing-Topics");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_PREFERS_COLOR_SCHEME = new StringHeaderKey("Sec-CH-Prefers-Color-Scheme");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_PREFERS_REDUCED_MOTION = new StringHeaderKey("Sec-CH-Prefers-Reduced-Motion");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_PREFERS_REDUCED_TRANSPARENCY = new StringHeaderKey("Sec-CH-Prefers-Reduced-Transparency");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA = new StringHeaderKey("Sec-CH-UA");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_ARCH = new StringHeaderKey("Sec-CH-UA-Arch");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_BITNESS = new StringHeaderKey("Sec-CH-UA-Bitness");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_FULL_VERSION = new StringHeaderKey("Sec-CH-UA-Full-Version");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_FULL_VERSION_LIST = new StringHeaderKey("Sec-CH-UA-Full-Version-List");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_MOBILE = new StringHeaderKey("Sec-CH-UA-Mobile");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_MODEL = new StringHeaderKey("Sec-CH-UA-Model");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_PLATFORM = new StringHeaderKey("Sec-CH-UA-Platform");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_CH_UA_PLATFORM_VERSION = new StringHeaderKey("Sec-CH-UA-Platform-Version");
-    public static @NotNull HeaderKey<?> SEC_FETCH_DEST = new StringHeaderKey("Sec-Fetch-Dest");
-    public static @NotNull HeaderKey<?> SEC_FETCH_MODE = new StringHeaderKey("Sec-Fetch-Mode");
-    public static @NotNull HeaderKey<?> SEC_FETCH_SITE = new StringHeaderKey("Sec-Fetch-Site");
-    public static @NotNull HeaderKey<?> SEC_FETCH_USER = new StringHeaderKey("Sec-Fetch-User");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SEC_GPC = new StringHeaderKey("Sec-GPC");
-    public static @NotNull HeaderKey<?> SEC_PURPOSE = new StringHeaderKey("Sec-Purpose");
-    public static @NotNull HeaderKey<?> SEC_WEBSOCKET_ACCEPT = new StringHeaderKey("Sec-WebSocket-Accept");
+    public static @NotNull HeaderKey<Duration> RTT = new RTTHeaderKey();
+    public static @NotNull HeaderKey<Boolean> SAVE_DATA = new SaveDataHeaderKey();
     public static @NotNull HeaderKey<String> SERVER = new ServerHeaderKey();
-    public static @NotNull HeaderKey<?> SERVER_TIMING = new StringHeaderKey("Server-Timing");
-    public static @NotNull HeaderKey<?> SERVICE_WORKER_NAVIGATION_PRELOAD = new StringHeaderKey("Service-Worker-Navigation-Preload");
     public static @NotNull HeaderKey<Cookie.Request> SET_COOKIE = new SetCookieHeaderKey();
+    public static @NotNull HeaderKey<Origin> SOURCEMAP = new SourceMapHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> SET_LOGIN = new StringHeaderKey("Set-Login");
-    public static @NotNull HeaderKey<?> SOURCEMAP = new StringHeaderKey("SourceMap");
-    public static @NotNull HeaderKey<?> STRICT_TRANSPORT_SECURITY = new StringHeaderKey("Strict-Transport-Security");
-    public static @NotNull HeaderKey<?> SUPPORTS_LOADING_MODE = new StringHeaderKey("Supports-Loading-Mode");
-    @ApiStatus.Experimental
-    public static @NotNull HeaderKey<?> TE = new StringHeaderKey("TE");
-    public static @NotNull HeaderKey<?> TIMING_ALLOW_ORIGIN = new StringHeaderKey("Timing-Allow-Origin");
-    @Deprecated
-    public static @NotNull HeaderKey<?> TK = new StringHeaderKey("Tk");
-    public static @NotNull HeaderKey<?> TRAILER = new StringHeaderKey("Trailer");
+    public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> TE = new TEHeaderKey();
+    public static @NotNull HeaderKey<HeaderKey<?>[]> TRAILER = new TrailerHeaderKey();
     public static @NotNull HeaderKey<PseudoEncoding[]> TRANSFER_ENCODING = new TransferEncodingHeaderKey();
-    public static @NotNull HeaderKey<?> ANONYMOUS_HEADER = new StringHeaderKey("X-Anonymous");
-
-    /**
-     * @see <a href="https://regexr.com/7sg4c">RegExr Tests</a>
-     * @apiNote Last change: 23/02/2024 | 19:23 (GMT-3)
-     */
-    public static @NotNull HeaderKey<?> UPGRADE = new StringHeaderKey("Upgrade");
-    public static @NotNull HeaderKey<?> UPGRADE_INSECURE_REQUESTS = new StringHeaderKey("Upgrade-Insecure-Requests");
-    public static @NotNull HeaderKey<?> USER_AGENT = new StringHeaderKey("User-Agent");
-    public static @NotNull HeaderKey<?> VARY = new StringHeaderKey("Vary");
-    public static @NotNull HeaderKey<?> VIA = new StringHeaderKey("Via");
-    @Deprecated
-    public static @NotNull HeaderKey<?> VIEWPORT_WIDTH = new StringHeaderKey("Viewport-Width");
-    @Deprecated
-    public static @NotNull HeaderKey<?> WANT_DIGEST = new StringHeaderKey("Want-Digest");
-    @Deprecated
-    public static @NotNull HeaderKey<?> WARNING = new StringHeaderKey("Warning");
-    @Deprecated
-    public static @NotNull HeaderKey<?> WIDTH = new StringHeaderKey("Width");
-    public static @NotNull HeaderKey<?> WWW_AUTHENTICATE = new StringHeaderKey("WWW-Authenticate");
-    public static @NotNull HeaderKey<?> PROXY_CONNECTION = new StringHeaderKey("Proxy-Connection");
-
+    public static @NotNull HeaderKey<Wildcard<HeaderKey<?>>[]> VARY = new VaryHeaderKey();
     // Object
 
     private final @NotNull String name;
@@ -307,6 +231,286 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class VaryHeaderKey extends HeaderKey<Wildcard<HeaderKey<?>>[]> {
+        private VaryHeaderKey() {
+            super("Vary", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Wildcard<HeaderKey<?>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
+
+            //noinspection unchecked
+            @NotNull Wildcard<HeaderKey<?>>[] keys = new Wildcard[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                @NotNull String name = matcher.group(group);
+                @NotNull Wildcard<HeaderKey<?>> key;
+
+                if (name.trim().equals("*")) key = Wildcard.create();
+                else key = Wildcard.create(HeaderKey.create(name));
+
+                keys[group] = key;
+            }
+
+            return create(keys);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Wildcard<HeaderKey<?>>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Wildcard<HeaderKey<?>> key : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+
+                if (key.isWildcard()) builder.append("*");
+                else builder.append(key);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class TrailerHeaderKey extends HeaderKey<HeaderKey<?>[]> {
+        private TrailerHeaderKey() {
+            super("Trailer", Target.BOTH);
+        }
+
+        @Override
+        public @NotNull Header<HeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
+            @NotNull HeaderKey<?>[] keys = new HeaderKey[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                @NotNull String name = matcher.group(group);
+                @NotNull HeaderKey<?> key = HeaderKey.create(name);
+
+                if (key.getTarget() == Target.RESPONSE) {
+                    // Ignore response headers
+                    continue;
+                }
+
+                keys[group] = key;
+            }
+
+            return create(keys);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<HeaderKey<?>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull HeaderKey<?> key : header.getValue()) {
+                if (key.getTarget() == Target.RESPONSE) {
+                    // Ignore response headers
+                    continue;
+                }
+
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(key.getName());
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class TEHeaderKey extends HeaderKey<Weight<PseudoEncoding>[]> {
+        private TEHeaderKey() {
+            super("TE", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Weight<PseudoEncoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
+            @NotNull Matcher matcher = pattern.matcher(value);
+
+            //noinspection unchecked
+            @NotNull Weight<PseudoEncoding>[] pairs = new Weight[matcher.groupCount()];
+
+            for (int group = 0; group < matcher.groupCount(); group++) {
+                if (!matcher.find()) break;
+
+                @NotNull String encoding = matcher.group("encoding");
+                @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+
+                pairs[group] = Weight.create(weight, PseudoEncoding.create(encoding));
+            }
+
+            return create(pairs);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Weight<PseudoEncoding>[]> header) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
+                if (builder.length() > 0) builder.append(", ");
+                builder.append(pseudo);
+            }
+
+            return builder.toString();
+        }
+    }
+    private static final class SourceMapHeaderKey extends HeaderKey<Origin> {
+        private SourceMapHeaderKey() {
+            super("SourceMap", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Origin.parse(value));
+            } catch (ParseException | UnknownHostException | URISyntaxException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Origin> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class SaveDataHeaderKey extends HeaderKey<Boolean> {
+        private SaveDataHeaderKey() {
+            super("Save-Data", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(value.equalsIgnoreCase("on"));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Boolean> header) {
+            return header.getValue() ? "on" : "off";
+        }
+    }
+    private static final class RTTHeaderKey extends HeaderKey<Duration> {
+        private RTTHeaderKey() {
+            super("RTT", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Duration> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(Duration.ofMillis(Long.parseLong(value)));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Duration> header) {
+            return String.valueOf(header.getValue().toMillis());
+        }
+    }
+    private static final class RefererHeaderKey extends HeaderKey<Origin> {
+        private RefererHeaderKey() {
+            super("Referer", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(Origin.parse(value));
+            } catch (ParseException | UnknownHostException | URISyntaxException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Origin> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class ProxyAuthorizationHeaderKey extends HeaderKey<Credentials> {
+        private ProxyAuthorizationHeaderKey() {
+            super("Proxy-Authorization", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            @NotNull String[] split = value.split(" ", 2);
+            @NotNull Credentials credentials;
+
+            try {
+                if (split[0].equalsIgnoreCase("Bearer")) {
+                    credentials = new Credentials.Bearer(split[1].toLowerCase());
+                } else if (split[0].equalsIgnoreCase("Basic")) {
+                    credentials = Credentials.Basic.parse(split[1]);
+                } else {
+                    credentials = Credentials.Unknown.create(value.toCharArray());
+                }
+            } catch (@NotNull ParseException e) {
+                throw new HeaderFormatException("cannot parse credentials '" + value + "'", e);
+            }
+
+            return create(credentials);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Credentials> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class PragmaHeaderKey extends HeaderKey<Void> {
+        private PragmaHeaderKey() {
+            super("Pragma", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<Void> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create((Void) null);
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Void> header) {
+            return "no-cache";
+        }
+    }
+    private static final class OriginAgentClusterHeaderKey extends HeaderKey<Boolean> {
+        private OriginAgentClusterHeaderKey() {
+            super("Origin-Agent-Cluster", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.equalsIgnoreCase("?1")) {
+                return create(true);
+            } else if (value.equalsIgnoreCase("?0")) {
+                return create(false);
+            } else {
+                return create(Boolean.parseBoolean(value));
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Boolean> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class OriginHeaderKey extends HeaderKey<@Nullable Host> {
+        private OriginHeaderKey() {
+            super("Origin", Target.REQUEST);
+        }
+
+        @Override
+        public @NotNull Header<@Nullable Host> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equalsIgnoreCase("null")) {
+                return create((Host) null);
+            } else try {
+                return create(Host.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<@Nullable Host> header) {
+            return header.getValue().toString();
+        }
+    }
+    private static final class NetworkErrorLoggingHeaderKey extends HeaderKey<NetworkErrorLogging> {
+        private NetworkErrorLoggingHeaderKey() {
+            super("NEL", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<NetworkErrorLogging> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            try {
+                return create(NetworkErrorLogging.Parser.parse(value));
+            } catch (ParseException e) {
+                throw new HeaderFormatException(e);
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<NetworkErrorLogging> header) {
+            return NetworkErrorLogging.Parser.serialize(header.getValue());
+        }
+    }
     private static final class ExpectCTHeaderKey extends HeaderKey<ExpectCertificate> {
         private ExpectCTHeaderKey() {
             super("Expect-CT", Target.RESPONSE);
@@ -511,21 +715,21 @@ public abstract class HeaderKey<T> {
             return String.valueOf(header.getValue());
         }
     }
-    private static final class LocationHeaderKey extends HeaderKey<ContentLocation> {
+    private static final class LocationHeaderKey extends HeaderKey<Origin> {
         private LocationHeaderKey() {
             super("Location", Target.RESPONSE);
         }
 
         @Override
-        public @NotNull Header<ContentLocation> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(ContentLocation.parse(value));
+                return create(Origin.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException(e);
             }
         }
         @Override
-        public @NotNull String write(@NotNull Header<ContentLocation> header) {
+        public @NotNull String write(@NotNull Header<Origin> header) {
             return header.getValue().toString();
         }
     }
@@ -1040,21 +1244,21 @@ public abstract class HeaderKey<T> {
             return header.getValue().toString();
         }
     }
-    private static final class ContentLocationHeaderKey extends HeaderKey<ContentLocation> {
+    private static final class ContentLocationHeaderKey extends HeaderKey<Origin> {
         private ContentLocationHeaderKey() {
             super("Content-Location", Target.RESPONSE);
         }
 
         @Override
-        public @NotNull Header<ContentLocation> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+        public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
             try {
-                return create(ContentLocation.parse(value));
+                return create(Origin.parse(value));
             } catch (ParseException | UnknownHostException | URISyntaxException e) {
                 throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
             }
         }
         @Override
-        public @NotNull String write(@NotNull Header<ContentLocation> header) {
+        public @NotNull String write(@NotNull Header<Origin> header) {
             return header.getValue().toString();
         }
     }

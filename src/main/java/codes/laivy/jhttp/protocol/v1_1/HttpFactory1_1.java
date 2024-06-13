@@ -235,7 +235,11 @@ final class HttpFactory1_1 implements HttpFactory {
             if (content.length > 1) {
                 @NotNull String[] headerSection = content[0].split("\r\n", 2)[1].split("\r\n");
                 for (@NotNull String header : headerSection) {
-                    headerList.add(getHeaders().parse(header.getBytes()));
+                    try {
+                        headerList.add(getHeaders().parse(header.getBytes()));
+                    } catch (HeaderFormatException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             // Charset
@@ -254,12 +258,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @Nullable Message message = null;
             if (content.length == 2) {
                 byte[] value = content[1].getBytes();
-
-                if () {
-
-                }
-
-                message = new StringMessage(, charset);
+                message = new StringMessage(value, charset);
             }
 
             // todo: content length if not have

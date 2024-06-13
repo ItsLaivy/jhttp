@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.ContentLocation;
+import codes.laivy.jhttp.content.Origin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -10,9 +10,9 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public final class ContentLocationTests {
+public final class OriginTests {
 
-    private ContentLocationTests() {
+    private OriginTests() {
     }
 
     private static final @NotNull String[] VALIDS = new String[] {
@@ -25,14 +25,14 @@ public final class ContentLocationTests {
     @Order(value = 0)
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(ContentLocation.isContentLocation(valid));
-            Assertions.assertEquals(ContentLocation.parse(VALIDS[0]), ContentLocation.parse(ContentLocation.parse(VALIDS[0]).toString()));
+            Assertions.assertTrue(Origin.isContentLocation(valid));
+            Assertions.assertEquals(Origin.parse(VALIDS[0]), Origin.parse(Origin.parse(VALIDS[0]).toString()));
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull ContentLocation location = ContentLocation.parse("localhost:80/test/excellent");
+        @NotNull Origin location = Origin.parse("localhost:80/test/excellent");
 
         // Path
         Assertions.assertEquals(location.getURI().getPath(), URI.create("/test/excellent").getPath());
