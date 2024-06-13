@@ -16,7 +16,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
 
     // Static initializers
 
-    public static final @NotNull Pattern DOMAIN_URL_PATTERN = Pattern.compile("^(?:(http|https)://)?(?<host>[^]]{2,39})(?::(\\d+))?(/.*)?$");
+    public static final @NotNull Pattern DOMAIN_URL_PATTERN = Pattern.compile("^((?<protocol>http|https)://)?(?<host>[^:]{2,39})(?::(?<port>\\d+))?$");
 
     public static boolean validate(@NotNull String string) {
         return DOMAIN_URL_PATTERN.matcher(string).matches();
@@ -26,30 +26,29 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
 
         if (matcher.matches()) {
             // Protocol
-            @Nullable HttpProtocol protocol = matcher.group(1).equalsIgnoreCase("http") ? HttpProtocol.HTTP : matcher.group(1).equalsIgnoreCase("https") ? HttpProtocol.HTTPS : null;
+            @Nullable HttpProtocol protocol = null;
 
-            // Host
-            @NotNull String[] parts = matcher.group(2).split("\\.");
-            @NotNull String name = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : matcher.group(2);
-            @Nullable Integer port = matcher.group(3) != null ? Integer.parseInt(matcher.group(3)) : null;
-            @NotNull Host host = Host.parse(matcher.group(2));
-
-            if (port != null) {
-                if (port == HttpProtocol.HTTP.getPort()) {
-                    protocol = HttpProtocol.HTTP;
-                } else if (port == HttpProtocol.HTTPS.getPort()) {
-                    protocol = HttpProtocol.HTTPS;
-                }
+            if (matcher.group("protocol") != null) {
+                protocol = matcher.group("protocol").equalsIgnoreCase("http") ? HttpProtocol.HTTP : matcher.group("protocol").equalsIgnoreCase("https") ? HttpProtocol.HTTPS : null;
             }
 
+            // Host
+            @NotNull String[] parts = matcher.group("host").split("\\.");
+            @NotNull String name = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : matcher.group("host");
+            @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
+            @NotNull Host host = Host.parse(name + (port != null ? ":" + port : ""));
+
             // Subdomains
-            @NotNull Subdomain[] subdomains = Arrays.stream(Arrays.copyOf(parts, parts.length - 2)).map(subdomain -> {
-                if (!subdomain.trim().equals("*")) return Subdomain.create(subdomain);
-                else return Subdomain.wildcard();
-            }).toArray(Subdomain[]::new);
+            @NotNull Subdomain[] subdomains = new Subdomain[0];
+            if (parts.length > 1) {
+                subdomains = Arrays.stream(Arrays.copyOf(parts, parts.length - 2)).map(subdomain -> {
+                    if (!subdomain.trim().equals("*")) return Subdomain.create(subdomain);
+                    else return Subdomain.wildcard();
+                }).toArray(Subdomain[]::new);
+            }
 
             // Finish
-            return new Domain<>(protocol, subdomains, name, host);
+            return new Domain<>(protocol, subdomains, name.split(":")[0], host);
         } else {
             throw new ParseException("cannot parse '" + string + "' as a valid domain url", 0);
         }

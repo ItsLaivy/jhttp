@@ -73,7 +73,7 @@ public final class Subdomain implements CharSequence, Wildcard<String> {
 
     @Override
     public boolean isWildcard() {
-        return content != null;
+        return content == null;
     }
 
     @Override

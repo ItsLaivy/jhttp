@@ -27,13 +27,18 @@ public final class Data implements ContentSecurityPolicy.Source {
     public static @NotNull Data parse(@NotNull String string) throws ParseException, UnsupportedEncodingException {
         @NotNull Matcher matcher = DATA_URL_PATTERN.matcher(string);
 
-        if (validate(string)) {
-            @Nullable MediaType type = matcher.group(1) != null ? MediaType.parse(matcher.group(1)) : null;
-            @NotNull String encoding = type != null && type.getCharset() != null ? type.getCharset().raw() : "UTF-8";
+        if (matcher.matches()) {
+            @Nullable MediaType type = null;
+            @NotNull String encoding = "UTF-8";
+
+            if (!matcher.group(1).isEmpty()) {
+                type = matcher.group(1) != null ? MediaType.parse(matcher.group(1)) : null;
+                encoding = type != null && type.getCharset() != null ? type.getCharset().raw() : "UTF-8";
+            }
 
             boolean base64 = matcher.group(2) != null;
 
-            byte[] data = matcher.group(3).getBytes();
+            byte[] data = URLDecoder.decode(matcher.group(3), encoding).getBytes();
             byte[] decoded = base64 ? URLDecoder.decode(new String(Base64.getDecoder().decode(data)), encoding).getBytes() : null;
 
             return new Data(type, base64, decoded, data);
@@ -108,14 +113,12 @@ public final class Data implements ContentSecurityPolicy.Source {
     public boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
-        if (!super.equals(object)) return false;
         @NotNull Data data = (Data) object;
-        return base64 == data.base64 && Objects.equals(mediaType, data.mediaType) && Objects.deepEquals(raw, data.raw);
+        return base64 == data.base64 && Objects.equals(mediaType, data.mediaType) && Objects.deepEquals(decoded, data.decoded);
     }
-
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), mediaType, base64, Arrays.hashCode(raw));
+        return Objects.hash(mediaType, base64, Arrays.hashCode(decoded));
     }
 
     @Override
