@@ -2,10 +2,13 @@ package codes.laivy.jhttp.utilities;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Date;
 import java.util.Locale;
 
 public final class DateUtils {
@@ -39,8 +42,8 @@ public final class DateUtils {
          * @since 1.0-SNAPSHOT
          */
         public static @NotNull String convert(@NotNull OffsetDateTime dateTime) throws NullPointerException {
-            @NotNull DateTimeFormatter rfc822Formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
-            return dateTime.withOffsetSameInstant(ZoneOffset.UTC).format(rfc822Formatter);
+            @NotNull SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+            return dateFormat.format(new Date(dateTime.toInstant().toEpochMilli()));
         }
 
         /**
@@ -56,8 +59,12 @@ public final class DateUtils {
          * @throws IllegalArgumentException if the input is null or empty
          */
         public static @NotNull OffsetDateTime convert(@NotNull String date) throws DateTimeParseException, IllegalArgumentException {
-            @NotNull DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.ENGLISH);
-            return OffsetDateTime.parse(date, formatter);
+            try {
+                @NotNull SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+                return Instant.ofEpochMilli(dateFormat.parse(date).getTime()).atOffset(ZoneOffset.UTC);
+            } catch (ParseException e) {
+                throw new DateTimeParseException(e.getMessage(), date, e.getErrorOffset());
+            }
         }
 
     }
