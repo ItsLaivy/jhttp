@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public interface NetworkSpeed {
+public interface BitMeasure {
 
     // Static initializers
 
-    static @NotNull NetworkSpeed create(long bits) {
-        return new NetworkSpeed() {
+    static @NotNull BitMeasure create(long bits) {
+        return new BitMeasure() {
             @Override
             @Contract(pure = true)
             public long getBits() {
@@ -22,8 +22,8 @@ public interface NetworkSpeed {
             @Contract(pure = true)
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
-                if (!(object instanceof NetworkSpeed)) return false;
-                @NotNull NetworkSpeed that = (NetworkSpeed) object;
+                if (!(object instanceof BitMeasure)) return false;
+                @NotNull BitMeasure that = (BitMeasure) object;
                 return that.getBits() == bits;
             }
             @Override
@@ -39,26 +39,41 @@ public interface NetworkSpeed {
             }
         };
     }
-    static @NotNull NetworkSpeed create(@NotNull Category category, double value) {
-        return create((long) (value * category.getMultiplier()));
+    static @NotNull BitMeasure create(@NotNull Level level, double value) {
+        return create((long) (value * level.getMultiplier()));
     }
 
     // Getters
 
     long getBits();
 
-    default double getBits(@NotNull Category category) {
-        return getBits() / category.getMultiplier();
+    default long getBytes() {
+        return (long) getBits(Level.BYTES);
+    }
+    default double getKilobytes() {
+        return getBits(Level.KILOBYTES);
+    }
+    default double getMegabytes() {
+        return getBits(Level.MEGABYTES);
+    }
+    default double getGigabytes() {
+        return getBits(Level.GIGABYTES);
+    }
+
+    default double getBits(@NotNull Level level) {
+        return getBits() / level.getMultiplier();
     }
 
     // Classes
 
-    enum Category {
+    enum Level {
+        BITS(1L),
         KILOBITS(1_000D),
         MEGABITS(1_000_000D),
         GIGABITS(1_000_000_000D),
         TERABITS(1_000_000_000_000D),
 
+        BYTES(8L),
         KILOBYTES(8 * 1_000D),
         MEGABYTES(8 * 1_000_000D),
         GIGABYTES(8 * 1_000_000_000D),
@@ -67,7 +82,7 @@ public interface NetworkSpeed {
 
         private final double multiplier;
 
-        Category(double multiplier) {
+        Level(double multiplier) {
             this.multiplier = multiplier;
         }
 
