@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.content;
 
+import codes.laivy.jhttp.utilities.KeyReader;
 import codes.laivy.jhttp.utilities.Target;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -8,19 +9,14 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.Map.Entry;
 
 public final class CacheControl {
 
     // Static initializers
 
-    // todo 08/06/2024: regex performance improvement
-    public static boolean isCacheControl(@NotNull String string) {
+    public static boolean validate(@NotNull String string) {
         try {
             parse(string);
             return true;
@@ -31,31 +27,21 @@ public final class CacheControl {
 
     @SuppressWarnings("unchecked")
     public static @NotNull CacheControl parse(@NotNull String string) throws ParseException {
-        @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-        @NotNull Matcher matcher = pattern.matcher(string);
+        @NotNull Map<String, String> keys = KeyReader.read(string, '=', ',');
         @NotNull Map<Key<?>, Object> map = new LinkedHashMap<>();
 
-        int row = 0;
-        while (matcher.find()) {
-            @NotNull String[] group = matcher.group().split("\\s*=\\s*", 2);
-            @NotNull String name = group[0];
-
-            if (group.length == 1) {
-                try {
-                    @NotNull Key<Void> key = (Key<Void>) Key.getKey(name).orElseThrow(() -> new NullPointerException("unknown cache control key '" + name + "'"));
-                    map.put(key, null);
-                } catch (@NotNull ClassCastException ignore) {
-                    throw new ParseException("cache control key without values '" + name + "'", matcher.start(0));
-                }
+        for (@NotNull Entry<String, String> entry : keys.entrySet()) {
+            if (entry.getValue().isEmpty()) {
+                @NotNull Key<Void> key = (Key<Void>) Key.getKey(entry.getKey()).orElseThrow(() -> new ParseException("unknown cache control key '" + entry.getKey() + "'", 0));
+                map.put(key, null);
             } else try {
-                @NotNull Long value = Long.parseLong(group[1]);
-                @NotNull Key<Long> key = (Key<Long>) Key.getKey(name).orElseThrow(() -> new NullPointerException("unknown cache control key '" + name + "'"));
-
+                @NotNull Key<Long> key = (Key<Long>) Key.getKey(entry.getKey()).orElseThrow(() -> new ParseException("unknown cache control key '" + entry.getKey() + "'", 0));
+                @NotNull Long value = Long.parseLong(entry.getValue());
                 map.put(key, value);
             } catch (@NotNull ClassCastException ignore) {
-                throw new ParseException("the cache control key '" + name + "' doesn't have values", matcher.start(0));
+                throw new ParseException("the cache control key '" + entry.getKey() + "' doesn't have values", 0);
             } catch (@NotNull NumberFormatException ignore) {
-                throw new ParseException("the cache control key '" + name + "' value '" + group[1] + "' isn't valid", matcher.start(1));
+                throw new ParseException("the cache control key '" + entry.getKey() + "' value '" + entry.getValue() + "' isn't valid", 0);
             }
         }
 
@@ -123,49 +109,54 @@ public final class CacheControl {
 
         // Static initializers
 
-        public static @NotNull Optional<Key<?>> getKey(@NotNull String name) {
+        public static @NotNull Key<?>[] getKeys() {
+            @NotNull List<Key<?>> keys = new ArrayList<>();
+
             for (@NotNull Field field : Key.class.getDeclaredFields()) {
                 try {
-                    if (!field.isAccessible()) continue;
-                    @NotNull Key<?> key = (Key<?>) field.get(null);
+                    if (field.getType() != Key.class) continue;
 
-                    if (key.getName().equalsIgnoreCase(name)) {
-                        return Optional.of(key);
-                    }
+                    field.setAccessible(true);
+                    keys.add((Key<?>) field.get(null));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException("cannot access key field value '" + field.getName() + "'", e);
                 }
             }
 
-            return Optional.empty();
+            return keys.toArray(new Key[0]);
+        }
+        public static @NotNull Optional<Key<?>> getKey(@NotNull String name) {
+            return Arrays.stream(getKeys()).filter(key -> key.getName().equalsIgnoreCase(name)).findFirst();
         }
 
-        public static final @NotNull Key<Long> MAX_AGE = new Key<>("max-age", Target.BOTH);
-        public static final @NotNull Key<Long> MAX_STALE = new Key<>("max-stale", Target.REQUEST);
-        public static final @NotNull Key<Long> MIN_FRESH = new Key<>("min-fresh", Target.REQUEST);
-        public static final @NotNull Key<Long> S_MAXAGE = new Key<>("s-maxage", Target.RESPONSE);
-        public static final @NotNull Key<Long> STALE_WHILE_REVALIDATE = new Key<>("stale-while-revalidate", Target.RESPONSE);
-        public static final @NotNull Key<Long> STALE_IF_ERROR = new Key<>("stale-if-error", Target.BOTH);
+        public static final @NotNull Key<Long> MAX_AGE = new Key<>("max-age", long.class, Target.BOTH);
+        public static final @NotNull Key<Long> MAX_STALE = new Key<>("max-stale", long.class, Target.REQUEST);
+        public static final @NotNull Key<Long> MIN_FRESH = new Key<>("min-fresh", long.class, Target.REQUEST);
+        public static final @NotNull Key<Long> S_MAXAGE = new Key<>("s-maxage", long.class, Target.RESPONSE);
+        public static final @NotNull Key<Long> STALE_WHILE_REVALIDATE = new Key<>("stale-while-revalidate", long.class, Target.RESPONSE);
+        public static final @NotNull Key<Long> STALE_IF_ERROR = new Key<>("stale-if-error", long.class, Target.BOTH);
 
-        public static final @NotNull Key<Void> NO_CACHE = new Key<>("no-cache", Target.BOTH);
-        public static final @NotNull Key<Void> NO_STORE = new Key<>("no-store", Target.BOTH);
-        public static final @NotNull Key<Void> NO_TRANSFORM = new Key<>("no-transform", Target.BOTH);
-        public static final @NotNull Key<Void> ONLY_IF_CACHED = new Key<>("only-if-cached", Target.REQUEST);
-        public static final @NotNull Key<Void> MUST_REVALIDATE = new Key<>("must-revalidate", Target.RESPONSE);
-        public static final @NotNull Key<Void> PROXY_REVALIDATE = new Key<>("proxy-revalidate", Target.RESPONSE);
-        public static final @NotNull Key<Void> MUST_UNDERSTAND = new Key<>("must-understand", Target.RESPONSE);
-        public static final @NotNull Key<Void> PRIVATE = new Key<>("private", Target.RESPONSE);
-        public static final @NotNull Key<Void> PUBLIC = new Key<>("public", Target.RESPONSE);
-        public static final @NotNull Key<Void> IMMUTABLE = new Key<>("immutable", Target.RESPONSE);
+        public static final @NotNull Key<Void> NO_CACHE = new Key<>("no-cache", void.class, Target.BOTH);
+        public static final @NotNull Key<Void> NO_STORE = new Key<>("no-store", void.class, Target.BOTH);
+        public static final @NotNull Key<Void> NO_TRANSFORM = new Key<>("no-transform", void.class, Target.BOTH);
+        public static final @NotNull Key<Void> ONLY_IF_CACHED = new Key<>("only-if-cached", void.class, Target.REQUEST);
+        public static final @NotNull Key<Void> MUST_REVALIDATE = new Key<>("must-revalidate", void.class, Target.RESPONSE);
+        public static final @NotNull Key<Void> PROXY_REVALIDATE = new Key<>("proxy-revalidate", void.class, Target.RESPONSE);
+        public static final @NotNull Key<Void> MUST_UNDERSTAND = new Key<>("must-understand", void.class, Target.RESPONSE);
+        public static final @NotNull Key<Void> PRIVATE = new Key<>("private", void.class, Target.RESPONSE);
+        public static final @NotNull Key<Void> PUBLIC = new Key<>("public", void.class, Target.RESPONSE);
+        public static final @NotNull Key<Void> IMMUTABLE = new Key<>("immutable", void.class, Target.RESPONSE);
         ;
 
         // Object
 
         private final @NotNull String name;
+        private final @NotNull Class<T> type;
         private final @NotNull Target target;
 
-        private Key(@NotNull String name, @NotNull Target target) {
+        private Key(@NotNull String name, @NotNull Class<T> type, @NotNull Target target) {
             this.name = name;
+            this.type = type;
             this.target = target;
         }
 
@@ -174,6 +165,11 @@ public final class CacheControl {
         public @NotNull String getName() {
             return name;
         }
+
+        public @NotNull Class<T> getType() {
+            return type;
+        }
+
         public @NotNull Target getTarget() {
             return target;
         }
