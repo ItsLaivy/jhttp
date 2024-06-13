@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.content;
 
-import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,32 +24,31 @@ public final class ContentLocation {
     }
     public static @NotNull ContentLocation parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
         try {
-            @Nullable URIAuthority authority = URIAuthority.isUriAuthority(string) ? URIAuthority.parse(string) : null;
-            @NotNull URI path = new URI(string);
+            // todo: content location parser
 
             return new ContentLocation(authority, path);
         } catch (@NotNull URISyntaxException syntax) {
             throw new ParseException("cannot parse '" + string + "' into a valid location uri", 0);
         }
     }
-    public static @NotNull ContentLocation create(@NotNull URIAuthority authority, @NotNull URI path) {
-        return new ContentLocation(authority, path);
+    public static @NotNull ContentLocation create(@Nullable Domain<?> domain, @NotNull URI path) {
+        return new ContentLocation(domain, path);
     }
 
     // Object
 
-    private final @NotNull Domain domain;
+    private final @Nullable Domain<?> domain;
     private final @NotNull URI uri;
 
-    private ContentLocation(@Nullable URIAuthority authority, @NotNull URI uri) {
-        this.authority = authority;
+    private ContentLocation(@Nullable Domain<?> domain, @NotNull URI uri) {
+        this.domain = domain;
         this.uri = uri;
     }
 
     // Getters
 
-    public @Nullable URIAuthority getAuthority() {
-        return authority;
+    public @Nullable Domain<?> getDomain() {
+        return domain;
     }
     public @NotNull URI getURI() {
         return uri;
@@ -63,17 +61,17 @@ public final class ContentLocation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         @NotNull ContentLocation contentLocation = (ContentLocation) o;
-        return Objects.equals(authority, contentLocation.authority) && Objects.equals(uri, contentLocation.uri);
+        return Objects.equals(domain, contentLocation.domain) && Objects.equals(uri, contentLocation.uri);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(authority, uri);
+        return Objects.hash(domain, uri);
     }
 
     @Override
     public @NotNull String toString() {
-        if (getAuthority() != null) {
-            return getAuthority() + "/" + getURI().getPath();
+        if (getDomain() != null) {
+            return getDomain() + "/" + getURI().getPath();
         } else {
             return getURI().toString();
         }

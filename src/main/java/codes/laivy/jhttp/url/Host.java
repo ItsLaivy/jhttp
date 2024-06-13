@@ -17,6 +17,25 @@ import java.util.regex.Pattern;
 
 public interface Host {
 
+    // Static initializers
+
+    static boolean validate(@NotNull String string) {
+        return IPv4.validate(string) || IPv6.validate(string) || Name.validate(string);
+    }
+    static @NotNull Host parse(@NotNull String string) throws ParseException {
+        if (IPv4.validate(string)) {
+            return IPv4.parse(string);
+        } else if (IPv6.validate(string)) {
+            return IPv6.parse(string);
+        } else if (Name.validate(string)) {
+            return Name.parse(string);
+        } else {
+            throw new ParseException("the value '" + string + "' isn't a valid host", 0);
+        }
+    }
+
+    // Object
+
     @NotNull
     String getName();
 

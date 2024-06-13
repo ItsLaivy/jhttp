@@ -32,19 +32,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
             @NotNull String[] parts = matcher.group(2).split("\\.");
             @NotNull String name = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : matcher.group(2);
             @Nullable Integer port = matcher.group(3) != null ? Integer.parseInt(matcher.group(3)) : null;
-
-            @NotNull String hostname = matcher.group(2);
-            @NotNull Host host;
-
-            if (Host.IPv6.validate(hostname)) {
-                host = Host.IPv6.parse(hostname);
-            } else if (Host.IPv4.validate(hostname)) {
-                host = Host.IPv4.parse(hostname);
-            } else if (Host.Name.validate(hostname)) {
-                host = Host.Name.parse(hostname);
-            } else {
-                throw new ParseException("unknown host '" + string + "'", matcher.start(2));
-            }
+            @NotNull Host host = Host.parse(matcher.group(2));
 
             if (port != null) {
                 if (port == HttpProtocol.HTTP.getPort()) {
