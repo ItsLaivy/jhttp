@@ -6,9 +6,9 @@ import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
+import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.HttpStatus;
 import codes.laivy.jhttp.utilities.Method;
-import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.content.MediaType;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
@@ -13,10 +14,9 @@ import codes.laivy.jhttp.protocol.impl.HttpRequestImpl;
 import codes.laivy.jhttp.protocol.impl.HttpResponseImpl;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
-import codes.laivy.jhttp.utilities.HttpStatus;
-import codes.laivy.jhttp.content.MediaType;
-import codes.laivy.jhttp.utilities.Method;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.utilities.HttpStatus;
+import codes.laivy.jhttp.utilities.Method;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

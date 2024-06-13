@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;

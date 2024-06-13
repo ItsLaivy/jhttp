@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;

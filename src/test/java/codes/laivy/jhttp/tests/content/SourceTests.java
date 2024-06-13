@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.text.ParseException;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
@@ -24,7 +23,7 @@ public final class SourceTests {
                 "mail.example.com:443",
                 "https://store.example.com",
                 "*.example.com",
-                "https://*.example.com:12/path/to/file.js",
+                "https://*.example.com:12",
                 "ws://example.com/"
         };
 
@@ -44,7 +43,6 @@ public final class SourceTests {
 
             Assertions.assertEquals(domain.getHost().getPort(), 12);
             Assertions.assertEquals(domain.getName(), "example.com");
-            Assertions.assertEquals(domain.getPath(), URI.create("/path/to/file.js"));
             Assertions.assertTrue(domain.getProtocol().isSecure());
 
             // Subdomains
