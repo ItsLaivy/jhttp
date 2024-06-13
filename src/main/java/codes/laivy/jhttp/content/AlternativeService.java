@@ -2,59 +2,53 @@ package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.utilities.KeyReader;
+import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public final class AlternativeService {
 
     // Static initializers
 
-    @ApiStatus.Internal
-    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("(\\w+(-\\d+)?)\\s*=\\s*\"(:\\d+)\"(?:\\s*;\\s*ma\\s*=\\s*(\\d+))?(?:\\s*;\\s*persist\\s*=\\s*(\\d+))?");
-
-    public static boolean isAlternativeService(@NotNull String string) {
-        return PARSE_PATTERN.matcher(string).matches();
+    public static boolean validate(@NotNull String string) {
+        try {
+            parse(string);
+            return true;
+        } catch (@NotNull ParseException | @NotNull UnknownHostException | @NotNull URISyntaxException ignore) {
+            return false;
+        }
     }
-    public static @NotNull AlternativeService parse(@NotNull String string) throws ParseException {
-        @NotNull Matcher matcher = PARSE_PATTERN.matcher(string);
+    public static @NotNull AlternativeService parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+        @NotNull Map<String, String> keys = KeyReader.read(string, '=', ';');
 
-        if (matcher.groupCount() != 5) {
-            throw new ParseException("cannot parse '" + string + "' into a valid alternative service", 0);
+        // Duration and age
+        @Nullable Duration age = keys.containsKey("ma") && StringUtils.isInteger(keys.get("ma")) ? Duration.ofSeconds(Integer.parseInt(keys.get("ma"))) : null;
+        boolean persist = keys.containsKey("persist") && keys.get("persist").trim().equals("1");
+
+        // Protocol
+        @NotNull Optional<String> optional = keys.keySet().stream().filter(key -> !key.equalsIgnoreCase("ma") && !key.equalsIgnoreCase("persist")).findFirst();
+
+        if (optional.isPresent()) {
+            @NotNull String protocol = optional.get();
+            @Nullable URIAuthority authority = URIAuthority.parse(keys.get(protocol));
+
+            return new AlternativeService(protocol.getBytes(StandardCharsets.UTF_8), authority, age, persist);
+        } else {
+            throw new ParseException("cannot parse '" + string + "' into a valid alternative service because it's missing protocol", 0);
         }
-
-        byte[] protocol = matcher.group(1).getBytes();
-        @NotNull URIAuthority authority;
-        @NotNull Duration age;
-
-        try {
-            authority = URIAuthority.parse(matcher.group(3));
-        } catch (@NotNull URISyntaxException | UnknownHostException e) {
-            throw new ParseException("cannot parse '" + string.substring(matcher.start(3), matcher.end(3)) + "' into a valid uri authority: " + e.getMessage(), matcher.start(3));
-        }
-
-        try {
-            age = Duration.ofSeconds(matcher.group(4) == null ? 86400 : Integer.parseInt(matcher.group(4)));
-        } catch (@NotNull IllegalArgumentException ignore) {
-            throw new ParseException("cannot parse '" + string.substring(matcher.start(4), matcher.end(4)) + "' into a valid alternative service age integer", matcher.start(4));
-        }
-
-        boolean persist = matcher.group(5) != null && matcher.group(5).trim().equals("1");
-
-        if (age.isNegative()) {
-            throw new IllegalStateException("negative alternative service age");
-        }
-
-        return new AlternativeService(protocol, authority, age, persist);
     }
 
     public static @NotNull AlternativeService create(@NotNull HttpVersion version, @NotNull URIAuthority authority) {
@@ -63,7 +57,6 @@ public final class AlternativeService {
     public static @NotNull AlternativeService create(@NotNull HttpVersion version, @NotNull URIAuthority authority, @NotNull Duration age, boolean persist) {
         return new AlternativeService(version.getId(), authority, age, persist);
     }
-
     public static @NotNull AlternativeService create(byte[] protocolId, @NotNull URIAuthority authority, @NotNull Duration age, boolean persist) {
         return new AlternativeService(protocolId, authority, age, persist);
     }
@@ -72,10 +65,10 @@ public final class AlternativeService {
 
     private final byte[] version;
     private final @NotNull URIAuthority authority;
-    private final @NotNull Duration age;
+    private final @Nullable Duration age;
     private final boolean persistent;
 
-    private AlternativeService(byte[] version, @NotNull URIAuthority authority, @NotNull Duration age, boolean persistent) {
+    private AlternativeService(byte[] version, @NotNull URIAuthority authority, @Nullable Duration age, boolean persistent) {
         this.version = version;
         this.authority = authority;
         this.age = age;
@@ -90,7 +83,7 @@ public final class AlternativeService {
     public @NotNull URIAuthority getAuthority() {
         return authority;
     }
-    public @NotNull Duration getAge() {
+    public @Nullable Duration getAge() {
         return age;
     }
 
