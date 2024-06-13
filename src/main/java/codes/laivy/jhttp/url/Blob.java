@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.url;
 
+import codes.laivy.jhttp.url.Host.Name;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
@@ -25,9 +26,16 @@ public final class Blob implements ContentSecurityPolicy.Source {
         @NotNull Matcher matcher = BLOB_URL_PATTERN.matcher(string);
 
         if (validate(string)) {
-            @NotNull Domain domain = Domain.parse(matcher.group("domain"));
+            @NotNull Domain<Name> domain;
             @NotNull URI path = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
             @NotNull UUID uuid = UUID.fromString(matcher.group("uuid"));
+
+            try {
+                //noinspection unchecked
+                domain = (Domain<Name>) Domain.parse(matcher.group("domain"));
+            } catch (@NotNull ClassCastException ignore) {
+                throw new ParseException("invalid host name '" + matcher.group("domain") + "'", matcher.start("domain"));
+            }
 
             return new Blob(domain, path, uuid);
         } else {
@@ -35,18 +43,18 @@ public final class Blob implements ContentSecurityPolicy.Source {
         }
     }
 
-    public static @NotNull Blob create(@NotNull Domain domain, @NotNull URI path, @NotNull UUID uuid) {
+    public static @NotNull Blob create(@NotNull Domain<Name> domain, @NotNull URI path, @NotNull UUID uuid) {
         return new Blob(domain, path, uuid);
     }
 
     // Object
 
-    private final @NotNull Domain domain;
+    private final @NotNull Domain<Name> domain;
     private final @NotNull URI path;
 
     private final @NotNull UUID uuid;
 
-    private Blob(@NotNull Domain domain, @NotNull URI path, @NotNull UUID uuid) {
+    private Blob(@NotNull Domain<Name> domain, @NotNull URI path, @NotNull UUID uuid) {
         this.domain = domain;
         this.path = path;
         this.uuid = uuid;
@@ -54,7 +62,7 @@ public final class Blob implements ContentSecurityPolicy.Source {
 
     // Getters
 
-    public @NotNull Domain getDomain() {
+    public @NotNull Domain<Name> getDomain() {
         return domain;
     }
 

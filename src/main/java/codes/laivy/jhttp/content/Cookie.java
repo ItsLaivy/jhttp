@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.content;
 
+import codes.laivy.jhttp.url.Host.Name;
 import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.Contract;
@@ -120,7 +121,7 @@ public class Cookie {
                 @NotNull String key = matcher.group("key");
                 @NotNull String value = matcher.group("value");
 
-                @Nullable Domain domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
+                @Nullable Domain<Name> domain;
                 @Nullable OffsetDateTime expires = matcher.group("expires") != null ? DateUtils.RFC822.convert(matcher.group("domain")) : null;
                 @Nullable Duration maxAge = matcher.group("maxage") != null ? Duration.ofSeconds(Long.parseLong(matcher.group("maxage"))) : null;
                 @Nullable Path path = matcher.group("path") != null ? new File(matcher.group("path")).toPath() : null;
@@ -129,6 +130,13 @@ public class Cookie {
                 boolean httpOnly = matcher.group("httponly") != null;
                 boolean partitioned = matcher.group("partitioned") != null;
                 boolean secure = matcher.group("secure") != null;
+
+                try {
+                    //noinspection unchecked
+                    domain = matcher.group("domain") != null ? (Domain<Name>) Domain.parse(matcher.group("domain")) : null;
+                } catch (@NotNull ClassCastException ignore) {
+                    throw new ParseException("invalid host name '" + matcher.group("domain") + "'", matcher.start("domain"));
+                }
 
                 return new Request(key, value, domain, expires, maxAge, path, sameSite, httpOnly, partitioned, secure);
             } else {
@@ -145,7 +153,7 @@ public class Cookie {
 
         // Object
 
-        private final @Nullable Domain domain;
+        private final @Nullable Domain<Name> domain;
         private final @Nullable OffsetDateTime expires;
         private final @Nullable Duration maxAge;
         private final @Nullable Path path;
@@ -155,7 +163,7 @@ public class Cookie {
         private final boolean partitioned;
         private final boolean secure;
 
-        private Request(@NotNull String key, @NotNull String value, @Nullable Domain domain, @Nullable OffsetDateTime expires, @Nullable Duration maxAge, @Nullable Path path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
+        private Request(@NotNull String key, @NotNull String value, @Nullable Domain<Name> domain, @Nullable OffsetDateTime expires, @Nullable Duration maxAge, @Nullable Path path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
             super(key, value);
             this.domain = domain;
             this.expires = expires;
@@ -169,7 +177,7 @@ public class Cookie {
 
         // Getters
 
-        public @Nullable Domain getDomain() {
+        public @Nullable Domain<Name> getDomain() {
             return domain;
         }
         public @Nullable OffsetDateTime getExpires() {
@@ -270,7 +278,7 @@ public class Cookie {
             private final @NotNull String key;
             private final @NotNull String value;
 
-            private @Nullable Domain domain;
+            private @Nullable Domain<Name> domain;
             private @Nullable OffsetDateTime expires;
             private @Nullable Duration maxAge;
             private @Nullable Path path;
@@ -303,7 +311,7 @@ public class Cookie {
             }
 
             @Contract("_->this")
-            public @NotNull Builder domain(@NotNull Domain domain) {
+            public @NotNull Builder domain(@NotNull Domain<Name> domain) {
                 this.domain = domain;
                 return this;
             }

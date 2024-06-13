@@ -38,7 +38,7 @@ public final class SourceTests {
         @Test
         @Order(value = 1)
         void assertions() throws ParseException {
-            @NotNull Domain domain = Domain.parse("https://*.example.com:12/path/to/file.js");
+            @NotNull Domain<?> domain = Domain.parse("https://*.example.com:12");
 
             Assertions.assertNotNull(domain.getProtocol());
 

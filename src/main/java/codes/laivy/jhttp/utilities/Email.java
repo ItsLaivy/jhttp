@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.utilities;
 
+import codes.laivy.jhttp.url.Host.Name;
 import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.url.domain.Subdomain;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,14 @@ public final class Email implements CharSequence {
 
         if (matcher.matches()) {
             @NotNull String username = matcher.group("username");
-            @NotNull Domain domain = Domain.parse(matcher.group("domain"));
+            @NotNull Domain<Name> domain;
+
+            try {
+                //noinspection unchecked
+                domain = (Domain<Name>) Domain.parse(matcher.group("domain"));
+            } catch (@NotNull ClassCastException ignore) {
+                throw new ParseException("invalid host name '" + matcher.group("domain") + "'", matcher.start("domain"));
+            }
 
             return new Email(username, domain);
         } else {
@@ -32,16 +40,16 @@ public final class Email implements CharSequence {
         }
     }
 
-    public static @NotNull Email create(@NotNull String username, @NotNull Domain domain) throws IllegalArgumentException {
+    public static @NotNull Email create(@NotNull String username, @NotNull Domain<Name> domain) throws IllegalArgumentException {
         return new Email(username, domain);
     }
 
     // Object
 
     private final @NotNull String username;
-    private final @NotNull Domain domain;
+    private final @NotNull Domain<Name> domain;
 
-    private Email(@NotNull String username, @NotNull Domain domain) {
+    private Email(@NotNull String username, @NotNull Domain<Name> domain) {
         this.username = username;
         this.domain = domain;
     }
@@ -51,7 +59,7 @@ public final class Email implements CharSequence {
     public @NotNull String getUsername() {
         return username;
     }
-    public @NotNull Domain getDomain() {
+    public @NotNull Domain<Name> getDomain() {
         return domain;
     }
 
