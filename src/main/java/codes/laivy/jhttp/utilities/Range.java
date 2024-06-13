@@ -11,8 +11,13 @@ public final class Range<T extends Comparable<T>> {
     private final @NotNull T maximum;
 
     public Range(@NotNull T first, @NotNull T second) {
-        this.minimum = first.compareTo(second) <= 0 ? first : second;
-        this.maximum = second.compareTo(first) <= 0 ? second : first;
+        if (first.compareTo(second) <= 0) {
+            this.minimum = first;
+            this.maximum = second;
+        } else {
+            this.minimum = second;
+            this.maximum = first;
+        }
     }
 
     // Getters

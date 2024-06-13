@@ -14,7 +14,8 @@ public final class ContentRange {
 
     // Static initializers
 
-    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(\\w+) (\\d+)?-(\\d+)?/(\\d+|\\*)$");
+    // todo: this regex has vulnerabilities
+    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(\\w+) (\\*|\\d+)?-?(\\d+)?/(\\d+|\\*)$");
 
     public static boolean isContentRange(@NotNull String string) {
         return PARSE_PATTERN.matcher(string).matches();
@@ -24,32 +25,29 @@ public final class ContentRange {
 
         if (matcher.matches()) {
             @NotNull String unit = matcher.group(1);
+            @NotNull Wildcard<Long> size = !matcher.group(4).equals("*") ? Wildcard.create(Long.valueOf(matcher.group(4))) : Wildcard.create();
 
-            @Nullable Long rangeMinimum = matcher.group(2) != null ? Long.valueOf(matcher.group(2)) : null;
-            @Nullable Long rangeMaximum = matcher.group(3) != null ? Long.valueOf(matcher.group(3)) : null;
-
-            @Nullable Long size = !matcher.group(4).equals("*") ? Long.valueOf(matcher.group(4)) : null;
-
-            return new ContentRange(
-                    unit,
-                    rangeMinimum != null && rangeMaximum != null ? Wildcard.create(new Range<>(rangeMinimum, rangeMaximum)) : Wildcard.create(),
-                    size != null ? Wildcard.create(size) : Wildcard.create()
+            @NotNull Range<Long> range = new Range<>(
+                    matcher.group(2).trim().equals("*") ? Long.MIN_VALUE : Long.parseLong(matcher.group(2)),
+                    matcher.group(3) != null ? Long.parseLong(matcher.group(3)) : Long.MAX_VALUE
             );
+            
+            return new ContentRange(unit, range, size);
         } else {
             throw new ParseException("cannot parse '" + string + "' into a valid content range", 0);
         }
     }
-    public static @NotNull ContentRange create(@NotNull String unit, @NotNull Wildcard<Range<Long>> range, @NotNull Wildcard<Long> size) {
+    public static @NotNull ContentRange create(@NotNull String unit, @NotNull Range<Long> range, @NotNull Wildcard<Long> size) {
         return new ContentRange(unit, range, size);
     }
 
     // Object
 
     private final @NotNull String unit;
-    private final @NotNull Wildcard<Range<Long>> range;
+    private final @NotNull Range<Long> range;
     private final @NotNull Wildcard<Long> size;
 
-    private ContentRange(@NotNull String unit, @NotNull Wildcard<Range<Long>> range, @NotNull Wildcard<Long> size) {
+    private ContentRange(@NotNull String unit, @NotNull Range<Long> range, @NotNull Wildcard<Long> size) {
         this.unit = unit;
         this.range = range;
         this.size = size;
@@ -60,8 +58,7 @@ public final class ContentRange {
     public @NotNull String getUnit() {
         return unit;
     }
-
-    public @NotNull Wildcard<Range<Long>> getRange() {
+    public @NotNull Range<Long> getRange() {
         return range;
     }
     public @NotNull Wildcard<Long> getSize() {
@@ -84,10 +81,11 @@ public final class ContentRange {
 
     @Override
     public @NotNull String toString() {
-        if (getRange().isWildcard()) {
+        // Wildcard check
+        if (getRange().getMinimum() == Long.MIN_VALUE && getRange().getMaximum() == Long.MAX_VALUE) {
             return getUnit() + " " + "*/" + getSize();
         } else {
-            @NotNull Range<Long> range = getRange().getValue();
+            @NotNull Range<Long> range = getRange();
             return getUnit() + " " + range.getMinimum() + "-" + range.getMaximum() + "/" + getSize();
         }
     }
