@@ -13,7 +13,7 @@ public final class Subdomain implements CharSequence, Wildcard<String> {
 
     // Static initializers
 
-    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)*[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]$");
+    public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$");
 
     public static @NotNull Subdomain wildcard() {
         return new Subdomain();

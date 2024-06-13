@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.url;
 
+import codes.laivy.jhttp.url.domain.Subdomain;
 import inet.ipaddr.IPAddressString;
 import inet.ipaddr.ipv4.IPv4Address;
 import inet.ipaddr.ipv6.IPv6Address;
@@ -8,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 import java.text.ParseException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +60,19 @@ public interface Host {
             this.port = port;
         }
 
+        public @NotNull Subdomain[] getSubdomains() {
+            @NotNull String[] split = getName().split("\\.");
+            @NotNull List<Subdomain> list = new LinkedList<>();
+
+            if (split.length > 1) {
+                for (int row = 0; row + 2 < split.length; row++) {
+                    list.add(Subdomain.create(split[row]));
+                }
+            }
+
+            return list.toArray(new Subdomain[0]);
+        }
+
         @Override
         public @NotNull String getName() {
             return name;
@@ -64,6 +80,25 @@ public interface Host {
         @Override
         public @Range(from = 0, to = 65535) @Nullable Integer getPort() {
             return port;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            Name name1 = (Name) object;
+            return Objects.equals(name, name1.name) && Objects.equals(port, name1.port);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, port);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return getName() + (getPort() != null ? ":" + getPort() : "");
         }
 
     }
