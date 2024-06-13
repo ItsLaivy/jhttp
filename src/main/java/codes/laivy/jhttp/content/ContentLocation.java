@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +39,7 @@ public final class ContentLocation {
 
     // Object
 
-    private final @Nullable URIAuthority authority;
+    private final @NotNull Domain domain;
     private final @NotNull URI uri;
 
     private ContentLocation(@Nullable URIAuthority authority, @NotNull URI uri) {

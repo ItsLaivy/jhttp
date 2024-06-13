@@ -5,6 +5,7 @@ import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.Objects;
 import java.util.UUID;
@@ -15,7 +16,7 @@ public final class Blob implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
-    public static final @NotNull Pattern BLOB_URL_PATTERN = Pattern.compile("^blob:((?:https?://)?(?:[\\w.-]+\\.)?[^/]+)/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$");
+    public static final @NotNull Pattern BLOB_URL_PATTERN = Pattern.compile("^blob:((?:https?://)?(?<domain>(?:[\\w.-]+\\.)?[^/]+))(?<path>/.+)/(?<uuid>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$");
 
     public static boolean validate(@NotNull String string) {
         return BLOB_URL_PATTERN.matcher(string).matches();
@@ -24,26 +25,30 @@ public final class Blob implements ContentSecurityPolicy.Source {
         @NotNull Matcher matcher = BLOB_URL_PATTERN.matcher(string);
 
         if (validate(string)) {
-            @NotNull Domain domain = Domain.parse(matcher.group(0));
-            @NotNull UUID uuid = UUID.fromString(matcher.group(1));
+            @NotNull Domain domain = Domain.parse(matcher.group("domain"));
+            @NotNull URI path = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
+            @NotNull UUID uuid = UUID.fromString(matcher.group("uuid"));
 
-            return new Blob(domain, uuid);
+            return new Blob(domain, path, uuid);
         } else {
             throw new ParseException("cannot parse '" + string + "' as a valid blob url", 0);
         }
     }
 
-    public static @NotNull Blob create(@NotNull Domain domain, @NotNull UUID uuid) {
-        return new Blob(domain, uuid);
+    public static @NotNull Blob create(@NotNull Domain domain, @NotNull URI path, @NotNull UUID uuid) {
+        return new Blob(domain, path, uuid);
     }
 
     // Object
 
     private final @NotNull Domain domain;
+    private final @NotNull URI path;
+
     private final @NotNull UUID uuid;
 
-    private Blob(@NotNull Domain domain, @NotNull UUID uuid) {
+    private Blob(@NotNull Domain domain, @NotNull URI path, @NotNull UUID uuid) {
         this.domain = domain;
+        this.path = path;
         this.uuid = uuid;
     }
 
@@ -52,6 +57,11 @@ public final class Blob implements ContentSecurityPolicy.Source {
     public @NotNull Domain getDomain() {
         return domain;
     }
+
+    public @NotNull URI getPath() {
+        return path;
+    }
+
     public @NotNull UUID getUniqueId() {
         return uuid;
     }
@@ -67,16 +77,26 @@ public final class Blob implements ContentSecurityPolicy.Source {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         @NotNull Blob blob = (Blob) object;
-        return Objects.equals(domain, blob.domain) && Objects.equals(uuid, blob.uuid);
+        return Objects.equals(domain, blob.domain) && Objects.equals(path, blob.path) && Objects.equals(uuid, blob.uuid);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(domain, uuid);
+        return Objects.hash(domain, path, uuid);
     }
 
     @Override
     public @NotNull String toString() {
-        return "blob:" + getDomain() + (getDomain().toString().endsWith("/") ? "" : "/") + getUniqueId();
+        // Domain
+        @NotNull String domain = getDomain().toString();
+        if (!domain.endsWith("/")) domain += "/";
+        domain += getPath();
+
+        if (!domain.endsWith("/")) {
+            domain += "/";
+        }
+
+        // Generate blob
+        return "blob:" + domain + getUniqueId();
     }
 
 }

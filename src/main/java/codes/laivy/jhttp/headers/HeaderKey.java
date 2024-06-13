@@ -6,8 +6,7 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
-import codes.laivy.jhttp.url.domain.Domain;
-import codes.laivy.jhttp.url.domain.Domain.Host;
+import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.header.Weight;
@@ -103,7 +102,7 @@ public abstract class HeaderKey<T> {
     @Deprecated
     public static @NotNull HeaderKey<Boolean> DNT = new DNTHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<NetworkSpeed> DOWNLINK = new DownlinkHeaderKey();
+    public static @NotNull HeaderKey<BitMeasure> DOWNLINK = new DownlinkHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Float> DPR = new DPRHeaderKey();
     @ApiStatus.Experimental
@@ -128,8 +127,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<OffsetDateTime> IF_UNMODIFIED_SINCE = new IfUnmodifiedSinceHeaderKey();
     public static @NotNull HeaderKey<KeepAlive> KEEP_ALIVE = new KeepAliveHeaderKey();
     @Deprecated
-    public static @NotNull HeaderKey<?> LARGE_ALLOCATION = new StringHeaderKey("Large-Allocation");
-    public static @NotNull HeaderKey<?> LAST_MODIFIED = new StringHeaderKey("Last-Modified");
+    public static @NotNull HeaderKey<Optional<BitMeasure>> LARGE_ALLOCATION = new LargeAllocationHeaderKey();
+    public static @NotNull HeaderKey<OffsetDateTime> LAST_MODIFIED = new LastModifiedHeaderKey();
     public static @NotNull HeaderKey<?> LINK = new StringHeaderKey("Link");
     public static @NotNull HeaderKey<?> LOCATION = new StringHeaderKey("Location");
     public static @NotNull HeaderKey<?> MAX_FORWARDS = new StringHeaderKey("Max-Forwards");
@@ -299,6 +298,42 @@ public abstract class HeaderKey<T> {
         }
     }
 
+    private static final class LastModifiedHeaderKey extends HeaderKey<OffsetDateTime> {
+        private LastModifiedHeaderKey() {
+            super("Last-Modified", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(DateUtils.RFC822.convert(value));
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            return DateUtils.RFC822.convert(header.getValue());
+        }
+    }
+    private static final class LargeAllocationHeaderKey extends HeaderKey<Optional<BitMeasure>> {
+        private LargeAllocationHeaderKey() {
+            super("Large-Allocation", Target.RESPONSE);
+        }
+
+        @Override
+        public @NotNull Header<Optional<BitMeasure>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            if (value.trim().equals("0")) {
+                return create(Optional.empty());
+            } else try {
+                int megabytes = Integer.parseInt(value.replace(",", "."));
+                return create(Optional.of(BitMeasure.create(BitMeasure.Level.MEGABYTES, megabytes)));
+            } catch (@NotNull NumberFormatException ignore) {
+                throw new HeaderFormatException("cannot parse '" + value + "' as a valid megabytes number");
+            }
+        }
+        @Override
+        public @NotNull String write(@NotNull Header<Optional<BitMeasure>> header) {
+            @NotNull Optional<BitMeasure> optional = header.getValue();
+            return optional.map(bitMeasure -> String.valueOf((int) bitMeasure.getMegabytes())).orElse("0");
+        }
+    }
     private static final class KeepAliveHeaderKey extends HeaderKey<KeepAlive> {
         private KeepAliveHeaderKey() {
             super("Keep-Alive", Target.BOTH);
@@ -587,18 +622,18 @@ public abstract class HeaderKey<T> {
             return header.getValue().toString();
         }
     }
-    private static final class DownlinkHeaderKey extends HeaderKey<NetworkSpeed> {
+    private static final class DownlinkHeaderKey extends HeaderKey<BitMeasure> {
         private DownlinkHeaderKey() {
             super("Downlink", Target.REQUEST);
         }
 
         @Override
-        public @NotNull Header<NetworkSpeed> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-            return create(NetworkSpeed.create((long) (Double.parseDouble(value) * 1_000_000D)));
+        public @NotNull Header<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            return create(BitMeasure.create((long) (Double.parseDouble(value) * 1_000_000D)));
         }
         @Override
-        public @NotNull String write(@NotNull Header<NetworkSpeed> header) {
-            return String.valueOf(header.getValue().getBits(NetworkSpeed.Category.MEGABITS));
+        public @NotNull String write(@NotNull Header<BitMeasure> header) {
+            return String.valueOf(header.getValue().getBits(BitMeasure.Level.MEGABITS));
         }
     }
     private static final class DNTHeaderKey extends HeaderKey<Boolean> {
