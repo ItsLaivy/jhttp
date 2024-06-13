@@ -24,7 +24,7 @@ public interface Origin {
             throw new UnsupportedOperationException("this class cannot be instantiated");
         }
 
-        public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}))?(?<path>/\\S*)?$");
+        public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?)(/.*)??(?<path>/\\S*)?$");
 
         public static boolean validate(@NotNull String string) {
             return ORIGIN_PATTERN.matcher(string).matches();
@@ -33,7 +33,7 @@ public interface Origin {
             @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
 
             if (matcher.matches()) {
-                @NotNull Domain<?> domain = Domain.parse(matcher.group("domain"));
+                @Nullable Domain<?> domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
                 @NotNull URI uri = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
 
                 return create(domain, uri);
@@ -43,7 +43,14 @@ public interface Origin {
         }
         public static @NotNull String serialize(@NotNull Origin origin) {
             if (origin.getDomain() != null) {
-                return origin.getDomain() + "/" + origin.getURI().getPath();
+                @NotNull StringBuilder builder = new StringBuilder(origin.getDomain().toString());
+
+                if (!origin.getURI().toString().startsWith("/")) {
+                    builder.append("/");
+                }
+
+                builder.append(origin.getURI());
+                return builder.toString();
             } else {
                 return origin.getURI().toString();
             }
@@ -70,6 +77,11 @@ public interface Origin {
                 @Override
                 public int hashCode() {
                     return Objects.hash(domain, uri);
+                }
+
+                @Override
+                public @NotNull String toString() {
+                    return serialize(this);
                 }
             };
         }
