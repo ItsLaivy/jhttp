@@ -1,21 +1,27 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.content.MediaType;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.MissingHeaderException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
+import codes.laivy.jhttp.message.BlankMessage;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.message.StringMessage;
 import codes.laivy.jhttp.protocol.HttpFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
+import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.HttpProtocol;
 import codes.laivy.jhttp.utilities.HttpStatus;
 import codes.laivy.jhttp.utilities.Method;
+import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,9 +32,13 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static codes.laivy.jhttp.Main.CRLF;
+import static codes.laivy.jhttp.headers.HeaderKey.CONTENT_ENCODING;
+import static codes.laivy.jhttp.headers.HeaderKey.CONTENT_LENGTH;
 
 @ApiStatus.Internal
 final class HttpFactory1_1 implements HttpFactory {
@@ -57,101 +67,76 @@ final class HttpFactory1_1 implements HttpFactory {
 
     private final @NotNull Request request = new Request() {
         @Override
-        public @NotNull HttpRequest parse(@NotNull String string) throws ParseException, MissingHeaderException, HeaderFormatException {
+        public @NotNull HttpRequest parse(@NotNull String string) throws IllegalHttpVersionException, MissingHeaderException, HeaderFormatException, UnknownHostException, URISyntaxException, EncodingException, ParseException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
 
             // Content
-            @NotNull String[] content = string.split("\r\n\r\n", 2);
-            @NotNull String request = content[0];
+            @NotNull String[] content = string.split(CRLF + CRLF, 2);
 
-            @NotNull URIAuthority authority;
-            @NotNull URI uri;
-
-            // Get connection address
-            @NotNull String temp1 = request.split(" ", 3)[1];
-            @NotNull Matcher matcher = Pattern.compile("(?i)\\r\\n\\s*Host: ?([a-zA-Z0-9:._-]*)\\s*\\r\\n").matcher(request);
-
-            try {
-                if (!matcher.find()) {
-                    throw new ParseException("missing '" + HeaderKey.HOST + "' header (required for all " + getVersion() + " requests)", 0);
-                }
-
-                if (URIAuthority.isUriAuthority(temp1)) {
-                    try {
-                        authority = URIAuthority.parse(temp1);
-                    } catch (UnknownHostException | URISyntaxException e) {
-                        throw new ParseException("cannot retrieve uri authority: " + e.getMessage(), getVersion().toString().length());
-                    }
-
-                    uri = parseUri(temp1);
-                } else {
-                    try { // Get by host header
-                        @NotNull String hostName = matcher.group(0).replaceAll("(?i)(\\s)?(\\\\r\\\\n)??", "");
-                        authority = URIAuthority.parse(hostName);
-                    } catch (UnknownHostException | URISyntaxException e) {
-                        throw new ParseException("cannot retrieve uri authority: " + e.getMessage(), getVersion().toString().length());
-                    }
-
-                    uri = new URI(temp1);
-                }
-            } catch (@NotNull URISyntaxException e) {
-                throw new ParseException(e.getMessage(), getVersion().toString().length());
+            // Headers
+            @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
+            for (@NotNull String header : content[0].split(CRLF, 2)[1].split(CRLF)) {
+                headers.add(getHeaders().parse(header));
             }
+
+            // Validate host headers
+            if (headers.get(HeaderKey.HOST).length == 0) {
+                throw new MissingHeaderException("cannot find '" + HeaderKey.HOST + "' header. This header is required for " + getVersion() + " requests.");
+            } else if (headers.get(HeaderKey.HOST).length > 1) {
+                throw new HeaderFormatException("multiples '" + HeaderKey.HOST + "' headers.");
+            }
+
+            @NotNull Host host = headers.get(HeaderKey.HOST)[0].getValue();
 
             // Request line
-            final @NotNull String[] temp2 = request.split("\r\n", 2);
-            @NotNull String requestLine = temp2[0];
-            @NotNull String[] headers = temp2[1].split("\r\n");
+            @NotNull String[] requestLine = content[0].split(CRLF, 2)[0].split(" ");
+            @NotNull Method method = Method.valueOf(requestLine[0].toUpperCase());
+            @Nullable URIAuthority authority = URIAuthority.validate(requestLine[1]) ? URIAuthority.parse(requestLine[1]) : null;
+            @NotNull URI uri = parseUri(requestLine[1]);
 
-            // Retrieve headers
-            @NotNull MutableHeaders headerList = codes.laivy.jhttp.headers.Headers.createMutable();
-
-            for (@NotNull String headerBrute : headers) {
-                headerList.add(getHeaders().parse(headerBrute));
-            }
-
-            // Validate host header
-            @NotNull Header<?>[] hostHeaders = headerList.get(HeaderKey.HOST);
-            if (hostHeaders.length == 0) {
-                throw new MissingHeaderException("cannot find 'Host' header");
-            } else if (hostHeaders.length > 1) {
-                throw new HeaderFormatException("multiples '" + HeaderKey.HOST + "' headers");
-            }
-
-            // Method
-            @NotNull String methodName = requestLine.split(" ", 2)[0].toUpperCase();
-            @NotNull Method method;
-
-            try {
-                method = Method.valueOf(methodName);
-            } catch (@NotNull IllegalArgumentException e) {
-                throw new ParseException("cannot parse '" + methodName + "' as a valid " + getVersion() + " request method", 0);
-            }
-            // Charset
-            @NotNull Charset charset = StandardCharsets.UTF_8;
-
-            @NotNull Optional<Header<MediaType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
-            if (optional.isPresent()) {
-                try {
-                    @NotNull MediaType type = optional.get().getValue();
-
-                    if (type.getCharset() != null && type.getCharset().available()) {
-                        charset = type.getCharset().retrieve();
-                    }
-                } catch (@NotNull Throwable throwable) {
-                    throw new ParseException("cannot parse content type: " + throwable.getMessage(), 0);
-                }
+            if (!requestLine[2].equals(getVersion().toString())) {
+                throw new IllegalHttpVersionException("this request from version '" + requestLine[2] + "' cannot be parsed using the version '" + getVersion() + "'");
             }
 
             // Message
-            @Nullable Message message = null;
-            if (content.length == 2) {
-                message = new StringMessage(content[1], charset);
+            @Nullable Message message;
+
+            {
+                // Message Length
+                byte[] bytes = content[1].getBytes();
+
+                if (headers.contains(CONTENT_LENGTH)) {
+                    int contentLength = (int) headers.get(CONTENT_LENGTH)[0].getValue().getBytes();
+                    bytes = Arrays.copyOfRange(content[1].getBytes(), 0, contentLength);
+                }
+
+                // Message Encoding
+                @NotNull Encoding @Nullable [] encodings = null;
+                if (headers.contains(CONTENT_ENCODING)) {
+                    @NotNull PseudoEncoding[] array = headers.get(CONTENT_ENCODING)[0].getValue();
+
+                    // Only apply encoding if all the encodings are available (not pseudo)
+                    if (Arrays.stream(array).allMatch(PseudoEncoding::available)) {
+                        encodings = Arrays.stream(array).map(PseudoEncoding::retrieve).toArray(Encoding[]::new);
+                    }
+                }
+
+                if (encodings != null) for (@NotNull Encoding encoding : encodings) {
+                    bytes = encoding.decompress(getVersion(), bytes);
+                }
+
+                if (bytes.length == 0) {
+                    message = BlankMessage.create();
+                } else {
+                    // todo: remove this string message
+                    message = new StringMessage(bytes, StandardCharsets.UTF_8);
+                }
             }
 
-            return build(method, authority, uri, headerList, message);
+            // Finish
+            return build(method, authority, uri, headers, message);
         }
 
         @Override
@@ -166,13 +151,13 @@ final class HttpFactory1_1 implements HttpFactory {
 
             // Write request line
             @NotNull String authority = request.getAuthority() != null ? request.getAuthority().toString() : request.getUri().toString();
-            builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion()).append("\r\n");
+            builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion()).append(CRLF);
             // Write headers
             for (@NotNull Header<?> header : request.getHeaders()) {
-                builder.append(getHeaders().wrap(header)).append("\r\n");
+                builder.append(getHeaders().wrap(header)).append(CRLF);
             }
             // End request configurations
-            builder.append("\r\n");
+            builder.append(CRLF);
             // Write a message if exists
             if (request.getMessage() != null) {
                 @NotNull Message message = request.getMessage();
@@ -189,7 +174,7 @@ final class HttpFactory1_1 implements HttpFactory {
 
         @Override
         public boolean isCompatible(@NotNull String string) {
-            if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
+            if (!string.contains(CRLF) || !string.contains("\n\r\n")) {
                 return false;
             }
 
@@ -207,9 +192,9 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull HttpStatus status;
 
             // Content
-            @NotNull String[] content = string.split("\r\n\r\n", 2);
+            @NotNull String[] content = string.split(CRLF + CRLF, 2);
             // Request line
-            @NotNull String[] temp = content[0].split("\r\n", 2);
+            @NotNull String[] temp = content[0].split(CRLF, 2);
             @NotNull String[] responseLine = temp[0].split(" ", 3);
 
             try {
@@ -225,7 +210,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull MutableHeaders headerList = codes.laivy.jhttp.headers.Headers.createMutable();
 
             if (content.length > 1) {
-                @NotNull String[] headerSection = content[0].split("\r\n", 2)[1].split("\r\n");
+                @NotNull String[] headerSection = content[0].split(CRLF, 2)[1].split(CRLF);
                 for (@NotNull String header : headerSection) {
                     headerList.add(getHeaders().parse(header));
                 }
@@ -262,13 +247,13 @@ final class HttpFactory1_1 implements HttpFactory {
             }
 
             @NotNull StringBuilder builder = new StringBuilder();
-            builder.append(getVersion()).append(" ").append(response.getStatus().getCode()).append(" ").append(response.getStatus().getMessage()).append("\r\n");
+            builder.append(getVersion()).append(" ").append(response.getStatus().getCode()).append(" ").append(response.getStatus().getMessage()).append(CRLF);
             // Write headers
             for (@NotNull Header<?> header : response.getHeaders()) {
-                builder.append(getHeaders().wrap(header)).append("\r\n");
+                builder.append(getHeaders().wrap(header)).append(CRLF);
             }
             // End request configurations
-            builder.append("\r\n");
+            builder.append(CRLF);
             // Write a message if exists
             if (response.getMessage() != null) {
                 @NotNull Message message = response.getMessage();
@@ -285,7 +270,7 @@ final class HttpFactory1_1 implements HttpFactory {
 
         @Override
         public boolean isCompatible(@NotNull String string) {
-            if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
+            if (!string.contains(CRLF) || !string.contains("\n\r\n")) {
                 return false;
             }
 
@@ -299,7 +284,7 @@ final class HttpFactory1_1 implements HttpFactory {
                 throw new ParseException("not a valid " + getVersion() + " header: " + string, -1);
             }
 
-            @NotNull String[] parts = string.split(":\\s*");
+            @NotNull String[] parts = string.split(":\\s*", 2);
             @NotNull String name = parts[0];
             @NotNull String value = parts[1];
 

@@ -32,7 +32,7 @@ public final class URIAuthorityTests {
     @Order(value = 0)
     void validate() {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(URIAuthority.isUriAuthority(valid));
+            Assertions.assertTrue(URIAuthority.validate(valid));
         }
     }
     @Test

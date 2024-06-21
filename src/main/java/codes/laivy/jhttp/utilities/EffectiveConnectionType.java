@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.utilities;
 
+import codes.laivy.jhttp.utilities.BitMeasure.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,9 +10,9 @@ import java.util.Optional;
 
 public enum EffectiveConnectionType {
 
-    SLOW_2G("slow-2g", Duration.ofMillis(2000), BitMeasure.create(BitMeasure.Level.KILOBITS, 50)),
-    _2G("2g", Duration.ofMillis(1400), BitMeasure.create(BitMeasure.Level.KILOBITS, 70)),
-    _3G("3g", Duration.ofMillis(270), BitMeasure.create(BitMeasure.Level.KILOBITS, 700)),
+    SLOW_2G("slow-2g", Duration.ofMillis(2000), BitMeasure.create(Level.KILOBITS, 50)),
+    _2G("2g", Duration.ofMillis(1400), BitMeasure.create(Level.KILOBITS, 70)),
+    _3G("3g", Duration.ofMillis(270), BitMeasure.create(Level.KILOBITS, 700)),
     _4G("4g", Duration.ZERO, null),
     ;
 

@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.url.Host.Name;
-import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
+import codes.laivy.jhttp.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -1,7 +1,9 @@
 package codes.laivy.jhttp.protocol;
 
 import codes.laivy.jhttp.exception.MissingHeaderException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.request.HttpRequest;
@@ -13,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 
 import static codes.laivy.jhttp.headers.Headers.MutableHeaders;
@@ -24,7 +28,7 @@ public interface HttpFactory {
     @NotNull Headers getHeaders();
 
     interface Request {
-        @NotNull HttpRequest parse(@NotNull String data) throws ParseException, MissingHeaderException, HeaderFormatException;
+        @NotNull HttpRequest parse(@NotNull String data) throws ParseException, MissingHeaderException, HeaderFormatException, IllegalHttpVersionException, UnknownHostException, URISyntaxException, EncodingException;
         @NotNull String wrap(@NotNull HttpRequest request);
 
         @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable Message message);

@@ -2,7 +2,6 @@ package codes.laivy.jhttp.message;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 public final class StringMessage implements Message {
@@ -33,8 +32,4 @@ public final class StringMessage implements Message {
         return bytes.length;
     }
 
-    @Override
-    public void close() throws IOException {
-
-    }
 }

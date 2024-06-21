@@ -2,10 +2,9 @@ package codes.laivy.jhttp.message;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Closeable;
 import java.nio.charset.Charset;
 
-public interface Message extends Closeable {
+public interface Message {
 
     @NotNull Charset getCharset();
 

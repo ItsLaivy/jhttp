@@ -7,7 +7,7 @@ import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
-import codes.laivy.jhttp.url.csp.ContentSecurityPolicy;
+import codes.laivy.jhttp.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
@@ -35,8 +35,13 @@ public abstract class HeaderKey<T> {
 
     public static @NotNull HeaderKey<?> create(@NotNull String name) {
         try {
-            @NotNull Field field = HeaderKey.class.getDeclaredField(name.replace("-", "_").toLowerCase());
-            return (HeaderKey<?>) field.get(null);
+            @NotNull Field field = HeaderKey.class.getDeclaredField(name.replace("-", "_").toUpperCase());
+            field.setAccessible(true);
+
+            if (field.getType() == HeaderKey.class) {
+                HeaderKey<?> key = (HeaderKey<?>) field.get(null);
+                return key;
+            }
         } catch (NoSuchFieldException | IllegalAccessException ignore) {
         } catch (Throwable throwable) {
             throw new IllegalStateException("Cannot create header key '" + name + "'");
@@ -76,6 +81,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<ContentDisposition> CONTENT_DISPOSITION = new Provided.ContentDispositionHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Float> CONTENT_DPR = new Provided.ContentDPRHeaderKey();
+    // todo: there's a directives list allowed for this header
     public static @NotNull HeaderKey<PseudoEncoding[]> CONTENT_ENCODING = new Provided.ContentEncodingHeaderKey();
     public static @NotNull HeaderKey<Locale[]> CONTENT_LANGUAGE = new Provided.ContentLanguageHeaderKey();
     public static @NotNull HeaderKey<BitMeasure> CONTENT_LENGTH = new Provided.ContentLengthHeaderKey();

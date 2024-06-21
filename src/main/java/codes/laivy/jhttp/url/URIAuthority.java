@@ -20,7 +20,7 @@ public final class URIAuthority {
     @ApiStatus.Internal
     public static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("^(https?://)?(([^:@]*:[^@]*)@)?([^:/]*)(:[0-9]+)?(/.*)?$");
 
-    public static boolean isUriAuthority(@NotNull String uri) {
+    public static boolean validate(@NotNull String uri) {
         return PARSE_PATTERN.matcher(uri).matches();
     }
 
