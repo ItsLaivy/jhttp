@@ -4,17 +4,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
 
-public interface Message {
+public interface Message extends CharSequence {
+
+    // Static initializers
+
+    static @NotNull StringMessage create(@NotNull Charset charset, @NotNull String message) {
+        return new StringMessage(charset, message.getBytes(charset));
+    }
+
+    // Object
 
     @NotNull Charset getCharset();
-
-    byte[] getContent();
-
-    long size();
-
-    static @NotNull StringMessage create(@NotNull String message, @NotNull Charset charset) {
-        byte[] bytes = message.getBytes();
-        return new StringMessage(bytes, charset);
-    }
 
 }

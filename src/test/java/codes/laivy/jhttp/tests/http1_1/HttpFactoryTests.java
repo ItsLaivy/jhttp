@@ -58,7 +58,7 @@ public final class HttpFactoryTests {
             @NotNull HttpRequest request = HttpVersion.HTTP1_1().getFactory().getRequest().parse(string);
 
             Assertions.assertNotNull(request.getMessage());
-            Assertions.assertEquals(new String(request.getMessage().getContent()), expected);
+            Assertions.assertEquals(request.getMessage().toString(), expected);
             Assertions.assertEquals(request.getMethod(), Method.GET);
             Assertions.assertEquals(request.getUri(), URI.create("/index.php"));
             Assertions.assertEquals(request.getHeaders().get(HOST)[0].getValue(), Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"));

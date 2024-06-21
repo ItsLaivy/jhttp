@@ -2,12 +2,12 @@ package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.content.*;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
-import codes.laivy.jhttp.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.utilities.header.Weight;
 import codes.laivy.jhttp.utilities.header.Wildcard;
@@ -341,10 +341,11 @@ public abstract class HeaderKey<T> {
                 for (int group = 0; group < matcher.groupCount(); group++) {
                     if (!matcher.find()) break;
 
-                    @NotNull String encoding = matcher.group("encoding");
+                    @NotNull String string = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs[group] = Weight.create(weight, PseudoEncoding.create(encoding));
+                    @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
+                    pairs[group] = optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string)));
                 }
 
                 return create(pairs);
@@ -1284,12 +1285,11 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
                 @NotNull List<PseudoEncoding> encodings = new ArrayList<>();
 
-                while (matcher.find()) {
-                    @NotNull String name = matcher.group(matcher.group());
-                    encodings.add(PseudoEncoding.create(name));
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    @NotNull Optional<Encoding> optional = Encoding.retrieve(name);
+                    encodings.add(optional.map(PseudoEncoding::createAvailable).orElseGet(() -> PseudoEncoding.createUnavailable(name)));
                 }
 
                 return create(encodings.toArray(new PseudoEncoding[0]));
@@ -1872,10 +1872,11 @@ public abstract class HeaderKey<T> {
                 for (int group = 0; group < matcher.groupCount(); group++) {
                     if (!matcher.find()) break;
 
-                    @NotNull String encoding = matcher.group("encoding");
+                    @NotNull String string = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs[group] = Weight.create(weight, PseudoEncoding.create(encoding));
+                    @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
+                    pairs[group] = optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string)));
                 }
 
                 return create(pairs);
@@ -2037,9 +2038,8 @@ public abstract class HeaderKey<T> {
                 while (matcher.find()) {
                     @NotNull String name = matcher.group(matcher.group());
 
-                    if (!name.isEmpty()) {
-                        encodings.add(PseudoEncoding.create(name));
-                    }
+                    @NotNull Optional<Encoding> optional = Encoding.retrieve(name);
+                    encodings.add(optional.map(PseudoEncoding::createAvailable).orElseGet(() -> PseudoEncoding.createUnavailable(name)));
                 }
 
                 return create(encodings.toArray(new PseudoEncoding[0]));

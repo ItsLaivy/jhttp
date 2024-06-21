@@ -13,10 +13,10 @@ public final class PseudoEncoding implements PseudoString<Encoding> {
 
     // Static initializers
 
-    public static @NotNull PseudoEncoding create(@NotNull String name) {
+    public static @NotNull PseudoEncoding createUnavailable(@NotNull String name) {
         return new PseudoEncoding(name);
     }
-    public static @NotNull PseudoEncoding create(@NotNull Encoding encoding) {
+    public static @NotNull PseudoEncoding createAvailable(@NotNull Encoding encoding) {
         return new PseudoEncoding(encoding.getName());
     }
 

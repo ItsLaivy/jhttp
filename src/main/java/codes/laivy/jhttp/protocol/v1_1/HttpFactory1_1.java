@@ -133,7 +133,7 @@ final class HttpFactory1_1 implements HttpFactory {
                     message = BlankMessage.create();
                 } else {
                     // todo: remove this string message
-                    message = new StringMessage(pure, StandardCharsets.UTF_8);
+                    message = new StringMessage(StandardCharsets.UTF_8, pure.getBytes());
                 }
             }
 
@@ -163,7 +163,7 @@ final class HttpFactory1_1 implements HttpFactory {
             // Write a message if exists
             if (request.getMessage() != null) {
                 @NotNull Message message = request.getMessage();
-                builder.append(new String(message.getContent(), message.getCharset()));
+                builder.append(message.toString());
             }
 
             return builder.toString();
@@ -233,7 +233,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @Nullable Message message = null;
             if (content.length == 2) {
                 byte[] value = content[1].getBytes();
-                message = new StringMessage(value, charset);
+                message = new StringMessage(charset, value);
             }
 
             // todo: content length if not have
@@ -259,7 +259,7 @@ final class HttpFactory1_1 implements HttpFactory {
             // Write a message if exists
             if (response.getMessage() != null) {
                 @NotNull Message message = response.getMessage();
-                builder.append(new String(message.getContent(), message.getCharset()));
+                builder.append(message.toString());
             }
 
             return builder.toString();

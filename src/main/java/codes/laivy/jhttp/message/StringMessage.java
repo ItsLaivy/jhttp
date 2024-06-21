@@ -9,27 +9,33 @@ public final class StringMessage implements Message {
     private final @NotNull Charset charset;
     private final byte @NotNull [] bytes;
 
-    public StringMessage(@NotNull String message, @NotNull Charset charset) {
-        this(message.getBytes(charset), charset);
-    }
-    public StringMessage(byte @NotNull [] bytes, @NotNull Charset charset) {
-        this.bytes = bytes;
+    public StringMessage(@NotNull Charset charset, byte @NotNull [] bytes) {
         this.charset = charset;
+        this.bytes = bytes;
     }
+
+    // Getters
 
     @Override
     public @NotNull Charset getCharset() {
         return charset;
     }
-
     @Override
-    public byte[] getContent() {
-        return bytes;
+    public int length() {
+        return toString().length();
+    }
+    @Override
+    public char charAt(int index) {
+        return toString().charAt(index);
+    }
+    @Override
+    public @NotNull CharSequence subSequence(int start, int end) {
+        return toString().subSequence(start, end);
     }
 
     @Override
-    public long size() {
-        return bytes.length;
+    public @NotNull String toString() {
+        return new String(bytes, getCharset());
     }
 
 }

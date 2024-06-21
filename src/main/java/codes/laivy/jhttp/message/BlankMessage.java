@@ -34,12 +34,16 @@ public final class BlankMessage implements Message {
     }
 
     @Override
-    public byte[] getContent() {
-        return new byte[0];
+    public int length() {
+        return toString().length();
     }
     @Override
-    public long size() {
-        return 0;
+    public char charAt(int index) {
+        return toString().charAt(index);
+    }
+    @Override
+    public @NotNull CharSequence subSequence(int start, int end) {
+        return toString().subSequence(start, end);
     }
 
     // Implementations
@@ -54,6 +58,11 @@ public final class BlankMessage implements Message {
     @Override
     public int hashCode() {
         return Objects.hashCode(charset);
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return new String(new byte[0], getCharset());
     }
 
 }
