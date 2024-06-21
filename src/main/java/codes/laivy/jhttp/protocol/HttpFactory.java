@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.protocol;
 
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.exception.MissingHeaderException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.message.Message;
@@ -24,20 +25,20 @@ public interface HttpFactory {
     @NotNull Headers getHeaders();
 
     interface Request {
-        @NotNull HttpRequest parse(@NotNull HttpClient client, byte[] data) throws ParseException;
+        @NotNull HttpRequest parse(byte[] data) throws ParseException, MissingHeaderException, HeaderFormatException;
         byte[] wrap(@NotNull HttpRequest request);
 
         @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable Message message);
 
-        boolean isCompatible(@NotNull HttpClient client, byte[] data);
+        boolean isCompatible(byte[] data);
     }
     interface Response {
-        @NotNull HttpResponse parse(@NotNull HttpClient client, byte[] data) throws ParseException;
+        @NotNull HttpResponse parse(byte[] data) throws ParseException;
         byte[] wrap(@NotNull HttpResponse response);
 
         @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable Message message);
 
-        boolean isCompatible(@NotNull HttpClient client, byte[] data);
+        boolean isCompatible(byte[] data);
     }
     interface Headers {
         <T> @NotNull Header<T> parse(byte[] data) throws ParseException, HeaderFormatException;

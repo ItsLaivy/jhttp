@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
-import codes.laivy.jhttp.connection.HttpClient;
 import codes.laivy.jhttp.content.MediaType;
+import codes.laivy.jhttp.exception.MissingHeaderException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
@@ -59,10 +59,10 @@ final class HttpFactory1_1 implements HttpFactory {
 
     private final @NotNull Request request = new Request() {
         @Override
-        public @NotNull HttpRequest parse(@NotNull HttpClient client, byte[] data) throws ParseException {
+        public @NotNull HttpRequest parse(byte[] data) throws ParseException, MissingHeaderException, HeaderFormatException {
             @NotNull String string = new String(data, StandardCharsets.UTF_8);
 
-            if (!isCompatible(client, string)) {
+            if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
 
@@ -113,16 +113,14 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull MutableHeaders headerList = codes.laivy.jhttp.headers.Headers.createMutable();
 
             for (@NotNull String headerBrute : headers) {
-                try {
-                    headerList.add(getHeaders().parse(headerBrute.getBytes()));
-                } catch (@NotNull Throwable throwable) {
-                    throw new ParseException("illegal headers format", 0);
-                }
+                headerList.add(getHeaders().parse(headerBrute.getBytes()));
             }
 
             // Validate host header
             @NotNull Header<?>[] hostHeaders = headerList.get(HeaderKey.HOST);
-            if (hostHeaders.length > 1) {
+            if (hostHeaders.length == 0) {
+                throw new ParseException("cannot find 'Host' header", 0);
+            } else if (hostHeaders.length > 1) {
                 throw new ParseException("multiples '" + HeaderKey.HOST + "' headers", 0);
             }
 
@@ -194,10 +192,10 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public boolean isCompatible(@NotNull HttpClient client, byte[] data) {
-            return this.isCompatible(client, new String(data));
+        public boolean isCompatible(byte[] data) {
+            return this.isCompatible(new String(data));
         }
-        public boolean isCompatible(@NotNull HttpClient client, @NotNull String string) {
+        public boolean isCompatible(@NotNull String string) {
             if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
                 return false;
             }
@@ -208,10 +206,10 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Response response = new Response() {
         @Override
-        public @NotNull HttpResponse parse(@NotNull HttpClient client, byte[] data) throws ParseException {
+        public @NotNull HttpResponse parse(byte[] data) throws ParseException {
             @NotNull String string = new String(data, StandardCharsets.UTF_8);
 
-            if (!isCompatible(client, string)) {
+            if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
 
@@ -299,10 +297,10 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public boolean isCompatible(@NotNull HttpClient client, byte[] data) {
-            return isCompatible(client, new String(data));
+        public boolean isCompatible(byte[] data) {
+            return isCompatible(new String(data));
         }
-        public boolean isCompatible(@NotNull HttpClient client, @NotNull String string) {
+        public boolean isCompatible(@NotNull String string) {
             if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
                 return false;
             }
@@ -330,7 +328,7 @@ final class HttpFactory1_1 implements HttpFactory {
 
         @Override
         public <T> byte[] wrap(@NotNull Header<T> header) {
-            return header.getKey().write(header).getBytes();
+            return header.getKey().write(getVersion(), header).getBytes();
         }
 
         @Override

@@ -165,7 +165,7 @@ public abstract class HeaderKey<T> {
     // Modules
 
     public abstract @NotNull Header<T> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException;
-    public abstract @NotNull String write(@NotNull Header<T> header);
+    public abstract @NotNull String write(@NotNull HttpVersion version, @NotNull Header<T> header);
 
     public @NotNull Header<T> create(@UnknownNullability T value) {
         return Header.create(this, value);
@@ -206,7 +206,7 @@ public abstract class HeaderKey<T> {
                 return Header.create(this, value);
             }
             @Override
-            public @NotNull String write(@NotNull Header<String> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<String> header) {
                 return header.getValue();
             }
         }
@@ -220,7 +220,7 @@ public abstract class HeaderKey<T> {
                 return create(Integer.parseInt(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Integer> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Integer> header) {
                 return header.getValue().toString();
             }
         }
@@ -235,7 +235,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull String write(@NotNull Header<Boolean> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Boolean> header) {
                 return header.getValue().toString();
             }
         }
@@ -265,7 +265,7 @@ public abstract class HeaderKey<T> {
                 return create(keys);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<HeaderKey<?>>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<HeaderKey<?>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<HeaderKey<?>> key : header.getValue()) {
@@ -303,7 +303,7 @@ public abstract class HeaderKey<T> {
                 return create(keys);
             }
             @Override
-            public @NotNull String write(@NotNull Header<HeaderKey<?>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull HeaderKey<?> key : header.getValue()) {
@@ -344,7 +344,7 @@ public abstract class HeaderKey<T> {
                 return create(pairs);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Weight<PseudoEncoding>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
@@ -369,7 +369,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Origin> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Origin> header) {
                 return Origin.Parser.serialize(header.getValue());
             }
         }
@@ -383,7 +383,7 @@ public abstract class HeaderKey<T> {
                 return create(value.equalsIgnoreCase("on"));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Boolean> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Boolean> header) {
                 return header.getValue() ? "on" : "off";
             }
         }
@@ -397,7 +397,7 @@ public abstract class HeaderKey<T> {
                 return create(Duration.ofMillis(Long.parseLong(value)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Duration> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Duration> header) {
                 return String.valueOf(header.getValue().toMillis());
             }
         }
@@ -415,7 +415,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Origin> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Origin> header) {
                 return Origin.Parser.serialize(header.getValue());
             }
         }
@@ -444,7 +444,7 @@ public abstract class HeaderKey<T> {
                 return create(credentials);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Credentials> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Credentials> header) {
                 return header.getValue().toString();
             }
         }
@@ -458,7 +458,7 @@ public abstract class HeaderKey<T> {
                 return create((Void) null);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Void> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Void> header) {
                 return "no-cache";
             }
         }
@@ -478,7 +478,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Boolean> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Boolean> header) {
                 return header.getValue().toString();
             }
         }
@@ -498,7 +498,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<@Nullable Host> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@Nullable Host> header) {
                 return header.getValue().toString();
             }
         }
@@ -516,7 +516,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<NetworkErrorLogging> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<NetworkErrorLogging> header) {
                 return NetworkErrorLogging.Parser.serialize(header.getValue());
             }
         }
@@ -534,7 +534,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<ExpectCertificate> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ExpectCertificate> header) {
                 return header.getValue().toString();
             }
         }
@@ -563,7 +563,7 @@ public abstract class HeaderKey<T> {
                 return create(keys);
             }
             @Override
-            public @NotNull String write(@NotNull Header<HeaderKey<?>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull HeaderKey<?> key : header.getValue()) {
@@ -589,7 +589,7 @@ public abstract class HeaderKey<T> {
                 return create(BitMeasure.create(BitMeasure.Level.BYTES, Double.parseDouble(value)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<BitMeasure> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<BitMeasure> header) {
                 return String.valueOf(header.getValue().getBytes());
             }
         }
@@ -611,7 +611,7 @@ public abstract class HeaderKey<T> {
                 return create(locales.toArray(new Locale[0]));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Locale[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Locale[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Locale locale : header.getValue()) {
@@ -632,7 +632,7 @@ public abstract class HeaderKey<T> {
                 return create(Float.parseFloat(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Float> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Float> header) {
                 return String.valueOf(header.getValue());
             }
         }
@@ -646,7 +646,7 @@ public abstract class HeaderKey<T> {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Duration> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Duration> header) {
                 return String.valueOf(header.getValue().getSeconds());
             }
         }
@@ -660,7 +660,7 @@ public abstract class HeaderKey<T> {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Duration> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Duration> header) {
                 return String.valueOf(header.getValue().getSeconds());
             }
         }
@@ -674,7 +674,7 @@ public abstract class HeaderKey<T> {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Duration> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Duration> header) {
                 return String.valueOf(header.getValue().getSeconds());
             }
         }
@@ -688,7 +688,7 @@ public abstract class HeaderKey<T> {
                 return Header.create(this, value);
             }
             @Override
-            public @NotNull String write(@NotNull Header<String> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<String> header) {
                 return header.getValue();
             }
         }
@@ -706,7 +706,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Cookie.Request> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Cookie.Request> header) {
                 return header.getValue().toString();
             }
         }
@@ -720,7 +720,7 @@ public abstract class HeaderKey<T> {
                 return create(Integer.parseInt(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Integer> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Integer> header) {
                 return String.valueOf(header.getValue());
             }
         }
@@ -738,7 +738,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Origin> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Origin> header) {
                 return Origin.Parser.serialize(header.getValue());
             }
         }
@@ -752,7 +752,7 @@ public abstract class HeaderKey<T> {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
                 return DateUtils.RFC822.convert(header.getValue());
             }
         }
@@ -773,7 +773,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Optional<BitMeasure>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Optional<BitMeasure>> header) {
                 @NotNull Optional<BitMeasure> optional = header.getValue();
                 return optional.map(bitMeasure -> String.valueOf((int) bitMeasure.getMegabytes())).orElse("0");
             }
@@ -792,7 +792,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<KeepAlive> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<KeepAlive> header) {
                 return header.getValue().toString();
             }
         }
@@ -806,7 +806,7 @@ public abstract class HeaderKey<T> {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
                 return DateUtils.RFC822.convert(header.getValue());
             }
         }
@@ -836,7 +836,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<EntityTag[]>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<EntityTag[]>> header) {
                 @NotNull Wildcard<EntityTag[]> wildcard = header.getValue();
 
                 if (wildcard.isWildcard()) {
@@ -863,7 +863,7 @@ public abstract class HeaderKey<T> {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
                 return DateUtils.RFC822.convert(header.getValue());
             }
         }
@@ -893,7 +893,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<EntityTag[]>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<EntityTag[]>> header) {
                 @NotNull Wildcard<EntityTag[]> wildcard = header.getValue();
 
                 if (wildcard.isWildcard()) {
@@ -924,7 +924,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Host> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Host> header) {
                 return header.getValue().toString();
             }
         }
@@ -942,7 +942,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Email> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Email> header) {
                 return header.getValue().toString();
             }
         }
@@ -960,7 +960,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Forwarded> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Forwarded> header) {
                 return header.getValue().toString();
             }
         }
@@ -978,7 +978,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
                 if (header.getValue().isBefore(OffsetDateTime.now())) {
                     return "0";
                 } else {
@@ -1001,7 +1001,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<HttpStatus> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HttpStatus> header) {
                 @NotNull HttpStatus status = header.getValue();
                 return status.getCode() + "-" + status.getMessage().replace(" ", "_").toLowerCase();
             }
@@ -1020,7 +1020,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<EntityTag> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<EntityTag> header) {
                 return header.getValue().toString();
             }
         }
@@ -1034,7 +1034,7 @@ public abstract class HeaderKey<T> {
                 return create(EffectiveConnectionType.getById(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<EffectiveConnectionType> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<EffectiveConnectionType> header) {
                 return header.getValue().getId();
             }
         }
@@ -1048,7 +1048,7 @@ public abstract class HeaderKey<T> {
                 return create((Void) null);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Void> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Void> header) {
                 return "1";
             }
         }
@@ -1062,7 +1062,7 @@ public abstract class HeaderKey<T> {
                 return create(Float.parseFloat(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Float> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Float> header) {
                 return header.getValue().toString();
             }
         }
@@ -1076,7 +1076,7 @@ public abstract class HeaderKey<T> {
                 return create(BitMeasure.create((long) (Double.parseDouble(value) * 1_000_000D)));
             }
             @Override
-            public @NotNull String write(@NotNull Header<BitMeasure> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<BitMeasure> header) {
                 return String.valueOf(header.getValue().getBits(BitMeasure.Level.MEGABITS));
             }
         }
@@ -1090,7 +1090,7 @@ public abstract class HeaderKey<T> {
                 return create(value.trim().equals("1"));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Boolean> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Boolean> header) {
                 return header.getValue() ? "1" : "0";
             }
         }
@@ -1104,7 +1104,7 @@ public abstract class HeaderKey<T> {
                 return create(Float.parseFloat(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Float> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Float> header) {
                 return header.getValue().toString();
             }
         }
@@ -1118,7 +1118,7 @@ public abstract class HeaderKey<T> {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<OffsetDateTime> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
                 return DateUtils.RFC822.convert(header.getValue());
             }
         }
@@ -1132,7 +1132,7 @@ public abstract class HeaderKey<T> {
                 return create(CrossOrigin.ResourcePolicy.getById(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<CrossOrigin.ResourcePolicy> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<CrossOrigin.ResourcePolicy> header) {
                 return header.getValue().getId();
             }
         }
@@ -1146,7 +1146,7 @@ public abstract class HeaderKey<T> {
                 return create(CrossOrigin.OpenerPolicy.getById(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<CrossOrigin.OpenerPolicy> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<CrossOrigin.OpenerPolicy> header) {
                 return header.getValue().getId();
             }
         }
@@ -1160,7 +1160,7 @@ public abstract class HeaderKey<T> {
                 return create(CrossOrigin.EmbedderPolicy.getById(value));
             }
             @Override
-            public @NotNull String write(@NotNull Header<CrossOrigin.EmbedderPolicy> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<CrossOrigin.EmbedderPolicy> header) {
                 return header.getValue().getId();
             }
         }
@@ -1188,7 +1188,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull String write(@NotNull Header<Cookie[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Cookie[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Cookie cookie : header.getValue()) {
@@ -1213,7 +1213,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<ContentSecurityPolicy> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ContentSecurityPolicy> header) {
                 return header.getValue().toString();
             }
         }
@@ -1231,7 +1231,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<ContentSecurityPolicy> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ContentSecurityPolicy> header) {
                 return header.getValue().toString();
             }
         }
@@ -1249,7 +1249,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<ContentRange> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ContentRange> header) {
                 return header.getValue().toString();
             }
         }
@@ -1267,7 +1267,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Origin> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Origin> header) {
                 return Origin.Parser.serialize(header.getValue());
             }
         }
@@ -1289,7 +1289,7 @@ public abstract class HeaderKey<T> {
                 return create(encodings.toArray(new PseudoEncoding[0]));
             }
             @Override
-            public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoEncoding[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull PseudoEncoding encoding : header.getValue()) {
@@ -1314,7 +1314,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<ContentDisposition> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ContentDisposition> header) {
                 return header.getValue().toString();
             }
         }
@@ -1332,7 +1332,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Connection> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Connection> header) {
                 return header.getValue().toString();
             }
         }
@@ -1364,7 +1364,7 @@ public abstract class HeaderKey<T> {
                 return create(data.toArray(new Wildcard[0]));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<SiteData>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<SiteData>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<SiteData> data : header.getValue()) {
@@ -1389,7 +1389,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<CacheControl> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<CacheControl> header) {
                 return header.getValue().toString();
             }
         }
@@ -1418,7 +1418,7 @@ public abstract class HeaderKey<T> {
                 return create(credentials);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Credentials> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Credentials> header) {
                 return header.getValue().toString();
             }
         }
@@ -1436,7 +1436,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<URIAuthority> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<URIAuthority> header) {
                 @NotNull URIAuthority authority = header.getValue();
                 return authority.getHostName() + ":" + authority.getPort();
             }
@@ -1471,7 +1471,7 @@ public abstract class HeaderKey<T> {
                 return create(Optional.of(services));
             }
             @Override
-            public @NotNull String write(@NotNull Header<Optional<AlternativeService[]>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Optional<AlternativeService[]>> header) {
                 if (header.getValue().isPresent()) {
                     @NotNull StringBuilder builder = new StringBuilder();
 
@@ -1512,7 +1512,7 @@ public abstract class HeaderKey<T> {
                 return create(methods);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Method[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Method[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Method method : header.getValue()) {
@@ -1549,7 +1549,7 @@ public abstract class HeaderKey<T> {
                 return create(methods);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Method[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Method[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Method method : header.getValue()) {
@@ -1586,7 +1586,7 @@ public abstract class HeaderKey<T> {
                 return create(headers);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> h : header.getValue()) {
@@ -1623,7 +1623,7 @@ public abstract class HeaderKey<T> {
                 return create(headers);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> h : header.getValue()) {
@@ -1654,7 +1654,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<@Nullable URIAuthority>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<@Nullable URIAuthority>> header) {
                 return header.getValue().toString();
             }
         }
@@ -1686,7 +1686,7 @@ public abstract class HeaderKey<T> {
                 return create(methods);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<Method>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Method>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<Method> method : header.getValue()) {
@@ -1723,7 +1723,7 @@ public abstract class HeaderKey<T> {
                 return create(headers);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> h : header.getValue()) {
@@ -1744,7 +1744,7 @@ public abstract class HeaderKey<T> {
                 return create(AcceptRange.valueOf(value.toUpperCase()));
             }
             @Override
-            public @NotNull String write(@NotNull Header<AcceptRange> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<AcceptRange> header) {
                 return header.getValue().name().toLowerCase();
             }
         }
@@ -1768,7 +1768,7 @@ public abstract class HeaderKey<T> {
                 return create(types);
             }
             @Override
-            public @NotNull String write(@NotNull Header<MediaType.Type[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType.Type[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull MediaType.Type type : header.getValue()) {
@@ -1804,7 +1804,7 @@ public abstract class HeaderKey<T> {
                 return create(types);
             }
             @Override
-            public @NotNull String write(@NotNull Header<MediaType[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull MediaType type : header.getValue()) {
@@ -1842,7 +1842,7 @@ public abstract class HeaderKey<T> {
                 return create(pairs);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Weight<Locale>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<Locale>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Weight<Locale> pseudo : header.getValue()) {
@@ -1878,7 +1878,7 @@ public abstract class HeaderKey<T> {
                 return create(pairs);
             }
             @Override
-            public @NotNull String write(@NotNull Header<Weight<PseudoEncoding>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
@@ -1915,7 +1915,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull String write(@NotNull Header<Weight<PseudoCharset>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoCharset>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull Weight<PseudoCharset> pseudo : header.getValue()) {
@@ -1951,7 +1951,7 @@ public abstract class HeaderKey<T> {
                 return create(keys);
             }
             @Override
-            public @NotNull String write(@NotNull Header<HeaderKey<?>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull HeaderKey<?> key : header.getValue()) {
@@ -1992,7 +1992,7 @@ public abstract class HeaderKey<T> {
                 return create(types.toArray(new MediaType[0]));
             }
             @Override
-            public @NotNull String write(@NotNull Header<MediaType[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull MediaType type : header.getValue()) {
@@ -2017,7 +2017,7 @@ public abstract class HeaderKey<T> {
                 }
             }
             @Override
-            public @NotNull String write(@NotNull Header<MediaType> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType> header) {
                 return header.getValue().toString();
             }
         }
@@ -2042,7 +2042,7 @@ public abstract class HeaderKey<T> {
                 return create(encodings.toArray(new PseudoEncoding[0]));
             }
             @Override
-            public @NotNull String write(@NotNull Header<PseudoEncoding[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoEncoding[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 for (@NotNull PseudoEncoding encoding : header.getValue()) {
