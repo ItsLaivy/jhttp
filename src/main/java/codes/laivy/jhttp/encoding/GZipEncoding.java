@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +25,7 @@ public class GZipEncoding extends Encoding {
     }
 
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         if (bytes.length == 0) return new byte[0];
 
         try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
@@ -40,12 +40,12 @@ public class GZipEncoding extends Encoding {
 
             return outStream.toByteArray();
         } catch (IOException e) {
-            throw new TransferEncodingException("cannot decompress with gzip native stream", e);
+            throw new EncodingException("cannot decompress with gzip native stream", e);
         }
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         if (bytes.length == 0) return new byte[0];
 
         try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length);
@@ -56,7 +56,7 @@ public class GZipEncoding extends Encoding {
 
             return byteStream.toByteArray();
         } catch (IOException e) {
-            throw new TransferEncodingException("cannot compress with gzip native stream", e);
+            throw new EncodingException("cannot compress with gzip native stream", e);
         }
     }
 

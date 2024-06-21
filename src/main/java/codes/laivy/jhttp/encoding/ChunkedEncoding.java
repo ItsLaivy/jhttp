@@ -2,7 +2,7 @@ package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Extension;
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Length;
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.Contract;
@@ -20,6 +20,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static codes.laivy.jhttp.Main.CRLF;
 
 public class ChunkedEncoding extends Encoding {
 
@@ -56,7 +58,7 @@ public class ChunkedEncoding extends Encoding {
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         // As you can see, the compression is pretty much simpler than the decompression
         // Lol the decompression method took Laivy almost 16 hours to be done :crying:
 
@@ -66,21 +68,21 @@ public class ChunkedEncoding extends Encoding {
         for (byte[] block : StringUtils.explode(bytes, getBlockSize())) {
             // Length and extensions
             @NotNull Length length = new Length(block.length, extensions(version, block));
-            builder.append(length).append("\r\n");
+            builder.append(length).append(CRLF);
 
             // Content
-            builder.append(new String(block)).append("\r\n");
+            builder.append(new String(block)).append(CRLF);
         }
 
         // Ending
         @NotNull Length length = new Length(0, extensions(version, new byte[0]));
-        builder.append(length).append("\r\n").append("\r\n");
+        builder.append(length).append(CRLF).append(CRLF);
 
         // Finish
         return builder.toString().getBytes();
     }
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         // Parser functions
         @NotNull BiFunction<String, Length, Chunk> chunkParser = new BiFunction<String, Length, Chunk>() {
             @Override
@@ -124,7 +126,7 @@ public class ChunkedEncoding extends Encoding {
         @Nullable Length length = null;
         while (!string.isEmpty()) {
             if (length == null) {
-                @NotNull String part = string.split("\r\n", 2)[0];
+                @NotNull String part = string.split(CRLF, 2)[0];
                 length = lengthParser.apply(part);
 
                 string = string.substring(part.length() + 2);

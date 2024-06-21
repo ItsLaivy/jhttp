@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -162,9 +162,9 @@ public abstract class Encoding {
         return name;
     }
 
-    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
+    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException, IllegalHttpVersionException;
 
-    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException, IllegalHttpVersionException;
+    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException, IllegalHttpVersionException;
 
     public boolean isCompatible(@NotNull HttpVersion version) {
         return true;

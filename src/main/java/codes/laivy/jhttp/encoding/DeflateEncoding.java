@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +38,7 @@ public class DeflateEncoding extends Encoding {
     // Modules
 
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         if (bytes.length == 0) return new byte[0];
 
         try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
@@ -53,12 +53,12 @@ public class DeflateEncoding extends Encoding {
 
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new TransferEncodingException("cannot decompress with gzip native stream", e);
+            throw new EncodingException("cannot decompress with gzip native stream", e);
         }
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
+    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
         if (bytes.length == 0) return new byte[0];
 
         try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -69,7 +69,7 @@ public class DeflateEncoding extends Encoding {
 
             return byteStream.toByteArray();
         } catch (IOException e) {
-            throw new TransferEncodingException("cannot compress with deflater native stream", e);
+            throw new EncodingException("cannot compress with deflater native stream", e);
         }
     }
 

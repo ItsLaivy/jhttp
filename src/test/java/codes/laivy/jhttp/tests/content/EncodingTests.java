@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
 import codes.laivy.jhttp.encoding.Encoding;
-import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ public final class EncodingTests {
 
     @Test
     @Order(value = 0)
-    void compressAndDecompress() throws TransferEncodingException, IllegalHttpVersionException {
+    void compressAndDecompress() throws EncodingException, IllegalHttpVersionException {
         @NotNull String target = "Just a Cool Text with\r\n Some cool characteristics and formatting!";
 
         for (@NotNull HttpVersion version : HttpVersion.getVersions()) {
