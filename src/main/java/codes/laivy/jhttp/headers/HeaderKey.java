@@ -155,7 +155,7 @@ public abstract class HeaderKey<T> {
         this.target = target;
 
         if (!NAME_FORMAT_REGEX.matcher(name).matches()) {
-            throw new IllegalArgumentException("this header key name have illegal characters");
+            throw new IllegalArgumentException("this header key name '" + name + "' have illegal characters");
         }
     }
 

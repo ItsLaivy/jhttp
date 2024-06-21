@@ -10,6 +10,7 @@ import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import codes.laivy.jhttp.message.BlankMessage;
+import codes.laivy.jhttp.message.EncodedMessage;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.message.StringMessage;
 import codes.laivy.jhttp.protocol.HttpFactory;
@@ -21,6 +22,7 @@ import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.HttpProtocol;
 import codes.laivy.jhttp.utilities.HttpStatus;
 import codes.laivy.jhttp.utilities.Method;
+import codes.laivy.jhttp.utilities.StringUtils;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -77,8 +79,10 @@ final class HttpFactory1_1 implements HttpFactory {
 
             // Headers
             @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
-            for (@NotNull String header : content[0].split(CRLF, 2)[1].split(CRLF)) {
-                headers.add(getHeaders().parse(header));
+            if (content[0].split(CRLF, 2).length > 1) {
+                for (@NotNull String header : content[0].split(CRLF, 2)[1].split(CRLF)) {
+                    headers.add(getHeaders().parse(header));
+                }
             }
 
             // Validate host headers
@@ -131,8 +135,9 @@ final class HttpFactory1_1 implements HttpFactory {
 
                 if (pure.isEmpty()) {
                     message = BlankMessage.create();
+                } else if (encodings != null) {
+                    message = EncodedMessage.create(StandardCharsets.UTF_8, encodings, content[1], pure);
                 } else {
-                    // todo: remove this string message
                     message = new StringMessage(StandardCharsets.UTF_8, pure.getBytes());
                 }
             }
@@ -152,20 +157,28 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull StringBuilder builder = new StringBuilder();
 
             // Write request line
-            @NotNull String authority = request.getAuthority() != null ? request.getAuthority().toString() : request.getUri().toString();
-            builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion()).append(CRLF);
+            @NotNull String authority = request.getAuthority() != null ? request.getAuthority().toString() : "";
+
+            @NotNull String uri = request.getUri().toString();
+            if (!StringUtils.isBlank(uri)) {
+                if (!uri.startsWith("/")) authority += "/";
+                authority += request.getUri().toString();
+            }
+
+            builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion());
             // Write headers
             for (@NotNull Header<?> header : request.getHeaders()) {
-                builder.append(getHeaders().wrap(header)).append(CRLF);
+                builder.append(CRLF).append(getHeaders().wrap(header));
             }
             // End request configurations
-            builder.append(CRLF);
+            builder.append(CRLF).append(CRLF);
             // Write a message if exists
             if (request.getMessage() != null) {
                 @NotNull Message message = request.getMessage();
                 builder.append(message.toString());
             }
 
+            System.out.println(builder.toString().replace("\r", "%r").replace("\n", "%n\n"));
             return builder.toString();
         }
 
@@ -297,7 +310,7 @@ final class HttpFactory1_1 implements HttpFactory {
 
         @Override
         public <T> @NotNull String wrap(@NotNull Header<T> header) {
-            return header.getKey().write(getVersion(), header);
+            return header.getName() + ": " + header.getKey().write(getVersion(), header);
         }
 
         @Override

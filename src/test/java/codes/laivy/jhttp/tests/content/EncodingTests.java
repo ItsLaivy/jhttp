@@ -1,7 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
 import codes.laivy.jhttp.encoding.Encoding;
-import codes.laivy.jhttp.encoding.GZipEncoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import org.jetbrains.annotations.NotNull;
@@ -24,18 +23,6 @@ public final class EncodingTests {
 
             Assertions.assertEquals(target, decompressed, "cannot proceed compress/decompress test using '" + encoding.getName() + "' encoding");
         }
-    }
-
-    @Test
-    @Order(value = 1)
-    void gzip() throws EncodingException, IllegalHttpVersionException {
-        @NotNull GZipEncoding encoding = GZipEncoding.builder().build();
-
-        @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
-        @NotNull String encoded = encoding.compress(expected);
-        @NotNull String decoded = encoding.decompress(encoded);
-
-        Assertions.assertEquals(expected, decoded);
     }
 
 }

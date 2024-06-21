@@ -1,22 +1,30 @@
 package codes.laivy.jhttp.protocol;
 
-import codes.laivy.jhttp.protocol.v1_1.HttpVersion1_1;
 import org.jetbrains.annotations.*;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public abstract class HttpVersion {
 
     // Static initializers
 
+    private static @NotNull HttpVersion version(@NotNull String name) {
+        try {
+            //noinspection unchecked
+            @NotNull Class<HttpVersion> clazz = (Class<HttpVersion>) Class.forName(name);
+            @NotNull Constructor<HttpVersion> constructor = clazz.getConstructor();
+            return constructor.newInstance();
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException("cannot obtain class/constructor '" + name + "' for http version", e);
+        }
+    }
+
     @ApiStatus.Internal
     private static final @NotNull Set<HttpVersion> versions = new TreeSet<>(Comparator.comparingInt(o -> (o.getMajor() + o.getMinor())));
 
     public static @NotNull HttpVersion[] getVersions() {
-        if (versions.stream().noneMatch(version -> version.getMajor() == 1 && version.getMinor() == 1)) {
-            new HttpVersion1_1().init();
-        }
-
         return versions.toArray(new HttpVersion[0]);
     }
     public static @NotNull HttpVersion getVersion(@NotNull String string) throws NullPointerException {
@@ -26,6 +34,29 @@ public abstract class HttpVersion {
 
     public static @NotNull HttpVersion HTTP1_1() {
         return Arrays.stream(getVersions()).filter(version -> version.getMajor() == 1 && version.getMinor() == 1).findFirst().orElseThrow(NullPointerException::new);
+    }
+
+    // Initialization
+
+    static {
+        for (@NotNull String name : new String[] {
+                "codes.laivy.jhttp.protocol.v1_1.HttpVersion1_1"
+        }) {
+            try {
+                //noinspection unchecked
+                @NotNull Class<HttpVersion> clazz = (Class<HttpVersion>) Class.forName(name);
+
+                @NotNull Constructor<HttpVersion> constructor = clazz.getConstructor();
+                constructor.setAccessible(true);
+
+                @NotNull HttpVersion version = constructor.newInstance();
+
+                // Initialize
+                version.init();
+            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException("cannot load provided http version '" + name + "'", e);
+            }
+        }
     }
 
     // Object

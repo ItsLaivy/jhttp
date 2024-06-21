@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -111,9 +112,31 @@ public final class URIAuthority {
 
     @Override
     public @NotNull String toString() {
-        return getHostName() + ":" + getPort();
-    }
+        @NotNull StringBuilder builder = new StringBuilder();
 
+        // Protocol ("http://" or "https://")
+        for (@NotNull HttpProtocol protocol : HttpProtocol.values()) {
+            if (protocol.getPort() == getPort()) {
+                builder.append(protocol.getName());
+            }
+        }
+
+        // User info
+        if (getUserInfo() != null) {
+            builder.append(getUserInfo()).append("@");
+        }
+
+        // Host
+        builder.append(getHostName());
+
+        // Port
+        boolean visible = Arrays.stream(HttpProtocol.values()).noneMatch(protocol -> protocol.getPort() == getPort());
+        if (visible) {
+            builder.append(":").append(getPort());
+        }
+
+        return builder.toString();
+    }
     @Override
     public boolean equals(@Nullable Object object) {
         if (this == object) return true;
@@ -121,6 +144,7 @@ public final class URIAuthority {
         URIAuthority authority = (URIAuthority) object;
         return Objects.equals(getUserInfo(), authority.getUserInfo()) && Objects.equals(getAddress(), authority.getAddress());
     }
+
     @Override
     public int hashCode() {
         return Objects.hash(getUserInfo(), getAddress());

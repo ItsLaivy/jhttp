@@ -39,6 +39,10 @@ public final class ContentRange extends Range<Long> {
         return size;
     }
 
+    public boolean isBoundless() {
+        return getMinimum() == Long.MIN_VALUE && getMaximum() == Long.MAX_VALUE;
+    }
+
     // Implementations
 
     @Override
