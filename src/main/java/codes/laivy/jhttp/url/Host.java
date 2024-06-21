@@ -23,12 +23,12 @@ public interface Host {
         return IPv4.validate(string) || IPv6.validate(string) || Name.validate(string);
     }
     static @NotNull Host parse(@NotNull String string) throws ParseException {
-        if (IPv4.validate(string)) {
+        if (Name.validate(string)) {
+            return Name.parse(string);
+        } else if (IPv4.validate(string)) {
             return IPv4.parse(string);
         } else if (IPv6.validate(string)) {
             return IPv6.parse(string);
-        } else if (Name.validate(string)) {
-            return Name.parse(string);
         } else {
             throw new ParseException("the value '" + string + "' isn't a valid host", 0);
         }
@@ -123,7 +123,7 @@ public interface Host {
     }
     final class IPv4 implements Host {
 
-        private static final @NotNull Pattern IPV4_PATTERN = Pattern.compile("^\\[?(?<bytes>[^]]{2,39})]?(:(?<port>\\d{1,5}))?$");
+        private static final @NotNull Pattern IPV4_PATTERN = Pattern.compile("^(?<bytes>[^]:]{2,39})(:(?<port>\\d{1,5}))?$");
 
         public static boolean validate(@NotNull String string) {
             @NotNull Matcher matcher = IPV4_PATTERN.matcher(string);
