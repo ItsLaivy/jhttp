@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.utilities.Connection;
+import codes.laivy.jhttp.content.Connection;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public final class KeyReader {
-
     private KeyReader() {
         throw new UnsupportedOperationException("this class cannot be instantiated");
     }

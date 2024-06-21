@@ -15,6 +15,8 @@ public enum Target {
         this.responses = responses;
     }
 
+    // Getters
+
     public boolean isRequests() {
         return requests;
     }

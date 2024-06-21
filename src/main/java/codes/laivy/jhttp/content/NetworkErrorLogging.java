@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.utilities;
+package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.headers.HeaderKey;
 import com.google.gson.*;
@@ -92,62 +92,8 @@ public interface NetworkErrorLogging {
     // Classes
 
     final class Parser {
-
         private Parser() {
             throw new UnsupportedOperationException();
-        }
-
-        public static boolean validate(@NotNull String string) {
-            try {
-                @NotNull JsonObject object = JsonParser.parseString(string).getAsJsonObject();
-
-                if (!object.has("report_to") || !object.get("report_to").isJsonPrimitive()) {
-                    return false;
-                } else if (!object.has("max_age") || object.get("max_age").isJsonPrimitive()) {
-                    return false;
-                } else if (object.has("include_subdomains") && !object.get("include_subdomains").isJsonPrimitive()) {
-                    return false;
-                } else if (object.has("success_fraction") && !object.get("success_fraction").isJsonPrimitive()) {
-                    return false;
-                } else if (object.has("failure_fraction") && !object.get("failure_fraction").isJsonPrimitive()) {
-                    return false;
-                } else if (object.has("request_headers") && !object.get("request_headers").isJsonArray()) {
-                    return false;
-                }
-
-                return !object.has("response_headers") || object.get("response_headers").isJsonArray();
-            } catch (@NotNull IllegalStateException | @NotNull JsonParseException | @NotNull UnsupportedOperationException e) {
-                return false;
-            }
-        }
-        public static @NotNull NetworkErrorLogging parse(@NotNull String string) throws ParseException {
-            if (validate(string)) {
-                @NotNull JsonObject object = JsonParser.parseString(string).getAsJsonObject();
-                @NotNull String group = object.get("report_to").getAsString();
-                @NotNull Duration age = Duration.ofSeconds(object.get("max_age").getAsInt());
-                boolean subdomains = object.has("include_subdomains") && object.get("include_subdomains").getAsBoolean();
-
-                @Nullable Double successFraction = object.has("success_fraction") ? object.get("success_fraction").getAsDouble() : null;
-                @Nullable Double failureFraction = object.has("failure_fraction") ? object.get("failure_fraction").getAsDouble() : null;
-
-                @NotNull List<HeaderKey<?>> requests = new LinkedList<>();
-                @NotNull List<HeaderKey<?>> responses = new LinkedList<>();
-
-                if (object.has("request_headers")) {
-                    for (@NotNull JsonElement element : object.getAsJsonArray("request_headers")) {
-                        requests.add(HeaderKey.create(element.getAsString()));
-                    }
-                }
-                if (object.has("response_headers")) {
-                    for (@NotNull JsonElement element : object.getAsJsonArray("response_headers")) {
-                        responses.add(HeaderKey.create(element.getAsString()));
-                    }
-                }
-
-                return create(group, age, requests.toArray(new HeaderKey[0]), responses.toArray(new HeaderKey[0]), subdomains, successFraction, failureFraction);
-            } else {
-                throw new ParseException("cannot parse '" + string + "' as a valid network error logging object", 0);
-            }
         }
 
         public static @NotNull String serialize(@NotNull NetworkErrorLogging nel) {
@@ -189,6 +135,59 @@ public interface NetworkErrorLogging {
             }
 
             return object.toString();
+        }
+        public static @NotNull NetworkErrorLogging parse(@NotNull String string) throws ParseException {
+            if (validate(string)) {
+                @NotNull JsonObject object = JsonParser.parseString(string).getAsJsonObject();
+                @NotNull String group = object.get("report_to").getAsString();
+                @NotNull Duration age = Duration.ofSeconds(object.get("max_age").getAsInt());
+                boolean subdomains = object.has("include_subdomains") && object.get("include_subdomains").getAsBoolean();
+
+                @Nullable Double successFraction = object.has("success_fraction") ? object.get("success_fraction").getAsDouble() : null;
+                @Nullable Double failureFraction = object.has("failure_fraction") ? object.get("failure_fraction").getAsDouble() : null;
+
+                @NotNull List<HeaderKey<?>> requests = new LinkedList<>();
+                @NotNull List<HeaderKey<?>> responses = new LinkedList<>();
+
+                if (object.has("request_headers")) {
+                    for (@NotNull JsonElement element : object.getAsJsonArray("request_headers")) {
+                        requests.add(HeaderKey.create(element.getAsString()));
+                    }
+                }
+                if (object.has("response_headers")) {
+                    for (@NotNull JsonElement element : object.getAsJsonArray("response_headers")) {
+                        responses.add(HeaderKey.create(element.getAsString()));
+                    }
+                }
+
+                return create(group, age, requests.toArray(new HeaderKey[0]), responses.toArray(new HeaderKey[0]), subdomains, successFraction, failureFraction);
+            } else {
+                throw new ParseException("cannot parse '" + string + "' as a valid network error logging object", 0);
+            }
+        }
+
+        public static boolean validate(@NotNull String string) {
+            try {
+                @NotNull JsonObject object = JsonParser.parseString(string).getAsJsonObject();
+
+                if (!object.has("report_to") || !object.get("report_to").isJsonPrimitive()) {
+                    return false;
+                } else if (!object.has("max_age") || object.get("max_age").isJsonPrimitive()) {
+                    return false;
+                } else if (object.has("include_subdomains") && !object.get("include_subdomains").isJsonPrimitive()) {
+                    return false;
+                } else if (object.has("success_fraction") && !object.get("success_fraction").isJsonPrimitive()) {
+                    return false;
+                } else if (object.has("failure_fraction") && !object.get("failure_fraction").isJsonPrimitive()) {
+                    return false;
+                } else if (object.has("request_headers") && !object.get("request_headers").isJsonArray()) {
+                    return false;
+                }
+
+                return !object.has("response_headers") || object.get("response_headers").isJsonArray();
+            } catch (@NotNull IllegalStateException | @NotNull JsonParseException | @NotNull UnsupportedOperationException e) {
+                return false;
+            }
         }
 
     }
