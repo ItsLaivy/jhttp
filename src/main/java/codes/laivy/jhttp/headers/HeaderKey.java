@@ -700,7 +700,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Cookie.Request> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Cookie.Request.parse(value));
+                    return create(Cookie.Request.Parser.deserialize(value));
                 } catch (ParseException e) {
                     throw new HeaderFormatException(e);
                 }
@@ -1177,7 +1177,7 @@ public abstract class HeaderKey<T> {
 
                 while (matcher.find()) {
                     try {
-                        @NotNull Cookie cookie = Cookie.parse(matcher.group());
+                        @NotNull Cookie cookie = Cookie.Parser.deserialize(matcher.group());
                         cookies.add(cookie);
                     } catch (ParseException e) {
                         throw new HeaderFormatException(e);
