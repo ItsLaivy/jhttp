@@ -144,9 +144,13 @@ public abstract class HeaderKey<T> {
     private final @NotNull String name;
     private final @NotNull Target target;
 
-    private HeaderKey(@NotNull String name, @NotNull Target target) {
+    protected HeaderKey(@NotNull String name, @NotNull Target target) {
         this.name = name;
         this.target = target;
+
+        if (!NAME_FORMAT_REGEX.matcher(name).matches()) {
+            throw new IllegalArgumentException("this header key name have illegal characters");
+        }
     }
 
     @Contract(pure = true)
@@ -170,10 +174,10 @@ public abstract class HeaderKey<T> {
     // Implementations
 
     @Override
-    public final boolean equals(Object object) {
+    public final boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (!(object instanceof HeaderKey)) return false;
-        HeaderKey<?> that = (HeaderKey<?>) object;
+        @NotNull HeaderKey<?> that = (HeaderKey<?>) object;
         return getName().equalsIgnoreCase(that.getName());
     }
     @Override
@@ -1239,7 +1243,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<ContentRange> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(ContentRange.parse(value));
+                    return create(ContentRange.Parser.deserialize(value));
                 } catch (ParseException e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a valid content range", e);
                 }

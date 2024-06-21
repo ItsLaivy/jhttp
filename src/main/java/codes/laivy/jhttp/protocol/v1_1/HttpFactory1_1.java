@@ -15,6 +15,7 @@ import codes.laivy.jhttp.protocol.impl.HttpResponseImpl;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.utilities.HttpProtocol;
 import codes.laivy.jhttp.utilities.HttpStatus;
 import codes.laivy.jhttp.utilities.Method;
 import org.jetbrains.annotations.ApiStatus;
@@ -37,12 +38,14 @@ final class HttpFactory1_1 implements HttpFactory {
     // Utilities
 
     private static @NotNull URI parseUri(@NotNull String string) throws URISyntaxException {
-        if (string.startsWith("http://")) {
-            string = string.replaceFirst("http://", "");
-        } else if (string.startsWith("https://")) {
-            string = string.replaceFirst("https://", "");
+        // Remove protocol
+        for (@NotNull HttpProtocol protocol : HttpProtocol.values()) {
+            if (string.startsWith(protocol.getName())) {
+                string = string.replaceFirst(protocol.getName(), "");
+            }
         }
 
+        // Parse
         @NotNull String[] split = string.split("/", 2);
 
         if (split.length == 1) {
@@ -357,14 +360,13 @@ final class HttpFactory1_1 implements HttpFactory {
     public @NotNull Request getRequest() {
         return request;
     }
-
     @Override
     public @NotNull Response getResponse() {
         return response;
     }
-
     @Override
     public @NotNull Headers getHeaders() {
         return headers;
     }
+
 }

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public final class Range<T extends Comparable<T>> {
+public class Range<T extends Comparable<T>> {
 
     private final @NotNull T minimum;
     private final @NotNull T maximum;
@@ -31,14 +31,14 @@ public final class Range<T extends Comparable<T>> {
 
     // Modules
 
-    public boolean isAfter(@NotNull T value) {
+    public final boolean isAfter(@NotNull T value) {
         return maximum.compareTo(value) > 0;
     }
-    public boolean isBefore(@NotNull T value) {
+    public final boolean isBefore(@NotNull T value) {
         return minimum.compareTo(value) < 0;
     }
 
-    public boolean contains(@NotNull T value) {
+    public final boolean contains(@NotNull T value) {
         return (minimum.compareTo(value) >= 0) && (maximum.compareTo(value) <= 0);
     }
 

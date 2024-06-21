@@ -25,14 +25,14 @@ public final class ConnectionTests {
     @Order(value = 0)
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Connection.validate(valid));
-            Assertions.assertEquals(Connection.parse(valid), Connection.parse(Connection.parse(valid).toString()));
+            Assertions.assertTrue(Connection.Parser.validate(valid));
+            Assertions.assertEquals(Connection.Parser.deserialize(valid), Connection.Parser.deserialize(Connection.Parser.deserialize(valid).toString()));
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException {
-        @NotNull Connection connection = Connection.parse("keep-alive,Upgrade,Authorization");
+        @NotNull Connection connection = Connection.Parser.deserialize("keep-alive,Upgrade,Authorization");
 
         Assertions.assertEquals(connection.getType(), Connection.Type.KEEP_ALIVE);
         Assertions.assertTrue(Arrays.stream(connection.getKeys()).anyMatch(key -> key.getName().equals("Upgrade")));

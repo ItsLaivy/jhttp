@@ -9,7 +9,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class HttpStatus implements Comparable<Integer> {
+public class HttpStatus {
 
     // Static initializers
 
@@ -70,8 +70,6 @@ public class HttpStatus implements Comparable<Integer> {
 
     public static final @NotNull HttpStatus INTERNAL_SERVER_ERROR = new HttpStatus(500, "Internal Server Error");
     public static final @NotNull HttpStatus NOT_IMPLEMENTED = new HttpStatus(501, "Not Implemented");
-
-    // todo: Use this for response errors
     public static final @NotNull HttpStatus BAD_GATEWAY = new HttpStatus(502, "Bad Gateway");
     public static final @NotNull HttpStatus SERVICE_UNAVAILABLE = new HttpStatus(503, "Service Unavailable");
     public static final @NotNull HttpStatus GATEWAY_TIMEOUT = new HttpStatus(504, "Gateway Timeout");
@@ -123,7 +121,6 @@ public class HttpStatus implements Comparable<Integer> {
     public final int getCode() {
         return code;
     }
-
     @Contract(pure = true)
     public final @NotNull String getMessage() {
         return message;
@@ -157,17 +154,12 @@ public class HttpStatus implements Comparable<Integer> {
     public boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (!(object instanceof HttpStatus)) return false;
-        HttpStatus that = (HttpStatus) object;
+        @NotNull HttpStatus that = (HttpStatus) object;
         return getCode() == that.getCode();
     }
     @Override
     public int hashCode() {
         return Objects.hash(getCode());
-    }
-
-    @Override
-    public int compareTo(@NotNull Integer o) {
-        return getCode() - o;
     }
 
     // Classes
