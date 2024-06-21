@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  * This interface represents an HTTP request.
@@ -18,13 +19,68 @@ import java.net.URI;
  */
 public interface HttpRequest {
 
-    // Object
+    // Static initializers
 
-    /**
-     * Retrieves the raw bytes of this request, which is the purest form of the request data.
-     * @return The raw bytes of the request
-     */
-    byte[] getBytes();
+    static @NotNull HttpRequest create(
+            final @NotNull HttpVersion version,
+            final @NotNull Method method,
+            final @Nullable URIAuthority authority,
+            final @NotNull URI uri,
+            final @NotNull MutableHeaders headers,
+            final @Nullable Message message
+    ) {
+        return new HttpRequest() {
+
+            // Object
+
+            @Override
+            public @NotNull HttpVersion getVersion() {
+                return version;
+            }
+            @Override
+            public @NotNull Method getMethod() {
+                return method;
+            }
+            @Override
+            public @Nullable URIAuthority getAuthority() {
+                return authority;
+            }
+            @Override
+            public @NotNull URI getUri() {
+                return uri;
+            }
+            @Override
+            public @NotNull MutableHeaders getHeaders() {
+                return headers;
+            }
+            @Override
+            public @Nullable Message getMessage() {
+                return message;
+            }
+
+            // Implementations
+
+            @Override
+            public boolean equals(@Nullable Object object) {
+                if (this == object) return true;
+                if (object == null || getClass() != object.getClass()) return false;
+                @NotNull HttpRequest that = (HttpRequest) object;
+                return Objects.equals(getVersion(), that.getVersion()) && getMethod() == that.getMethod() && Objects.equals(getAuthority(), that.getAuthority()) && Objects.equals(getUri(), that.getUri()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getMessage(), that.getMessage());
+            }
+            @Override
+            public int hashCode() {
+                return Objects.hash(getVersion(), getMethod(), getAuthority(), getUri(), getHeaders(), getMethod());
+            }
+
+            @Override
+            public @NotNull String toString() {
+                return getVersion().getFactory().getRequest().wrap(this);
+            }
+
+        };
+    }
+
+    // Object
 
     @NotNull Method getMethod();
 

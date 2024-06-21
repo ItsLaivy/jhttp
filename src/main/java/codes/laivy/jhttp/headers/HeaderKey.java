@@ -1353,10 +1353,7 @@ public abstract class HeaderKey<T> {
                     if (name.trim().equals("*")) {
                         data.add(Wildcard.create());
                     } else {
-                        @NotNull Optional<SiteData> optional = Arrays.stream(SiteData.values()).filter(s -> s.getId().equalsIgnoreCase(name)).findFirst();
-
-                        if (optional.isPresent()) data.add(Wildcard.create(optional.get()));
-                        else throw new NullPointerException("there's no site data named '" + name + "'");
+                        data.add(Wildcard.create(SiteData.getById(name)));
                     }
                 }
 

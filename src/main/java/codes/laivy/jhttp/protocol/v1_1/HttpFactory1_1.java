@@ -10,8 +10,6 @@ import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.message.StringMessage;
 import codes.laivy.jhttp.protocol.HttpFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.protocol.impl.HttpRequestImpl;
-import codes.laivy.jhttp.protocol.impl.HttpResponseImpl;
 import codes.laivy.jhttp.request.HttpRequest;
 import codes.laivy.jhttp.response.HttpResponse;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -59,9 +57,7 @@ final class HttpFactory1_1 implements HttpFactory {
 
     private final @NotNull Request request = new Request() {
         @Override
-        public @NotNull HttpRequest parse(byte[] data) throws ParseException, MissingHeaderException, HeaderFormatException {
-            @NotNull String string = new String(data, StandardCharsets.UTF_8);
-
+        public @NotNull HttpRequest parse(@NotNull String string) throws ParseException, MissingHeaderException, HeaderFormatException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
@@ -113,15 +109,15 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull MutableHeaders headerList = codes.laivy.jhttp.headers.Headers.createMutable();
 
             for (@NotNull String headerBrute : headers) {
-                headerList.add(getHeaders().parse(headerBrute.getBytes()));
+                headerList.add(getHeaders().parse(headerBrute));
             }
 
             // Validate host header
             @NotNull Header<?>[] hostHeaders = headerList.get(HeaderKey.HOST);
             if (hostHeaders.length == 0) {
-                throw new ParseException("cannot find 'Host' header", 0);
+                throw new MissingHeaderException("cannot find 'Host' header");
             } else if (hostHeaders.length > 1) {
-                throw new ParseException("multiples '" + HeaderKey.HOST + "' headers", 0);
+                throw new HeaderFormatException("multiples '" + HeaderKey.HOST + "' headers");
             }
 
             // Method
@@ -159,7 +155,7 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public byte[] wrap(@NotNull HttpRequest request) {
+        public @NotNull String wrap(@NotNull HttpRequest request) {
             if (!request.getHeaders().contains(HeaderKey.HOST)) {
                 throw new IllegalStateException("the http requests from version " + getVersion() + " must have the '" + HeaderKey.HOST + "' header");
             } else if (request.getHeaders().count(HeaderKey.HOST) > 1) {
@@ -173,28 +169,25 @@ final class HttpFactory1_1 implements HttpFactory {
             builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion()).append("\r\n");
             // Write headers
             for (@NotNull Header<?> header : request.getHeaders()) {
-                builder.append(new String(getHeaders().wrap(header))).append("\r\n");
+                builder.append(getHeaders().wrap(header)).append("\r\n");
             }
             // End request configurations
             builder.append("\r\n");
-            // Write message if exists
+            // Write a message if exists
             if (request.getMessage() != null) {
                 @NotNull Message message = request.getMessage();
                 builder.append(new String(message.getContent(), message.getCharset()));
             }
 
-            return builder.toString().getBytes(StandardCharsets.UTF_8);
+            return builder.toString();
         }
 
         @Override
         public @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable Message message) {
-            return new HttpRequestImpl(getVersion(), method, authority, uri, headers, message);
+            return HttpRequest.create(getVersion(), method, authority, uri, headers, message);
         }
 
         @Override
-        public boolean isCompatible(byte[] data) {
-            return this.isCompatible(new String(data));
-        }
         public boolean isCompatible(@NotNull String string) {
             if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
                 return false;
@@ -206,9 +199,7 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Response response = new Response() {
         @Override
-        public @NotNull HttpResponse parse(byte[] data) throws ParseException {
-            @NotNull String string = new String(data, StandardCharsets.UTF_8);
-
+        public @NotNull HttpResponse parse(@NotNull String string) throws ParseException, HeaderFormatException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
@@ -236,11 +227,7 @@ final class HttpFactory1_1 implements HttpFactory {
             if (content.length > 1) {
                 @NotNull String[] headerSection = content[0].split("\r\n", 2)[1].split("\r\n");
                 for (@NotNull String header : headerSection) {
-                    try {
-                        headerList.add(getHeaders().parse(header.getBytes()));
-                    } catch (HeaderFormatException e) {
-                        throw new RuntimeException(e);
-                    }
+                    headerList.add(getHeaders().parse(header));
                 }
             }
             // Charset
@@ -267,7 +254,7 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public byte[] wrap(@NotNull HttpResponse response) {
+        public @NotNull String wrap(@NotNull HttpResponse response) {
             for (@NotNull HeaderKey<?> key : response.getStatus().getHeaders()) {
                 if (!response.getHeaders().contains(key)) {
                     throw new NullPointerException("this response code '" + response.getStatus().getCode() + "' must have the header '" + key.getName() + "'");
@@ -278,28 +265,25 @@ final class HttpFactory1_1 implements HttpFactory {
             builder.append(getVersion()).append(" ").append(response.getStatus().getCode()).append(" ").append(response.getStatus().getMessage()).append("\r\n");
             // Write headers
             for (@NotNull Header<?> header : response.getHeaders()) {
-                builder.append(new String(getHeaders().wrap(header))).append("\r\n");
+                builder.append(getHeaders().wrap(header)).append("\r\n");
             }
             // End request configurations
             builder.append("\r\n");
-            // Write message if exists
+            // Write a message if exists
             if (response.getMessage() != null) {
                 @NotNull Message message = response.getMessage();
                 builder.append(new String(message.getContent(), message.getCharset()));
             }
 
-            return builder.toString().getBytes();
+            return builder.toString();
         }
 
         @Override
         public @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable Message message) {
-            return new HttpResponseImpl(status, getVersion(), headers, message);
+            return HttpResponse.create(status, getVersion(), headers, message);
         }
 
         @Override
-        public boolean isCompatible(byte[] data) {
-            return isCompatible(new String(data));
-        }
         public boolean isCompatible(@NotNull String string) {
             if (!string.contains("\r\n") || !string.contains("\n\r\n")) {
                 return false;
@@ -310,10 +294,8 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Headers headers = new Headers() {
         @Override
-        public <T> @NotNull Header<T> parse(byte[] data) throws ParseException, HeaderFormatException {
-            @NotNull String string = new String(data);
-
-            if (!isCompatible(data)) {
+        public <T> @NotNull Header<T> parse(@NotNull String string) throws ParseException, HeaderFormatException {
+            if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " header: " + string, -1);
             }
 
@@ -327,14 +309,11 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public <T> byte[] wrap(@NotNull Header<T> header) {
-            return header.getKey().write(getVersion(), header).getBytes();
+        public <T> @NotNull String wrap(@NotNull Header<T> header) {
+            return header.getKey().write(getVersion(), header);
         }
 
         @Override
-        public boolean isCompatible(byte[] data) {
-            return isCompatible(new String(data));
-        }
         public boolean isCompatible(@NotNull String string) {
             return Pattern.compile(":\\s*").matcher(string).find();
         }

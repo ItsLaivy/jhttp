@@ -7,6 +7,8 @@ import codes.laivy.jhttp.utilities.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * This interface represents an HTTP response.
  *
@@ -15,13 +17,58 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface HttpResponse {
 
-    // Object
+    // Static initializers
 
-    /**
-     * Retrieves the raw bytes of this response, which is the purest form of the response data.
-     * @return The raw bytes of the response
-     */
-    byte[] getBytes();
+    static @NotNull HttpResponse create(
+            @NotNull HttpStatus status,
+            @NotNull HttpVersion version,
+            @NotNull MutableHeaders headers,
+            @Nullable Message message
+    ) {
+        return new HttpResponse() {
+
+            // Object
+
+            @Override
+            public @NotNull HttpStatus getStatus() {
+                return status;
+            }
+            @Override
+            public @NotNull HttpVersion getVersion() {
+                return version;
+            }
+            @Override
+            public @NotNull MutableHeaders getHeaders() {
+                return headers;
+            }
+            @Override
+            public @Nullable Message getMessage() {
+                return message;
+            }
+
+            // Implementations
+
+            @Override
+            public boolean equals(@Nullable Object object) {
+                if (this == object) return true;
+                if (object == null || getClass() != object.getClass()) return false;
+                @NotNull HttpResponse that = (HttpResponse) object;
+                return Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getMessage(), that.getMessage());
+            }
+            @Override
+            public int hashCode() {
+                return Objects.hash(getStatus(), getVersion(), getHeaders(), getMessage());
+            }
+
+            @Override
+            public @NotNull String toString() {
+                return getVersion().getFactory().getResponse().wrap(this);
+            }
+
+        };
+    }
+
+    // Object
 
     /**
      * Retrieves the status of this HTTP response
