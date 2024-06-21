@@ -31,7 +31,7 @@ public final class ContentRange {
                     matcher.group(2).trim().equals("*") ? Long.MIN_VALUE : Long.parseLong(matcher.group(2)),
                     matcher.group(3) != null ? Long.parseLong(matcher.group(3)) : Long.MAX_VALUE
             );
-            
+
             return new ContentRange(unit, range, size);
         } else {
             throw new ParseException("cannot parse '" + string + "' into a valid content range", 0);

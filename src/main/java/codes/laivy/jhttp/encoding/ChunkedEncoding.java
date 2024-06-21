@@ -69,9 +69,14 @@ public class ChunkedEncoding extends Encoding {
             builder.append(length).append("\r\n");
 
             // Content
-            builder.append(string).append("\r\n");
+            builder.append(new String(block)).append("\r\n");
         }
 
+        // Ending
+        @NotNull Length length = new Length(0, extensions(version, new byte[0]));
+        builder.append(length).append("\r\n").append("\r\n");
+
+        // Finish
         return builder.toString().getBytes();
     }
     @Override
@@ -106,7 +111,7 @@ public class ChunkedEncoding extends Encoding {
 
                 // todo: 03/06/2024 according to Wikipedia, the length number may be a hexadecimal value
                 //  https://en.wikipedia.org/wiki/Chunked_transfer_encoding#Example
-                int length = Integer.parseInt(data[0]);
+                int length = Integer.parseInt(data[0].replace("\r", "").replace("\n", ""));
 
                 return new Length(length, extensions);
             }
@@ -119,19 +124,24 @@ public class ChunkedEncoding extends Encoding {
         @Nullable Length length = null;
         while (!string.isEmpty()) {
             if (length == null) {
-                @NotNull String part = StringUtils.splitAndKeepDelimiter(string, "\r\n", 2)[0];
+                @NotNull String part = string.split("\r\n", 2)[0];
                 length = lengthParser.apply(part);
 
-                string = string.substring(part.length());
+                string = string.substring(part.length() + 2);
             } else {
-                @NotNull String part = string.substring(0, length.getAmount());
+                @NotNull String part = "";
+                if (length.getAmount() > 0) {
+                    part = string.substring(0, length.getAmount()).split("\r\n", 2)[0];
+                }
+
+                if (length.getAmount() != part.length()) {
+                    throw new IllegalStateException("chunk specified length not equals to chunk content length");
+                }
+
                 chunks.add(chunkParser.apply(part, length));
+                string = string.substring(part.length() + 2);
 
-                string = string.substring(part.length());
-
-                if (!string.startsWith("\r\n")) {
-                    throw new TransferEncodingException("invalid chunk content ending");
-                } else if (length.getAmount() == 0) {
+                if (length.getAmount() == 0) {
                     // End of chunks
                     break;
                 }
@@ -145,8 +155,8 @@ public class ChunkedEncoding extends Encoding {
         int amount = 0;
         for (@NotNull Chunk chunk : chunks) {
             int bytesLength = chunk.getBytes().length;
-            decompressed = Arrays.copyOfRange(chunk.getBytes(), amount, bytesLength);
-            amount = bytesLength;
+            System.arraycopy(chunk.getBytes(), 0, decompressed, amount, bytesLength);
+            amount += bytesLength;
         }
 
         // Finish
