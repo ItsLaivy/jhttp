@@ -2,9 +2,9 @@ package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.encoding.TransferEncodingException;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
@@ -28,11 +28,18 @@ public class GZipEncoding extends Encoding {
     public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
         if (bytes.length == 0) return new byte[0];
 
-        try (@NotNull ByteInputStream byteStream = new ByteInputStream(bytes, bytes.length)) {
-            try (@NotNull GZIPInputStream stream = new GZIPInputStream(byteStream)) {
-                return byteStream.getBytes();
+        try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+             @NotNull GZIPInputStream gzipStream = new GZIPInputStream(byteStream);
+             @NotNull ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gzipStream.read(buffer)) > 0) {
+                outStream.write(buffer, 0, len);
             }
-        } catch (@NotNull IOException e) {
+
+            return outStream.toByteArray();
+        } catch (IOException e) {
             throw new TransferEncodingException("cannot decompress with gzip native stream", e);
         }
     }
@@ -41,12 +48,14 @@ public class GZipEncoding extends Encoding {
     public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws TransferEncodingException {
         if (bytes.length == 0) return new byte[0];
 
-        try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length)) {
-            try (@NotNull GZIPOutputStream stream = new GZIPOutputStream(byteStream)) {
-                stream.write(bytes);
-                return byteStream.toByteArray();
-            }
-        } catch (@NotNull IOException e) {
+        try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length);
+             @NotNull GZIPOutputStream stream = new GZIPOutputStream(byteStream)) {
+
+            stream.write(bytes);
+            stream.finish();
+
+            return byteStream.toByteArray();
+        } catch (IOException e) {
             throw new TransferEncodingException("cannot compress with gzip native stream", e);
         }
     }
