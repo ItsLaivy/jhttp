@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.content;
 
-import codes.laivy.jhttp.utilities.Pair;
 import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -191,7 +190,7 @@ public final class MediaType {
 
     }
 
-    public static final class Parameter implements Pair<String, String> {
+    public static final class Parameter {
 
         private final @NotNull String key;
         private final @NotNull String value;
@@ -207,11 +206,9 @@ public final class MediaType {
 
         // Getters
 
-        @Override
         public @NotNull String getKey() {
             return key;
         }
-        @Override
         public @NotNull String getValue() {
             return value;
         }
@@ -222,12 +219,12 @@ public final class MediaType {
         public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Parameter parameter = (Parameter) o;
-            return Objects.equals(key, parameter.key) && Objects.equals(value, parameter.value);
+            @NotNull Parameter parameter = (Parameter) o;
+            return Objects.equals(getKey(), parameter.getKey()) && Objects.equals(getValue(), parameter.getValue());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(key, value);
+            return Objects.hash(getKey(), getValue());
         }
 
         @Override
