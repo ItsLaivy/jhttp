@@ -1,7 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 public class IdentityEncoding extends Encoding {
@@ -19,12 +18,12 @@ public class IdentityEncoding extends Encoding {
     }
 
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) {
-        return bytes;
+    public @NotNull String decompress(@NotNull String string) {
+        return string;
     }
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
-        return bytes;
+    public @NotNull String compress(@NotNull String string) throws EncodingException {
+        return string;
     }
 
     // Classes

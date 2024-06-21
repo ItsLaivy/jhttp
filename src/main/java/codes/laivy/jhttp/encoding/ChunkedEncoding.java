@@ -3,14 +3,12 @@ package codes.laivy.jhttp.encoding;
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Extension;
 import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk.Length;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static codes.laivy.jhttp.Main.CRLF;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 public class ChunkedEncoding extends Encoding {
 
@@ -53,21 +52,20 @@ public class ChunkedEncoding extends Encoding {
 
     // Modules
 
-    protected @NotNull Extension @NotNull [] extensions(@NotNull HttpVersion version, byte @NotNull [] bytes) {
+    protected @NotNull Extension @NotNull [] extensions(@NotNull String bytes) {
         return new Extension[0];
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
+    public @NotNull String compress(@NotNull String string) throws EncodingException {
         // As you can see, the compression is pretty much simpler than the decompression
         // Lol the decompression method took Laivy almost 16 hours to be done :crying:
 
         @NotNull StringBuilder builder = new StringBuilder();
-        @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
 
-        for (byte[] block : StringUtils.explode(bytes, getBlockSize())) {
+        for (byte[] block : StringUtils.explode(string.getBytes(ISO_8859_1), getBlockSize())) {
             // Length and extensions
-            @NotNull Length length = new Length(block.length, extensions(version, block));
+            @NotNull Length length = new Length(block.length, extensions(new String(block, ISO_8859_1)));
             builder.append(length).append(CRLF);
 
             // Content
@@ -75,19 +73,19 @@ public class ChunkedEncoding extends Encoding {
         }
 
         // Ending
-        @NotNull Length length = new Length(0, extensions(version, new byte[0]));
+        @NotNull Length length = new Length(0, extensions(new String(new byte[0], ISO_8859_1)));
         builder.append(length).append(CRLF).append(CRLF);
 
         // Finish
-        return builder.toString().getBytes();
+        return new String(builder.toString().getBytes(ISO_8859_1), ISO_8859_1);
     }
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
+    public @NotNull String decompress(@NotNull String string) throws EncodingException {
         // Parser functions
         @NotNull BiFunction<String, Length, Chunk> chunkParser = new BiFunction<String, Length, Chunk>() {
             @Override
             public @NotNull Chunk apply(@NotNull String string, @NotNull Length length) {
-                return new Chunk(length, string.getBytes());
+                return new Chunk(length, string);
             }
         };
         @NotNull Function<String, Length> lengthParser = new Function<String, Length>() {
@@ -120,7 +118,6 @@ public class ChunkedEncoding extends Encoding {
         };
 
         // Parse
-        @NotNull String string = new String(bytes, StandardCharsets.UTF_8);
         @NotNull List<Chunk> chunks = new LinkedList<>();
 
         @Nullable Length length = null;
@@ -153,16 +150,16 @@ public class ChunkedEncoding extends Encoding {
         }
 
         // Merge bytes
-        byte[] decompressed = new byte[chunks.stream().mapToInt(chunk -> chunk.getBytes().length).sum()];
+        byte[] decompressed = new byte[chunks.stream().mapToInt(chunk -> chunk.getContent().length()).sum()];
         int amount = 0;
         for (@NotNull Chunk chunk : chunks) {
-            int bytesLength = chunk.getBytes().length;
-            System.arraycopy(chunk.getBytes(), 0, decompressed, amount, bytesLength);
+            int bytesLength = chunk.getContent().length();
+            System.arraycopy(chunk.getContent().getBytes(ISO_8859_1), 0, decompressed, amount, bytesLength);
             amount += bytesLength;
         }
 
         // Finish
-        return decompressed;
+        return new String(decompressed, ISO_8859_1);
     }
 
     // Classes
@@ -197,11 +194,11 @@ public class ChunkedEncoding extends Encoding {
     public static final class Chunk {
 
         private final @NotNull Length length;
-        private final byte @NotNull [] bytes;
+        private final @NotNull String content;
 
-        public Chunk(@NotNull Length length, byte @NotNull [] bytes) {
+        public Chunk(@NotNull Length length, @NotNull String content) {
             this.length = length;
-            this.bytes = Arrays.copyOfRange(bytes, 0, length.getAmount());
+            this.content = content.substring(0, length.getAmount());
         }
 
         // Getters
@@ -210,8 +207,8 @@ public class ChunkedEncoding extends Encoding {
         public @NotNull Length getLength() {
             return length;
         }
-        public byte @NotNull [] getBytes() {
-            return bytes;
+        public @NotNull String getContent() {
+            return content;
         }
 
         // Implementations
@@ -220,12 +217,12 @@ public class ChunkedEncoding extends Encoding {
         public boolean equals(@Nullable Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
-            Chunk chunk = (Chunk) object;
-            return Objects.equals(getLength(), chunk.getLength()) && Objects.deepEquals(getBytes(), chunk.getBytes());
+            @NotNull Chunk chunk = (Chunk) object;
+            return Objects.equals(length, chunk.length) && Objects.equals(content, chunk.content);
         }
         @Override
         public int hashCode() {
-            return Objects.hash(getLength(), Arrays.hashCode(getBytes()));
+            return Objects.hash(length, content);
         }
 
         // Classes

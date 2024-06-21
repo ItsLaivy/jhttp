@@ -105,11 +105,11 @@ final class HttpFactory1_1 implements HttpFactory {
 
             {
                 // Message Length
-                byte[] bytes = content[1].getBytes();
+                @NotNull String pure = content[1];
 
                 if (headers.contains(CONTENT_LENGTH)) {
                     int contentLength = (int) headers.get(CONTENT_LENGTH)[0].getValue().getBytes();
-                    bytes = Arrays.copyOfRange(content[1].getBytes(), 0, contentLength);
+                    pure = pure.substring(0, contentLength);
                 }
 
                 // Message Encoding
@@ -123,15 +123,17 @@ final class HttpFactory1_1 implements HttpFactory {
                     }
                 }
 
-                if (encodings != null) for (@NotNull Encoding encoding : encodings) {
-                    bytes = encoding.decompress(getVersion(), bytes);
+                if (encodings != null) {
+                    for (@NotNull Encoding encoding : encodings) {
+                        pure = encoding.decompress(pure);
+                    }
                 }
 
-                if (bytes.length == 0) {
+                if (pure.isEmpty()) {
                     message = BlankMessage.create();
                 } else {
                     // todo: remove this string message
-                    message = new StringMessage(bytes, StandardCharsets.UTF_8);
+                    message = new StringMessage(pure, StandardCharsets.UTF_8);
                 }
             }
 

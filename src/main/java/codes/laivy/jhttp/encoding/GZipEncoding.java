@@ -1,15 +1,16 @@
 package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+// todo: can also be called "x-gzip"
 public class GZipEncoding extends Encoding {
 
     // Static initializers
@@ -25,10 +26,8 @@ public class GZipEncoding extends Encoding {
     }
 
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
-        if (bytes.length == 0) return new byte[0];
-
-        try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+    public @NotNull String decompress(@NotNull String string) throws EncodingException {
+        try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(string.getBytes(StandardCharsets.ISO_8859_1));
              @NotNull GZIPInputStream gzipStream = new GZIPInputStream(byteStream);
              @NotNull ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
 
@@ -38,15 +37,15 @@ public class GZipEncoding extends Encoding {
                 outStream.write(buffer, 0, len);
             }
 
-            return outStream.toByteArray();
+            return new String(outStream.toByteArray(), StandardCharsets.ISO_8859_1);
         } catch (IOException e) {
             throw new EncodingException("cannot decompress with gzip native stream", e);
         }
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
-        if (bytes.length == 0) return new byte[0];
+    public @NotNull String compress(@NotNull String string) throws EncodingException {
+        byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
 
         try (@NotNull ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length);
              @NotNull GZIPOutputStream stream = new GZIPOutputStream(byteStream)) {
@@ -54,7 +53,7 @@ public class GZipEncoding extends Encoding {
             stream.write(bytes);
             stream.finish();
 
-            return byteStream.toByteArray();
+            return new String(byteStream.toByteArray(), StandardCharsets.ISO_8859_1);
         } catch (IOException e) {
             throw new EncodingException("cannot compress with gzip native stream", e);
         }

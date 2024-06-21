@@ -1,9 +1,9 @@
 package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +24,8 @@ public class CompressEncoding extends Encoding {
     }
 
     @Override
-    public byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
-        if (bytes.length == 0) return new byte[0];
+    public @NotNull String decompress(@NotNull String string) throws EncodingException {
+        byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
 
         @NotNull Map<Integer, String> dictionary = new HashMap<>();
         for (int i = 0; i < 256; i++) {
@@ -61,12 +61,12 @@ public class CompressEncoding extends Encoding {
             decompressed[i] = result.get(i);
         }
 
-        return decompressed;
+        return new String(decompressed, StandardCharsets.ISO_8859_1);
     }
 
     @Override
-    public byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException {
-        if (bytes.length == 0) return new byte[0];
+    public @NotNull String compress(@NotNull String string) throws EncodingException {
+        byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
 
         @NotNull Map<String, Integer> dictionary = new HashMap<>();
         for (int i = 0; i < 256; i++) {
@@ -93,7 +93,7 @@ public class CompressEncoding extends Encoding {
             compressed[i] = result.get(i);
         }
 
-        return compressed;
+        return new String(compressed, StandardCharsets.ISO_8859_1);
     }
 
     // Classes

@@ -162,9 +162,8 @@ public abstract class Encoding {
         return name;
     }
 
-    public abstract byte @NotNull [] decompress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException, IllegalHttpVersionException;
-
-    public abstract byte @NotNull [] compress(@NotNull HttpVersion version, byte @NotNull [] bytes) throws EncodingException, IllegalHttpVersionException;
+    public abstract @NotNull String decompress(@NotNull String string) throws EncodingException, IllegalHttpVersionException;
+    public abstract @NotNull String compress(@NotNull String string) throws EncodingException, IllegalHttpVersionException;
 
     public boolean isCompatible(@NotNull HttpVersion version) {
         return true;
