@@ -131,11 +131,11 @@ public class ChunkedEncoding extends Encoding {
             } else {
                 @NotNull String part = "";
                 if (length.getAmount() > 0) {
-                    part = string.substring(0, length.getAmount()).split("\r\n", 2)[0];
-                }
+                    if (length.getAmount() > string.length()) {
+                        throw new IllegalStateException("chunk specified length not equals to chunk content length");
+                    }
 
-                if (length.getAmount() != part.length()) {
-                    throw new IllegalStateException("chunk specified length not equals to chunk content length");
+                    part = string.substring(0, length.getAmount());
                 }
 
                 chunks.add(chunkParser.apply(part, length));
