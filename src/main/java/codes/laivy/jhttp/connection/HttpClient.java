@@ -18,7 +18,7 @@ public interface HttpClient extends Closeable {
     void write(@NotNull HttpResponse response);
 
     boolean isOpen();
-
+    
     @NotNull Metrics getAnalytic();
 
     // Classes

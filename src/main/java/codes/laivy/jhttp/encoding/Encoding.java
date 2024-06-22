@@ -1,8 +1,6 @@
 package codes.laivy.jhttp.encoding;
 
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -162,12 +160,8 @@ public abstract class Encoding {
         return name;
     }
 
-    public abstract @NotNull String decompress(@NotNull String string) throws EncodingException, IllegalHttpVersionException;
-    public abstract @NotNull String compress(@NotNull String string) throws EncodingException, IllegalHttpVersionException;
-
-    public boolean isCompatible(@NotNull HttpVersion version) {
-        return true;
-    }
+    public abstract @NotNull String decompress(@NotNull String string) throws EncodingException;
+    public abstract @NotNull String compress(@NotNull String string) throws EncodingException;
 
     public final synchronized void register() {
         collection.removeIf(encoding -> encoding.getName().equalsIgnoreCase(getName()));

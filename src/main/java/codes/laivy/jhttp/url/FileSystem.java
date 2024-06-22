@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.content.ContentSecurityPolicy;
+import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

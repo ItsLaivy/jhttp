@@ -36,7 +36,7 @@ public interface HttpFactory {
         boolean isCompatible(@NotNull String data);
     }
     interface Response {
-        @NotNull HttpResponse parse(@NotNull String data) throws ParseException, HeaderFormatException;
+        @NotNull HttpResponse parse(@NotNull String data) throws ParseException, HeaderFormatException, EncodingException, IllegalHttpVersionException;
         @NotNull String wrap(@NotNull HttpResponse response);
 
         @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable Message message);

@@ -37,12 +37,16 @@ public final class HttpFactoryTests {
     @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
     final class Requests {
 
-        private final @NotNull String[] VALIDS = new String[] {
+        private final @NotNull String[] VALIDS = new String[]{
                 "GET /index.php HTTP/1.1\r\nHost: localhost\r\n\r\n",
                 "GET /index.php HTTP/1.1\r\nHost: 192.0.2.1:8080\r\n\r\n",
                 "GET /index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
                 "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
+                "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + GZipEncoding.builder().build().compress("Cool Text")
         };
+
+        Requests() throws EncodingException {
+        }
 
         @Test
         @Order(value = 0)
@@ -52,6 +56,7 @@ public final class HttpFactoryTests {
                 HTTP1_1().getFactory().getRequest().parse(valid);
             }
         }
+
         @Test
         @Order(value = 1)
         void assertions() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
@@ -69,6 +74,7 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(request.getUri(), URI.create("/index.php"));
             Assertions.assertEquals(request.getHeaders().get(HOST)[0].getValue(), Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"));
         }
+
         @Test
         @Order(value = 2)
         void serialization() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
@@ -83,6 +89,27 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(reference, clone);
         }
 
+    }
+
+    @Nested
+    @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
+    final class Responses {
+        private final @NotNull String[] VALIDS = new String[]{
+                "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nConnection: close\r\n\r\n",
+                "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Encoding: gzip\r\n\r\n" + GZipEncoding.builder().build().compress("Cool Text")
+        };
+
+        Responses() throws EncodingException {
+        }
+
+        @Test
+        @Order(value = 0)
+        void validate() throws Throwable {
+            for (@NotNull String valid : VALIDS) {
+                Assertions.assertTrue(HTTP1_1().getFactory().getResponse().isCompatible(valid), "cannot validate http 1.1 response '" + valid + "'");
+                HTTP1_1().getFactory().getResponse().parse(valid);
+            }
+        }
     }
 
 }

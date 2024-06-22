@@ -29,6 +29,9 @@ public final class CrossOrigin {
         public @NotNull String getId() {
             return id;
         }
+
+        // Static initializers
+
         public static @NotNull EmbedderPolicy getById(@NotNull String id) {
             @NotNull Optional<EmbedderPolicy> optional = Arrays.stream(values()).filter(sameSite -> sameSite.getId().equalsIgnoreCase(id)).findFirst();
             return optional.orElseThrow(() -> new NullPointerException("There's no embedder policy enum with id '" + id + "'"));
@@ -51,6 +54,9 @@ public final class CrossOrigin {
         public @NotNull String getId() {
             return id;
         }
+
+        // Static initializers
+
         public static @NotNull OpenerPolicy getById(@NotNull String id) {
             @NotNull Optional<OpenerPolicy> optional = Arrays.stream(values()).filter(sameSite -> sameSite.getId().equalsIgnoreCase(id)).findFirst();
             return optional.orElseThrow(() -> new NullPointerException("There's no opener policy enum with id '" + id + "'"));
@@ -73,6 +79,9 @@ public final class CrossOrigin {
         public @NotNull String getId() {
             return id;
         }
+
+        // Static initializers
+
         public static @NotNull ResourcePolicy getById(@NotNull String id) {
             @NotNull Optional<ResourcePolicy> optional = Arrays.stream(values()).filter(sameSite -> sameSite.getId().equalsIgnoreCase(id)).findFirst();
             return optional.orElseThrow(() -> new NullPointerException("There's no resource policy enum with id '" + id + "'"));

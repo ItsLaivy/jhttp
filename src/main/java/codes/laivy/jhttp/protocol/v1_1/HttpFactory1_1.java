@@ -9,7 +9,6 @@ import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
-import codes.laivy.jhttp.message.BlankMessage;
 import codes.laivy.jhttp.message.EncodedMessage;
 import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.message.StringMessage;
@@ -35,12 +34,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static codes.laivy.jhttp.Main.CRLF;
-import static codes.laivy.jhttp.headers.HeaderKey.CONTENT_ENCODING;
-import static codes.laivy.jhttp.headers.HeaderKey.CONTENT_LENGTH;
+import static codes.laivy.jhttp.headers.HeaderKey.*;
 
 @ApiStatus.Internal
 final class HttpFactory1_1 implements HttpFactory {
@@ -80,8 +77,11 @@ final class HttpFactory1_1 implements HttpFactory {
             // Headers
             @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
             if (content[0].split(CRLF, 2).length > 1) {
-                for (@NotNull String header : content[0].split(CRLF, 2)[1].split(CRLF)) {
-                    headers.add(getHeaders().parse(header));
+                for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split(CRLF)) {
+                    @NotNull Header<?> header = getHeaders().parse(headerString);
+                    if (!header.getKey().getTarget().isRequests()) continue;
+
+                    headers.add(header);
                 }
             }
 
@@ -106,8 +106,18 @@ final class HttpFactory1_1 implements HttpFactory {
 
             // Message
             @Nullable Message message;
+            @NotNull Charset charset = StandardCharsets.UTF_8;
 
             {
+                // Content Type
+                if (headers.contains(CONTENT_TYPE)) {
+                    @NotNull MediaType type = headers.get(CONTENT_TYPE)[0].getValue();
+
+                    if (type.getCharset() != null) {
+                        charset = type.getCharset().available() ? type.getCharset().retrieve() : charset;
+                    }
+                }
+
                 // Message Length
                 @NotNull String pure = content[1];
 
@@ -133,12 +143,13 @@ final class HttpFactory1_1 implements HttpFactory {
                     }
                 }
 
+                // Interpret Message
                 if (pure.isEmpty()) {
-                    message = BlankMessage.create();
+                    message = null;
                 } else if (encodings != null) {
-                    message = EncodedMessage.create(StandardCharsets.UTF_8, encodings, content[1], pure);
+                    message = EncodedMessage.create(charset, encodings, content[1], pure);
                 } else {
-                    message = new StringMessage(StandardCharsets.UTF_8, pure.getBytes());
+                    message = new StringMessage(charset, pure.getBytes());
                 }
             }
 
@@ -168,6 +179,7 @@ final class HttpFactory1_1 implements HttpFactory {
             builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion());
             // Write headers
             for (@NotNull Header<?> header : request.getHeaders()) {
+                if (!header.getKey().getTarget().isRequests()) continue;
                 builder.append(CRLF).append(getHeaders().wrap(header));
             }
             // End request configurations
@@ -198,58 +210,83 @@ final class HttpFactory1_1 implements HttpFactory {
     };
     private final @NotNull Response response = new Response() {
         @Override
-        public @NotNull HttpResponse parse(@NotNull String string) throws ParseException, HeaderFormatException {
+        public @NotNull HttpResponse parse(@NotNull String string) throws ParseException, HeaderFormatException, EncodingException, IllegalHttpVersionException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
 
-            @NotNull HttpStatus status;
-
             // Content
             @NotNull String[] content = string.split(CRLF + CRLF, 2);
-            // Request line
-            @NotNull String[] temp = content[0].split(CRLF, 2);
-            @NotNull String[] responseLine = temp[0].split(" ", 3);
 
-            try {
-                int code = Integer.parseInt(responseLine[1]);
-                @NotNull String message = responseLine[2];
+            // Response line
+            @NotNull String[] line = content[0].split(CRLF, 2)[0].split(" ", 3);
 
-                status = new HttpStatus(code, message);
-            } catch (@NotNull Throwable throwable) {
-                throw new ParseException("cannot parse response line: " + throwable.getMessage(), 0);
-            }
+            int code = Integer.parseInt(line[1]);
+            @NotNull HttpStatus status = HttpStatus.getByCode(code);
 
             // Retrieve headers
-            @NotNull MutableHeaders headerList = codes.laivy.jhttp.headers.Headers.createMutable();
+            @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
 
-            if (content.length > 1) {
-                @NotNull String[] headerSection = content[0].split(CRLF, 2)[1].split(CRLF);
-                for (@NotNull String header : headerSection) {
-                    headerList.add(getHeaders().parse(header));
-                }
-            }
-            // Charset
-            @NotNull Charset charset = StandardCharsets.UTF_8;
+            if (content[0].split(CRLF, 2).length > 1) {
+                for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split(CRLF)) {
+                    @NotNull Header<?> header = getHeaders().parse(headerString);
+                    if (!header.getKey().getTarget().isResponses()) continue;
 
-            @NotNull Optional<Header<MediaType>> optional = headerList.first(HeaderKey.CONTENT_TYPE);
-            if (optional.isPresent()) {
-                @NotNull MediaType type = optional.get().getValue();
-
-                if (type.getCharset() != null && type.getCharset().available()) {
-                    charset = type.getCharset().retrieve();
+                    headers.add(header);
                 }
             }
 
             // Message
-            @Nullable Message message = null;
-            if (content.length == 2) {
-                byte[] value = content[1].getBytes();
-                message = new StringMessage(charset, value);
+            @Nullable Message message;
+            @NotNull Charset charset = StandardCharsets.UTF_8;
+
+            {
+                // Content Type
+                if (headers.contains(CONTENT_TYPE)) {
+                    @NotNull MediaType type = headers.get(CONTENT_TYPE)[0].getValue();
+
+                    if (type.getCharset() != null) {
+                        charset = type.getCharset().available() ? type.getCharset().retrieve() : charset;
+                    }
+                }
+
+                // Message Length
+                @NotNull String pure = content[1];
+
+                if (headers.contains(CONTENT_LENGTH)) {
+                    int contentLength = (int) headers.get(CONTENT_LENGTH)[0].getValue().getBytes();
+                    pure = pure.substring(0, contentLength);
+                }
+
+                // Message Encoding
+                @NotNull Encoding @Nullable [] encodings = null;
+                if (headers.contains(CONTENT_ENCODING)) {
+                    @NotNull PseudoEncoding[] array = headers.get(CONTENT_ENCODING)[0].getValue();
+
+                    // Only apply encoding if all the encodings are available (not pseudo)
+                    if (Arrays.stream(array).allMatch(PseudoEncoding::available)) {
+                        encodings = Arrays.stream(array).map(PseudoEncoding::retrieve).toArray(Encoding[]::new);
+                    }
+                }
+
+                if (encodings != null) {
+                    for (@NotNull Encoding encoding : encodings) {
+                        pure = encoding.decompress(pure);
+                    }
+                }
+
+                // Interpret Message
+                if (pure.isEmpty()) {
+                    message = null;
+                } else if (encodings != null) {
+                    message = EncodedMessage.create(charset, encodings, content[1], pure);
+                } else {
+                    message = new StringMessage(charset, pure.getBytes());
+                }
             }
 
-            // todo: content length if not have
-            return build(status, headerList, message);
+            // Finish
+            return build(status, headers, message);
         }
 
         @Override

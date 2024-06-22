@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Represents an Entity Tag (ETag) used in HTTP headers to identify specific versions of resources.
  * <p>
  * An EntityTag can be either strong or weak. Strong ETags are precise validators that change whenever the resource
- * changes. Weak ETags are less precise and can be used for comparison purposes but not for exact matching.
+ * changes. Weak ETags are less precise and can be used for comparison but not for exact matching.
  * <p>
  * This interface provides methods to retrieve the name of the EntityTag and to check whether it is weak or strong.
  *
@@ -41,11 +41,11 @@ public interface EntityTag {
 
             @Override
             public @NotNull String getName() {
-                return "";
+                return name;
             }
             @Override
             public boolean isWeak() {
-                return false;
+                return weak;
             }
 
             // Implementations
@@ -85,7 +85,7 @@ public interface EntityTag {
     /**
      * Indicates whether this EntityTag is weak.
      * <p>
-     * Weak EntityTags are prefixed with "W/" and are used for comparison purposes rather than exact matching.
+     * Weak EntityTags are prefixed with "W/" and are used for comparison rather than exact matching.
      *
      * @return {@code true} if this EntityTag is weak; {@code false} otherwise.
      */

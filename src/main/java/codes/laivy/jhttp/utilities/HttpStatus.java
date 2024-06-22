@@ -80,7 +80,7 @@ public class HttpStatus {
     public static final @NotNull HttpStatus NOT_EXTENDED = new HttpStatus(510, "Not Extended");
     public static final @NotNull HttpStatus NETWORK_AUTHENTICATION_REQUIRED = new HttpStatus(511, "Network Authentication Required");
 
-    public static @NotNull HttpStatus getByCode(int code) {
+    public static @NotNull HttpStatus getByCode(int code) throws NullPointerException {
         try {
             for (@NotNull Field field : HttpStatus.class.getDeclaredFields()) {
                 @NotNull HttpStatus status = (HttpStatus) field.get(null);
