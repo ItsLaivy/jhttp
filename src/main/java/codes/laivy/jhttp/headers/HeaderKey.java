@@ -948,7 +948,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Email> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Email.parse(value));
+                    return create(Email.Parser.deserialize(value));
                 } catch (ParseException e) {
                     throw new HeaderFormatException(e);
                 }
