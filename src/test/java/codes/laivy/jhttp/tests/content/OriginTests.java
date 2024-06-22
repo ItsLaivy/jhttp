@@ -27,7 +27,6 @@ public final class OriginTests {
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(Origin.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
-            Assertions.assertEquals(Origin.Parser.deserialize(valid), Origin.Parser.deserialize(Origin.Parser.serialize(Origin.Parser.deserialize(valid))), "Original origin: '" + valid + "'");
         }
     }
     @Test

@@ -1200,7 +1200,7 @@ public abstract class HeaderKey<T> {
 
                 for (@NotNull Cookie cookie : header.getValue()) {
                     if (builder.length() > 0) builder.append("; ");
-                    builder.append(cookie.getKey()).append("=").append(cookie.getValue());
+                    builder.append(cookie.getName()).append("=").append(cookie.getValue());
                 }
 
                 return builder.toString();

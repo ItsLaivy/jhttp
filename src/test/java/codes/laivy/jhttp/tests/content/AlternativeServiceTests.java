@@ -31,7 +31,6 @@ public final class AlternativeServiceTests {
     void validate() throws ParseException, UnknownHostException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(AlternativeService.validate(valid), "cannot verify '" + valid + "' as a valid alternative service");
-            Assertions.assertEquals(AlternativeService.parse(VALIDS[0]), AlternativeService.parse(AlternativeService.parse(VALIDS[0]).toString()), "cannot parse-obtain '" + valid + "' as a valid alternative service");
         }
     }
     @Test

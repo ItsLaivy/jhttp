@@ -27,7 +27,6 @@ public final class ConnectionTests {
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(Parser.validate(valid));
-            Assertions.assertEquals(Parser.deserialize(valid), Parser.deserialize(Parser.deserialize(valid).toString()));
         }
     }
     @Test

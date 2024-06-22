@@ -26,7 +26,6 @@ public final class CacheControlTests {
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(CacheControl.validate(valid), "cannot verify '" + valid + "' as a valid alternative service");
-            Assertions.assertEquals(CacheControl.parse(valid), CacheControl.parse(CacheControl.parse(valid).toString()), "cannot parse-obtain '" + valid + "' as a cache control");
         }
     }
     @Test

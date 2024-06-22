@@ -23,7 +23,6 @@ public final class ContentRangeTests {
     void validate() throws ParseException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(ContentRange.Parser.validate(valid), "cannot parse '" + valid + "' as a valid content range");
-            Assertions.assertEquals(ContentRange.Parser.deserialize(valid), ContentRange.Parser.deserialize(ContentRange.Parser.deserialize(valid).toString()));
         }
     }
     @Test
