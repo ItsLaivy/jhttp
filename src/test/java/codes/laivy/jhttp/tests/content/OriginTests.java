@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.Origin;
+import codes.laivy.jhttp.module.Origin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 

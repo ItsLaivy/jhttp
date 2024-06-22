@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -22,6 +23,7 @@ import java.util.stream.Stream;
  * @since 1.0-SNAPSHOT
  */
 // todo: 03/06/2023 add more tokens (See https://en.wikipedia.org/wiki/HTTP_compression)
+@SuppressWarnings("StaticInitializerReferencesSubClass")
 public abstract class Encoding {
 
     // Static initializers
@@ -29,36 +31,33 @@ public abstract class Encoding {
     // todo: multi threading
     private static final @NotNull Set<Encoding> collection = ConcurrentHashMap.newKeySet();
 
+    static {
+        collection.add(ChunkedEncoding.builder().build());
+        collection.add(GZipEncoding.builder().build());
+        collection.add(DeflateEncoding.builder().build());
+        collection.add(CompressEncoding.builder().build());
+        collection.add(IdentityEncoding.builder().build());
+    }
+
     /**
-     * Retrieves all the available encodings, including the default ones and any custom ones that have been added.
+     * Retrieves all the available encodings.
      *
      * @return an unmodifiable collection of all registered encodings
      * @author Daniel Richard (Laivy)
      */
     public static @NotNull Collection<Encoding> retrieve() {
-        @NotNull Set<Encoding> encodings = new HashSet<>(collection);
-
-        // todo: remove this, make it load just one time
-        // If there's a custom encoding with any of these names, it will not be added
-        // since Sets doesn't allow multiples elements with the same properties.
-        encodings.add(ChunkedEncoding.builder().build());
-        encodings.add(GZipEncoding.builder().build());
-        encodings.add(DeflateEncoding.builder().build());
-        encodings.add(CompressEncoding.builder().build());
-        encodings.add(IdentityEncoding.builder().build());
-
-        return Collections.unmodifiableSet(encodings);
+        return Collections.unmodifiableSet(collection);
     }
 
     /**
-     * Retrieves an encoding by its name.
+     * Retrieves an encoding by its name or alias.
      *
-     * @param name the name of the encoding to retrieve
+     * @param string the name or alias of the encoding to retrieve
      * @return an optional containing the encoding if found, otherwise an empty optional
      * @author Daniel Richard (Laivy)
      */
-    public static @NotNull Optional<Encoding> retrieve(@NotNull String name) {
-        return stream().filter(encoding -> encoding.getName().equalsIgnoreCase(name)).findFirst();
+    public static @NotNull Optional<Encoding> retrieve(@NotNull String string) {
+        return stream().filter(encoding -> encoding.getName().equalsIgnoreCase(string) || Arrays.stream(encoding.getAliases()).anyMatch(alias -> alias.equalsIgnoreCase(string))).findFirst();
     }
 
     /**
@@ -69,6 +68,18 @@ public abstract class Encoding {
      * @author Daniel Richard (Laivy)
      */
     public static boolean add(@NotNull Encoding encoding) {
+        // Check if there's an encoding with that name already defined
+        if (collection.stream().anyMatch(enc -> enc.getName().equalsIgnoreCase(encoding.getName()))) {
+            return false;
+        }
+
+        // Check if there's another encoding with the same aliases
+        for (@NotNull Encoding that : retrieve()) {
+            if (Arrays.stream(that.getAliases()).anyMatch(new HashSet<>(Arrays.asList(encoding.getAliases()))::contains)) {
+                return false;
+            }
+        }
+
         return collection.add(encoding);
     }
 
@@ -111,7 +122,7 @@ public abstract class Encoding {
      * @return the number of encodings in the collection
      * @author Daniel Richard (Laivy)
      */
-    public int size() {
+    public static int size() {
         return retrieve().size();
     }
 
@@ -148,25 +159,44 @@ public abstract class Encoding {
     // Object
 
     private final @NotNull String name;
+    private final @NotNull String @NotNull [] aliases;
 
-    protected Encoding(@NotNull String name) {
+    protected Encoding(@NotNull String name, @NotNull String @NotNull ... aliases) {
         this.name = name;
+        this.aliases = aliases;
 
-        if (name.contains(",") || StringUtils.isBlank(name)) {
-            throw new IllegalArgumentException("illegal transfer encoding name '" + name + "'");
-        }
+        validate();
     }
+
+    // Getters
 
     public final @NotNull String getName() {
         return name;
+    }
+    public @NotNull String @NotNull [] getAliases() {
+        return aliases;
+    }
+
+    // Modules
+
+    private void validate() {
+        @NotNull Consumer<@NotNull String> consumer = string -> {
+            if (StringUtils.isBlank(string) || string.contains(",")) {
+                throw new IllegalArgumentException("illegal transfer encoding name/alias '" + string + "'");
+            }
+        };
+
+        consumer.accept(getName());
+        for (@NotNull String alias : getAliases()) {
+            consumer.accept(alias);
+        }
     }
 
     public abstract @NotNull String decompress(@NotNull String string) throws EncodingException;
     public abstract @NotNull String compress(@NotNull String string) throws EncodingException;
 
     public final synchronized void register() {
-        collection.removeIf(encoding -> encoding.getName().equalsIgnoreCase(getName()));
-        collection.add(this);
+        add(this);
     }
 
     // Implementations
@@ -178,7 +208,6 @@ public abstract class Encoding {
         Encoding that = (Encoding) object;
         return Objects.equals(getName().toLowerCase(), that.getName().toLowerCase());
     }
-
     @Override
     public int hashCode() {
         return Objects.hashCode(getName().toLowerCase());

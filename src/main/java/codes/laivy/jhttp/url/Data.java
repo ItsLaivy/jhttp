@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.content.ContentSecurityPolicy;
-import codes.laivy.jhttp.content.MediaType;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
+import codes.laivy.jhttp.module.content.MediaType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

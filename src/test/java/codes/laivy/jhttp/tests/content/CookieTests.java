@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.Cookie;
-import codes.laivy.jhttp.content.Cookie.Request;
-import codes.laivy.jhttp.content.Cookie.Request.SameSite;
+import codes.laivy.jhttp.module.Cookie;
+import codes.laivy.jhttp.module.Cookie.Request;
+import codes.laivy.jhttp.module.Cookie.Request.SameSite;
 import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.NotNull;

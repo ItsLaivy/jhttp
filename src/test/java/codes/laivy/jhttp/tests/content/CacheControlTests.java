@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.CacheControl;
+import codes.laivy.jhttp.module.CacheControl;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 

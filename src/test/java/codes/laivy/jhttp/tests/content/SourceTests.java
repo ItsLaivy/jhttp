@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.ContentSecurityPolicy.Source;
-import codes.laivy.jhttp.content.MediaType;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Source;
+import codes.laivy.jhttp.module.content.MediaType;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.domain.Domain;

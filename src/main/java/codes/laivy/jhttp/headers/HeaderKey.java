@@ -1,19 +1,25 @@
 package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
-import codes.laivy.jhttp.content.*;
+import codes.laivy.jhttp.element.HttpStatus;
+import codes.laivy.jhttp.element.Method;
+import codes.laivy.jhttp.element.Target;
+import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
+import codes.laivy.jhttp.module.connection.Connection;
+import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
+import codes.laivy.jhttp.module.content.*;
+import codes.laivy.jhttp.network.BitMeasure;
+import codes.laivy.jhttp.url.email.Email;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.*;
-import codes.laivy.jhttp.utilities.header.Weight;
-import codes.laivy.jhttp.utilities.header.Wildcard;
-import codes.laivy.jhttp.utilities.pseudo.PseudoString;
-import codes.laivy.jhttp.utilities.pseudo.provided.PseudoCharset;
-import codes.laivy.jhttp.utilities.pseudo.provided.PseudoEncoding;
+import codes.laivy.jhttp.pseudo.PseudoString;
+import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
+import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
 import org.jetbrains.annotations.*;
 
 import java.io.UnsupportedEncodingException;

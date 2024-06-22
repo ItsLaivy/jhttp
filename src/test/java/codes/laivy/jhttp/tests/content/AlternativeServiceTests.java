@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.AlternativeService;
+import codes.laivy.jhttp.module.AlternativeService;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;

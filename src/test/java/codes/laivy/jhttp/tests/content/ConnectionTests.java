@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.Connection;
-import codes.laivy.jhttp.content.Connection.Parser;
+import codes.laivy.jhttp.module.connection.Connection;
+import codes.laivy.jhttp.module.connection.Connection.Parser;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 

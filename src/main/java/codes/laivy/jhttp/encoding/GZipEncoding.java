@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-// todo: can also be called "x-gzip"
 public class GZipEncoding extends Encoding {
 
     // Static initializers
@@ -22,7 +21,7 @@ public class GZipEncoding extends Encoding {
     // Object
 
     protected GZipEncoding() {
-        super("gzip");
+        super("gzip", "x-gzip");
     }
 
     // Implementations

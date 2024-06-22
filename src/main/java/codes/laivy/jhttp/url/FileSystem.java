@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.content.ContentSecurityPolicy;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -133,7 +133,7 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
             return retrieve(name).isPresent();
         }
 
-        public int size() {
+        public static int size() {
             return retrieve().size();
         }
 

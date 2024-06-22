@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.content.ContentRange;
+import codes.laivy.jhttp.module.content.ContentRange;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 

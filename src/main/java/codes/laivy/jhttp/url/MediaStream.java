@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.content.ContentSecurityPolicy;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

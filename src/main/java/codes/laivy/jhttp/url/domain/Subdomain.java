@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url.domain;
 
 import codes.laivy.jhttp.exception.WildcardValueException;
-import codes.laivy.jhttp.utilities.header.Wildcard;
+import codes.laivy.jhttp.headers.Wildcard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;

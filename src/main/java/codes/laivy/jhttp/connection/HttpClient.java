@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.connection;
 
-import codes.laivy.jhttp.request.HttpRequest;
-import codes.laivy.jhttp.response.HttpResponse;
+import codes.laivy.jhttp.element.request.HttpRequest;
+import codes.laivy.jhttp.element.response.HttpResponse;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
 
