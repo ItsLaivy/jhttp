@@ -1,5 +1,8 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
+import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.exception.media.MediaParserException;
+import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.MissingHeaderException;
@@ -9,9 +12,7 @@ import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
-import codes.laivy.jhttp.message.EncodedMessage;
-import codes.laivy.jhttp.message.Message;
-import codes.laivy.jhttp.message.StringMessage;
+import codes.laivy.jhttp.message.Content;
 import codes.laivy.jhttp.protocol.HttpFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.element.request.HttpRequest;
@@ -65,8 +66,9 @@ final class HttpFactory1_1 implements HttpFactory {
     // Parsers
 
     private final @NotNull Request request = new Request() {
+        @SuppressWarnings("rawtypes")
         @Override
-        public @NotNull HttpRequest parse(@NotNull String string) throws IllegalHttpVersionException, MissingHeaderException, HeaderFormatException, UnknownHostException, URISyntaxException, EncodingException, ParseException {
+        public @NotNull HttpRequest parse(@NotNull String string) throws IllegalHttpVersionException, MissingHeaderException, HeaderFormatException, UnknownHostException, URISyntaxException, EncodingException, ParseException, MediaParserException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
@@ -105,17 +107,15 @@ final class HttpFactory1_1 implements HttpFactory {
             }
 
             // Message
-            @Nullable Message message;
+            @Nullable MediaType<?> media = null;
             @NotNull Charset charset = StandardCharsets.UTF_8;
+
+            @Nullable HttpBody body;
 
             {
                 // Content Type
                 if (headers.contains(CONTENT_TYPE)) {
-                    @NotNull MediaType type = headers.get(CONTENT_TYPE)[0].getValue();
-
-                    if (type.getCharset() != null) {
-                        charset = type.getCharset().available() ? type.getCharset().retrieve() : charset;
-                    }
+                    media = headers.get(CONTENT_TYPE)[0].getValue();
                 }
 
                 // Message Length
@@ -144,17 +144,22 @@ final class HttpFactory1_1 implements HttpFactory {
                 }
 
                 // Interpret Message
-                if (pure.isEmpty()) {
-                    message = null;
-                } else if (encodings != null) {
-                    message = EncodedMessage.create(charset, encodings, content[1], pure);
+                if (StringUtils.isBlank(pure)) {
+                    body = null;
                 } else {
-                    message = new StringMessage(charset, pure.getBytes());
+                    @Nullable Content<?> contentBody = null;
+
+                    if (media != null) {
+                        // noinspection unchecked
+                        contentBody = ((MediaParser) media.getParser()).deserialize(media, pure);
+                    }
+
+                    body = HttpBody.create(contentBody, pure, content[1]);
                 }
             }
 
             // Finish
-            return build(method, authority, uri, headers, message);
+            return build(method, authority, uri, headers, body);
         }
 
         @Override
@@ -185,17 +190,16 @@ final class HttpFactory1_1 implements HttpFactory {
             // End request configurations
             builder.append(CRLF).append(CRLF);
             // Write a message if exists
-            if (request.getMessage() != null) {
-                @NotNull Message message = request.getMessage();
-                builder.append(message.toString());
+            if (request.getBody() != null) {
+                builder.append(request.getBody());
             }
 
             return builder.toString();
         }
 
         @Override
-        public @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable Message message) {
-            return HttpRequest.create(getVersion(), method, authority, uri, headers, message);
+        public @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable HttpBody body) {
+            return HttpRequest.create(getVersion(), method, authority, uri, headers, body);
         }
 
         @Override
@@ -209,8 +213,9 @@ final class HttpFactory1_1 implements HttpFactory {
         }
     };
     private final @NotNull Response response = new Response() {
+        @SuppressWarnings("rawtypes")
         @Override
-        public @NotNull HttpResponse parse(@NotNull String string) throws ParseException, HeaderFormatException, EncodingException, IllegalHttpVersionException {
+        public @NotNull HttpResponse parse(@NotNull String string) throws ParseException, HeaderFormatException, EncodingException, IllegalHttpVersionException, MediaParserException {
             if (!isCompatible(string)) {
                 throw new ParseException("not a valid " + getVersion() + " response", -1);
             }
@@ -237,17 +242,15 @@ final class HttpFactory1_1 implements HttpFactory {
             }
 
             // Message
-            @Nullable Message message;
             @NotNull Charset charset = StandardCharsets.UTF_8;
+            @Nullable MediaType<?> media = null;
+
+            @Nullable HttpBody body;
 
             {
                 // Content Type
                 if (headers.contains(CONTENT_TYPE)) {
-                    @NotNull MediaType type = headers.get(CONTENT_TYPE)[0].getValue();
-
-                    if (type.getCharset() != null) {
-                        charset = type.getCharset().available() ? type.getCharset().retrieve() : charset;
-                    }
+                    media = headers.get(CONTENT_TYPE)[0].getValue();
                 }
 
                 // Message Length
@@ -276,17 +279,22 @@ final class HttpFactory1_1 implements HttpFactory {
                 }
 
                 // Interpret Message
-                if (pure.isEmpty()) {
-                    message = null;
-                } else if (encodings != null) {
-                    message = EncodedMessage.create(charset, encodings, content[1], pure);
+                if (StringUtils.isBlank(pure)) {
+                    body = null;
                 } else {
-                    message = new StringMessage(charset, pure.getBytes());
+                    @Nullable Content<?> contentBody = null;
+
+                    if (media != null) {
+                        // noinspection unchecked
+                        contentBody = ((MediaParser) media.getParser()).deserialize(media, pure);
+                    }
+
+                    body = HttpBody.create(contentBody, pure, content[1]);
                 }
             }
 
             // Finish
-            return build(status, headers, message);
+            return build(status, headers, body);
         }
 
         @Override
@@ -306,17 +314,16 @@ final class HttpFactory1_1 implements HttpFactory {
             // End request configurations
             builder.append(CRLF);
             // Write a message if exists
-            if (response.getMessage() != null) {
-                @NotNull Message message = response.getMessage();
-                builder.append(message.toString());
+            if (response.getBody() != null) {
+                builder.append(response.getBody());
             }
 
             return builder.toString();
         }
 
         @Override
-        public @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable Message message) {
-            return HttpResponse.create(status, getVersion(), headers, message);
+        public @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable HttpBody body) {
+            return HttpResponse.create(status, getVersion(), headers, body);
         }
 
         @Override

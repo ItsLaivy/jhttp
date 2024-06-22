@@ -1,28 +1,21 @@
 package codes.laivy.jhttp.tests.http1_1;
 
 import codes.laivy.jhttp.authorization.Credentials.Basic;
-import codes.laivy.jhttp.encoding.GZipEncoding;
-import codes.laivy.jhttp.exception.MissingHeaderException;
-import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.exception.parser.HeaderFormatException;
-import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.message.EncodedMessage;
+import codes.laivy.jhttp.element.HttpStatus;
+import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
+import codes.laivy.jhttp.encoding.GZipEncoding;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
+import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.DateUtils;
-import codes.laivy.jhttp.element.HttpStatus;
-import codes.laivy.jhttp.element.Method;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 
 import static codes.laivy.jhttp.headers.HeaderKey.*;
 import static codes.laivy.jhttp.protocol.HttpVersion.HTTP1_1;
@@ -61,7 +54,7 @@ public final class HttpFactoryTests {
         }
         @Test
         @Order(value = 1)
-        void assertions() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
+        void assertions() throws Throwable {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
@@ -69,16 +62,16 @@ public final class HttpFactoryTests {
 
             @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
 
-            Assertions.assertNotNull(request.getMessage());
+            Assertions.assertNotNull(request.getBody());
             Assertions.assertEquals(URIAuthority.create(new Basic("username", "password"), InetSocketAddress.createUnresolved("example.com", 8080)), request.getAuthority());
-            Assertions.assertEquals(expected, ((EncodedMessage) request.getMessage()).getDecoded());
+            Assertions.assertEquals(expected, request.getBody().getDecoded());
             Assertions.assertEquals(Method.GET, request.getMethod());
             Assertions.assertEquals(URI.create("/index.php"), request.getUri());
             Assertions.assertEquals(Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"), request.getHeaders().get(HOST)[0].getValue());
         }
         @Test
         @Order(value = 2)
-        void serialization() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
+        void serialization() throws Throwable {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
@@ -113,7 +106,7 @@ public final class HttpFactoryTests {
         }
         @Test
         @Order(value = 1)
-        void assertions() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
+        void assertions() throws Throwable {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
@@ -121,9 +114,9 @@ public final class HttpFactoryTests {
 
             @NotNull HttpResponse response = HTTP1_1().getFactory().getResponse().parse(string);
 
-            Assertions.assertNotNull(response.getMessage());
+            Assertions.assertNotNull(response.getBody());
             Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-            Assertions.assertEquals(expected, ((EncodedMessage) response.getMessage()).getDecoded());
+            Assertions.assertEquals(expected, response.getBody().getDecoded());
 
             // Headers
             Assertions.assertEquals("JHTTP Environment", response.getHeaders().get(SERVER)[0].getValue());
@@ -131,7 +124,7 @@ public final class HttpFactoryTests {
         }
         @Test
         @Order(value = 2)
-        void serialization() throws ParseException, EncodingException, HeaderFormatException, IOException, MissingHeaderException, IllegalHttpVersionException, URISyntaxException {
+        void serialization() throws Throwable {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 

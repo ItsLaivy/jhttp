@@ -1,8 +1,7 @@
 package codes.laivy.jhttp.media;
 
-import codes.laivy.jhttp.media.json.JsonContent;
 import codes.laivy.jhttp.media.json.JsonMediaParser;
-import codes.laivy.jhttp.message.Content;
+import codes.laivy.jhttp.media.text.TextMediaParser;
 import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
@@ -14,32 +13,57 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class MediaType<T, C extends Content<T>> {
+/**
+ * Represents a media type and its associated parser. Each media type is defined by a type, optional parameters,
+ * and a parser that can handle the content of that type.
+ *
+ * @param <T> the type of the content that this media type handles
+ * @author Daniel Richard (Laivy)
+ * @since 1.0-SNAPSHOT
+ */
+public final class MediaType<T> {
 
     // Static initializers
 
-    public static @NotNull MediaType<JsonElement, JsonContent> APPLICATION_JSON = create(new Type("application", "json"), JsonMediaParser.create());
+    public static @NotNull MediaType<JsonElement> APPLICATION_JSON = create(new Type("application", "json"), JsonMediaParser.create());
 
-    public static <T, C extends Content<T>> @NotNull MediaType<T, C> create(
+    /**
+     * Creates a new media type with the specified type, parser, and parameters.
+     *
+     * @param type       the type of the media
+     * @param parser     the parser to handle this media type
+     * @param parameters the parameters associated with this media type
+     * @param <T>        the type of the content that this media type handles
+     * @return the newly created media type
+     */
+    public static <T> @NotNull MediaType<T> create(
             @NotNull Type type,
-            @NotNull MediaParser<T, C> parser,
+            @NotNull MediaParser<T> parser,
             @NotNull Parameter @NotNull ... parameters
     ) {
         return new MediaType<>(type, parser, parameters);
     }
-    public static @NotNull MediaType<?, ?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
-        return new MediaType<>(type, null, parameters);
+
+    /**
+     * Creates a new media type with the specified type and parameters, using a default text parser.
+     *
+     * @param type       the type of the media
+     * @param parameters the parameters associated with this media type
+     * @return the newly created media type
+     */
+    public static @NotNull MediaType<?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
+        return new MediaType<>(type, TextMediaParser.create(), parameters);
     }
 
     // Object
 
     private final @NotNull Type type;
     private final @NotNull Parameter @NotNull [] parameters;
-    private final @Nullable MediaParser<T, C> parser;
+    private final @NotNull MediaParser<T> parser;
 
     private MediaType(
             @NotNull Type type,
-            @Nullable MediaParser<T, C> parser,
+            @NotNull MediaParser<T> parser,
             @NotNull Parameter @NotNull [] parameters
     ) {
         this.type = type;
@@ -50,25 +74,58 @@ public final class MediaType<T, C extends Content<T>> {
 
     // Getters
 
+    /**
+     * Returns the type of this media type.
+     *
+     * @return the type of this media type
+     */
     public @NotNull Type getType() {
         return type;
     }
-    public @Nullable MediaParser<T, C> getParser() {
+
+    /**
+     * Returns the parser associated with this media type.
+     *
+     * @return the parser associated with this media type
+     */
+    public @NotNull MediaParser<T> getParser() {
         return parser;
     }
 
+    /**
+     * Returns the parameters associated with this media type.
+     *
+     * @return an array of parameters associated with this media type
+     */
     public @NotNull Parameter @NotNull [] getParameters() {
         return parameters;
     }
 
+    /**
+     * Returns the parameter with the specified key, if present.
+     *
+     * @param key the key of the parameter to retrieve
+     * @return an optional containing the parameter if present, or an empty optional if not
+     */
     public @NotNull Optional<Parameter> getParameter(@NotNull String key) {
         return Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase(key)).findFirst();
     }
 
+    /**
+     * Returns the charset parameter of this media type, if present.
+     *
+     * @return the charset parameter if present, or null if not
+     */
     public @Nullable PseudoCharset getCharset() {
         @Nullable Parameter parameter = getParameter("charset").orElse(null);
         return parameter != null ? PseudoCharset.create(parameter.getValue()) : null;
     }
+
+    /**
+     * Returns the boundary parameter of this media type, if present.
+     *
+     * @return the boundary parameter if present, or null if not
+     */
     public @Nullable Boundary getBoundary() {
         @Nullable Parameter parameter = getParameter("boundary").orElse(null);
 
@@ -82,17 +139,16 @@ public final class MediaType<T, C extends Content<T>> {
     // Implementations
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        @NotNull MediaType<?, ?> that = (MediaType<?, ?>) o;
-        return Objects.equals(type, that.type) && Arrays.equals(parameters, that.parameters);
+        @NotNull MediaType<?> that = (MediaType<?>) o;
+        return Objects.equals(getType(), that.getType()) && Arrays.equals(getParameters(), that.getParameters());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(type, Arrays.hashCode(getParameters()));
+        return Objects.hash(getType(), Arrays.hashCode(getParameters()));
     }
-
     @Override
     public @NotNull String toString() {
         return Parser.serialize(this);
@@ -100,6 +156,12 @@ public final class MediaType<T, C extends Content<T>> {
 
     // Classes
 
+    /**
+     * Utility class for parsing and serializing media types.
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
     public static final class Parser {
         private Parser() {
             throw new UnsupportedOperationException();
@@ -110,7 +172,13 @@ public final class MediaType<T, C extends Content<T>> {
         @ApiStatus.Internal
         private static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("([^;\\s]+)(?:;\\s*charset=([^;\\s]+))?(?:;\\s*(.*))?");
 
-        public static @NotNull String serialize(@NotNull MediaType<?, ?> media) {
+        /**
+         * Serializes the given media type to a string.
+         *
+         * @param media the media type to serialize
+         * @return the string representation of the media type
+         */
+        public static @NotNull String serialize(@NotNull MediaType<?> media) {
             @NotNull StringBuilder builder = new StringBuilder();
             builder.append(media.getType());
 
@@ -120,7 +188,15 @@ public final class MediaType<T, C extends Content<T>> {
 
             return builder.toString();
         }
-        public static @NotNull MediaType<?, ?> deserialize(@NotNull String string) throws ParseException {
+
+        /**
+         * Deserializes the given string into a media type.
+         *
+         * @param string the string to deserialize
+         * @return the deserialized media type
+         * @throws ParseException if an error occurs during deserialization
+         */
+        public static @NotNull MediaType<?> deserialize(@NotNull String string) throws ParseException {
             @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
             @NotNull Matcher matcher = pattern.matcher(string);
 
@@ -147,6 +223,12 @@ public final class MediaType<T, C extends Content<T>> {
             return create(type, parameters.toArray(new Parameter[0]));
         }
 
+        /**
+         * Validates whether the given string is a valid media type.
+         *
+         * @param string the string to validate
+         * @return true if the string is a valid media type, false otherwise
+         */
         public static boolean validate(@NotNull String string) {
             try {
                 deserialize(string);
@@ -158,10 +240,22 @@ public final class MediaType<T, C extends Content<T>> {
 
     }
 
+    /**
+     * Represents the type of media type, consisting of a type and an optional subtype.
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
     public static final class Type implements CharSequence {
 
         // Static initializers
 
+        /**
+         * Parses a string into a media type {@link Type}.
+         *
+         * @param string the string to parse
+         * @return the parsed media type {@link Type}
+         */
         public static @NotNull Type parse(@NotNull String string) {
             @NotNull String[] split = string.split("/", 2);
 
@@ -188,13 +282,29 @@ public final class MediaType<T, C extends Content<T>> {
 
         // Getters
 
+        /**
+         * Returns the type of this media type {@link Type}.
+         *
+         * @return the type of this media type {@link Type}
+         */
         public @NotNull String getType() {
             return type;
         }
+
+        /**
+         * Returns the subtype of this media type {@link Type}.
+         *
+         * @return the subtype of this media type {@link Type}, or null if none
+         */
         public @Nullable String getSubType() {
             return subtype;
         }
 
+        /**
+         * Determines whether this media type {@link Type} is multipart.
+         *
+         * @return true if this media type {@link Type} is multipart, false otherwise
+         */
         public boolean isMultipart() {
             return getType().equalsIgnoreCase("multipart");
         }
@@ -233,6 +343,12 @@ public final class MediaType<T, C extends Content<T>> {
 
     }
 
+    /**
+     * Represents a parameter of a media type, consisting of a key-value pair.
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
     public static final class Parameter {
 
         private final @NotNull String key;
@@ -249,9 +365,20 @@ public final class MediaType<T, C extends Content<T>> {
 
         // Getters
 
+        /**
+         * Returns the key of this parameter.
+         *
+         * @return the key of this parameter
+         */
         public @NotNull String getKey() {
             return key;
         }
+
+        /**
+         * Returns the value of this parameter.
+         *
+         * @return the value of this parameter
+         */
         public @NotNull String getValue() {
             return value;
         }
@@ -277,6 +404,12 @@ public final class MediaType<T, C extends Content<T>> {
 
     }
 
+    /**
+     * Represents a boundary parameter for multipart media types.
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
     public static final class Boundary implements CharSequence {
 
         private final @NotNull String name;
@@ -285,6 +418,11 @@ public final class MediaType<T, C extends Content<T>> {
             this.name = name;
         }
 
+        /**
+         * Returns the name of this boundary.
+         *
+         * @return the name of this boundary
+         */
         public @NotNull String getName() {
             return name;
         }

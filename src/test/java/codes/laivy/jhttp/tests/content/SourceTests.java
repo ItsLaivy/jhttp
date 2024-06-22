@@ -89,7 +89,7 @@ public final class SourceTests {
         @Test
         @Order(value = 1)
         void assertions() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
-            @NotNull MediaType<?, ?> expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
+            @NotNull MediaType<?> expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
 
             // Source
             @NotNull Source source = Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
