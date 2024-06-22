@@ -45,7 +45,7 @@ public final class AlternativeServiceTests {
     }
     @Test
     @Order(value = 2)
-    void validation() throws ParseException, UnknownHostException, URISyntaxException {
+    void serialization() throws ParseException, UnknownHostException, URISyntaxException {
         @NotNull AlternativeService reference = AlternativeService.parse("http/1.1=\"localhost:500/\"; ma=12345; persist=1");
         @NotNull AlternativeService clone = AlternativeService.parse(reference.toString());
 

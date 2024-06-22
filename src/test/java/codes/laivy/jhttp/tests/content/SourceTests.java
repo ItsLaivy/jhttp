@@ -1,11 +1,15 @@
 package codes.laivy.jhttp.tests.content;
 
+import codes.laivy.jhttp.content.ContentSecurityPolicy.Source;
+import codes.laivy.jhttp.content.MediaType;
+import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
@@ -51,6 +55,14 @@ public final class SourceTests {
             Assertions.assertEquals(1, domain.getSubdomains().length);
             Assertions.assertTrue(domain.getSubdomains()[0].isWildcard());
         }
+        @Test
+        @Order(value = 2)
+        void serialization() throws ParseException {
+            @NotNull Domain<?> reference = Domain.parse("https://*.example.com:12");
+            @NotNull Domain<?> clone = Domain.parse(reference.toString());
+
+            Assertions.assertEquals(reference, clone);
+        }
     }
 
     @Nested
@@ -73,10 +85,28 @@ public final class SourceTests {
                 Assertions.assertEquals(Data.parse(valid), Data.parse(Data.parse(valid).toString()));
             }
         }
+
         @Test
         @Order(value = 1)
-        void assertions() throws ParseException {
+        void assertions() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
+            @NotNull MediaType expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
 
+            // Source
+            @NotNull Source source = Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
+            Assertions.assertInstanceOf(Data.class, source);
+
+            @NotNull Data data = (Data) source;
+            Assertions.assertTrue(data.isBase64());
+            Assertions.assertEquals(expected, data.getMediaType());
+            Assertions.assertArrayEquals("{\"key\": \"Value\"}".getBytes(StandardCharsets.UTF_8), data.getData());
+        }
+        @Test
+        @Order(value = 2)
+        void serialization() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
+            @NotNull Data reference = (Data) Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
+            @NotNull Data clone = Data.parse(reference.toString());
+
+            Assertions.assertEquals(reference, clone);
         }
     }
 

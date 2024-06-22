@@ -35,18 +35,26 @@ public final class ContentDispositionTests {
     @Test
     @Order(value = 1)
     void assertions() throws ParseException {
-        @NotNull ContentDisposition service = ContentDisposition.parse("attachment  ;   name    =  \"test\"  ; filename  =  \"example.txt\"    ;   creation-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; read-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; size  =  12345");
+        @NotNull ContentDisposition disposition = ContentDisposition.parse("attachment  ;   name    =  \"test\"  ; filename  =  \"example.txt\"    ;   creation-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; read-date  = \"Wed, 12 Feb 1997 16:29:51 -0500\"; modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; size  =  12345");
         @NotNull OffsetDateTime instant = DateUtils.RFC822.convert("Wed, 12 Feb 1997 16:29:51 -0500");
 
-        Assertions.assertNotNull(service.getProperty());
-        Assertions.assertEquals(service.getType(), ATTACHMENT);
-        Assertions.assertEquals(service.getName(), "test");
+        Assertions.assertNotNull(disposition.getProperty());
+        Assertions.assertEquals(disposition.getType(), ATTACHMENT);
+        Assertions.assertEquals(disposition.getName(), "test");
 
-        @NotNull Property property = service.getProperty();
+        @NotNull Property property = disposition.getProperty();
         Assertions.assertEquals(property.getCreation(), instant);
         Assertions.assertEquals(property.getModification(), instant);
         Assertions.assertEquals(property.getRead(), instant);
         Assertions.assertEquals(property.getSize(), 12345L);
+    }
+    @Test
+    @Order(value = 2)
+    void serialization() throws ParseException {
+        @NotNull ContentDisposition reference = ContentDisposition.parse("attachment; name=\"test\"; filename=\"example.txt\"; creation-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; read-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"; size=12345");
+        @NotNull ContentDisposition clone = ContentDisposition.parse(reference.toString());
+
+        Assertions.assertEquals(reference, clone);
     }
 
 }

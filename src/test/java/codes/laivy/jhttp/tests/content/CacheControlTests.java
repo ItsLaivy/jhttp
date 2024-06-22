@@ -54,7 +54,7 @@ public final class CacheControlTests {
     }
     @Test
     @Order(value = 2)
-    void validation() throws ParseException, UnknownHostException, URISyntaxException {
+    void serialization() throws ParseException, UnknownHostException, URISyntaxException {
         @NotNull CacheControl reference = CacheControl.parse("max-age=60,s-maxage=61,no-cache,must-revalidate,proxy-revalidate,no-store,private,public,must-understand,no-transform,immutable,stale-while-revalidate=65,stale-if-error=62,max-stale=63,min-fresh=64,no-transform,only-if-cached");
         @NotNull CacheControl clone = CacheControl.parse(reference.toString());
 

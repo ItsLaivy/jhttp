@@ -43,7 +43,7 @@ public final class MediaType {
 
         return new MediaType(type, parameters.toArray(new Parameter[0]));
     }
-    public static @NotNull MediaType create(@NotNull Type type, @NotNull Parameter[] parameters) {
+    public static @NotNull MediaType create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
         return new MediaType(type, parameters);
     }
 

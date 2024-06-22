@@ -14,6 +14,40 @@ import java.util.regex.Pattern;
 
 public interface Origin {
 
+    // Static initializers
+
+    static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI uri) {
+        return new Origin() {
+            @Override
+            public @Nullable Domain<?> getDomain() {
+                return domain;
+            }
+            @Override
+            public @NotNull URI getURI() {
+                return uri;
+            }
+
+            @Override
+            public boolean equals(@Nullable Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                @NotNull Origin origin = (Origin) o;
+                return Objects.equals(domain, origin.getDomain()) && Objects.equals(uri, origin.getURI());
+            }
+            @Override
+            public int hashCode() {
+                return Objects.hash(domain, uri);
+            }
+
+            @Override
+            public @NotNull String toString() {
+                return Parser.serialize(this);
+            }
+        };
+    }
+
+    // Getters
+
     @Nullable Domain<?> getDomain();
     @NotNull URI getURI();
 
@@ -26,10 +60,7 @@ public interface Origin {
 
         public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?)(/.*)??(?<path>/\\S*)?$");
 
-        public static boolean validate(@NotNull String string) {
-            return ORIGIN_PATTERN.matcher(string).matches();
-        }
-        public static @NotNull Origin parse(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+        public static @NotNull Origin deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
             @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
 
             if (matcher.matches()) {
@@ -56,35 +87,10 @@ public interface Origin {
             }
         }
 
-        public static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI uri) {
-            return new Origin() {
-                @Override
-                public @Nullable Domain<?> getDomain() {
-                    return domain;
-                }
-                @Override
-                public @NotNull URI getURI() {
-                    return uri;
-                }
-
-                @Override
-                public boolean equals(@Nullable Object o) {
-                    if (this == o) return true;
-                    if (o == null || getClass() != o.getClass()) return false;
-                    @NotNull Origin origin = (Origin) o;
-                    return Objects.equals(domain, origin.getDomain()) && Objects.equals(uri, origin.getURI());
-                }
-                @Override
-                public int hashCode() {
-                    return Objects.hash(domain, uri);
-                }
-
-                @Override
-                public @NotNull String toString() {
-                    return serialize(this);
-                }
-            };
+        public static boolean validate(@NotNull String string) {
+            return ORIGIN_PATTERN.matcher(string).matches();
         }
+
     }
 
 }

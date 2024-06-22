@@ -117,7 +117,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
                 port = null;
             }
         } for (@NotNull Subdomain subdomain : getSubdomains()) {
-            builder.append(subdomain.getValue()).append(".");
+            builder.append(subdomain).append(".");
         }
 
         builder.append(getName());

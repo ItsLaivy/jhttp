@@ -37,5 +37,13 @@ public final class ContentRangeTests {
         Assertions.assertEquals(range.getMaximum(), 50L);
         Assertions.assertEquals(range.getSize().getValue(), 100L);
     }
+    @Test
+    @Order(value = 2)
+    void serialization() throws ParseException {
+        @NotNull ContentRange reference = ContentRange.Parser.deserialize("bytes 0-50/100");
+        @NotNull ContentRange clone = ContentRange.Parser.deserialize(ContentRange.Parser.serialize(reference));
+
+        Assertions.assertEquals(reference, clone);
+    }
 
 }

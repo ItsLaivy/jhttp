@@ -370,7 +370,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.parse(value));
+                    return create(Origin.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
@@ -416,7 +416,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.parse(value));
+                    return create(Origin.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
@@ -739,7 +739,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.parse(value));
+                    return create(Origin.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
@@ -1268,7 +1268,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.parse(value));
+                    return create(Origin.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
                 }

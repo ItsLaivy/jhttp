@@ -27,23 +27,31 @@ public final class OriginTests {
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
             Assertions.assertTrue(Origin.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
-            Assertions.assertEquals(Origin.Parser.parse(valid), Origin.Parser.parse(Origin.Parser.serialize(Origin.Parser.parse(valid))), "Original origin: '" + valid + "'");
+            Assertions.assertEquals(Origin.Parser.deserialize(valid), Origin.Parser.deserialize(Origin.Parser.serialize(Origin.Parser.deserialize(valid))), "Original origin: '" + valid + "'");
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Origin location = Origin.Parser.parse("localhost:80/test/excellent");
+        @NotNull Origin origin = Origin.Parser.deserialize("localhost:80/test/excellent");
 
         // Path
-        Assertions.assertEquals(location.getURI().getPath(), URI.create("/test/excellent").getPath());
+        Assertions.assertEquals(origin.getURI().getPath(), URI.create("/test/excellent").getPath());
 
         // Authority
-        Assertions.assertNotNull(location.getDomain());
-        Assertions.assertNotNull(location.getDomain().getHost().getPort());
+        Assertions.assertNotNull(origin.getDomain());
+        Assertions.assertNotNull(origin.getDomain().getHost().getPort());
 
-        Assertions.assertEquals(location.getDomain().getHost().getPort(), 80);
-        Assertions.assertEquals(location.getDomain().getHost().getName(), "localhost");
+        Assertions.assertEquals(origin.getDomain().getHost().getPort(), 80);
+        Assertions.assertEquals(origin.getDomain().getHost().getName(), "localhost");
+    }
+    @Test
+    @Order(value = 2)
+    void serialization() throws ParseException, UnknownHostException, URISyntaxException {
+        @NotNull Origin reference = Origin.Parser.deserialize("localhost:80/test/excellent");
+        @NotNull Origin clone = Origin.Parser.deserialize(Origin.Parser.serialize(reference));
+
+        Assertions.assertEquals(reference, clone);
     }
 
 }

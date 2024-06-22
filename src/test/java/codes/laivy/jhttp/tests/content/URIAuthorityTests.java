@@ -52,7 +52,6 @@ public final class URIAuthorityTests {
         Assertions.assertNotNull(authority.getUserInfo());
         Assertions.assertEquals(authority.getUserInfo(), new Credentials.Basic("user", "pass"));
     }
-
     @Test
     @Order(value = 3)
     void serialization() throws UnknownHostException, URISyntaxException {
