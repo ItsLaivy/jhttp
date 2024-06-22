@@ -86,8 +86,7 @@ public interface HttpBody extends CharSequence {
      *
      * @return the transformed content of this body, or null if it cannot be generated
      */
-    @Nullable
-    Content<?> getContent();
+    @Nullable Content<?> getContent();
 
     /**
      * Returns the content of this body in a decoded form, if the body has any encodings applied.

@@ -8,10 +8,13 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Represents a media type and its associated parser. Each media type is defined by a type, optional parameters,
@@ -26,6 +29,7 @@ public final class MediaType<T> {
     // Static initializers
 
     public static @NotNull MediaType<JsonElement> APPLICATION_JSON = create(new Type("application", "json"), JsonMediaParser.create());
+    public static @NotNull MediaType<String> TEXT_PLAIN = create(new Type("text", "plain"), TextMediaParser.create());
 
     /**
      * Creates a new media type with the specified type, parser, and parameters.
@@ -53,6 +57,134 @@ public final class MediaType<T> {
      */
     public static @NotNull MediaType<?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
         return new MediaType<>(type, TextMediaParser.create(), parameters);
+    }
+    
+    // Media type content
+
+    // todo: multi threading
+    private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
+
+    static {
+        for (@NotNull Field field : MediaType.class.getDeclaredFields()) {
+            if (field.getType() == MediaType.class) {
+                try {
+                    field.setAccessible(true);
+                    add((MediaType<?>) field.get(null));
+                } catch (@NotNull IllegalAccessException e) {
+                    throw new RuntimeException("cannot store default media type '" + field.getName() + "'", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves all the available media types.
+     *
+     * @return an unmodifiable collection of all registered media types
+     * @author Daniel Richard (Laivy)
+     */
+    public static @NotNull Collection<MediaType<?>> retrieve() {
+        return Collections.unmodifiableSet(collection);
+    }
+
+    /**
+     * Retrieves a media type by its name or alias.
+     *
+     * @param type the type of the media type to retrieve
+     * @return an optional containing the media type if found, otherwise an empty optional
+     * @author Daniel Richard (Laivy)
+     */
+    public static @NotNull Optional<MediaType<?>> retrieve(@NotNull Type type) {
+        return stream().filter(media -> media.getType().equals(type)).findFirst();
+    }
+
+    /**
+     * Adds a custom media type to the collection.
+     *
+     * @param type the media type to add
+     * @return {@code true} if the media type was added successfully, {@code false} if it was already present
+     * @author Daniel Richard (Laivy)
+     */
+    public static boolean add(@NotNull MediaType<?> type) {
+        // Check if there's an media type with that name already defined
+        if (collection.stream().anyMatch(media -> media.getType().equals(type.getType()))) {
+            return false;
+        }
+
+        return collection.add(type);
+    }
+
+    /**
+     * Removes a custom media type from the collection.
+     *
+     * @param media the media type to remove
+     * @return {@code true} if the media type was removed successfully, {@code false} if it was not present
+     * @author Daniel Richard (Laivy)
+     */
+    public static boolean remove(@NotNull MediaType<?> media) {
+        return collection.remove(media);
+    }
+
+    /**
+     * Checks if a specific media type is present in the collection.
+     *
+     * @param media the media type to check for
+     * @return {@code true} if the media type is present, {@code false} otherwise
+     * @author Daniel Richard (Laivy)
+     */
+    public static boolean contains(@NotNull MediaType<?> media) {
+        return retrieve().contains(media);
+    }
+
+    /**
+     * Checks if a specific media type is present in the collection by it's name.
+     *
+     * @param type the type of the media
+     * @return {@code true} if the media type is present, {@code false} otherwise
+     * @author Daniel Richard (Laivy)
+     */
+    public static boolean contains(@NotNull Type type) {
+        return retrieve(type).isPresent();
+    }
+
+    /**
+     * Returns the number of media types in the collection, including the default ones.
+     *
+     * @return the number of media types in the collection
+     * @author Daniel Richard (Laivy)
+     */
+    public static int size() {
+        return retrieve().size();
+    }
+
+    /**
+     * Returns a stream of all the media types in the collection.
+     *
+     * @return a stream of all media types
+     * @author Daniel Richard (Laivy)
+     */
+    public static @NotNull Stream<MediaType<?>> stream() {
+        return retrieve().stream();
+    }
+
+    /**
+     * Returns an iterator over the media types in the collection.
+     *
+     * @return an iterator over the media types
+     * @author Daniel Richard (Laivy)
+     */
+    public static @NotNull Iterator<MediaType<?>> iterator() {
+        return retrieve().iterator();
+    }
+
+    /**
+     * Returns an array containing all the media types in the collection.
+     *
+     * @return an array of all media types
+     * @author Daniel Richard (Laivy)
+     */
+    public static @NotNull MediaType<?>[] toArray() {
+        return retrieve().toArray(new MediaType<?>[0]);
     }
 
     // Object
@@ -136,6 +268,12 @@ public final class MediaType<T> {
         }
     }
 
+    // Modules
+
+    public boolean register() {
+        return add(this);
+    }
+
     // Implementations
 
     @Override
@@ -201,6 +339,8 @@ public final class MediaType<T> {
             @NotNull Matcher matcher = pattern.matcher(string);
 
             @Nullable Type type = null;
+            @Nullable MediaParser<?> parser = null;
+
             @NotNull List<Parameter> parameters = new LinkedList<>();
 
             try {
@@ -220,7 +360,18 @@ public final class MediaType<T> {
                 throw new ParseException("cannot obtain name in media type text '" + string + "'", -1);
             }
 
-            return create(type, parameters.toArray(new Parameter[0]));
+            // Get parser
+            @NotNull Optional<MediaType<?>> optional = MediaType.retrieve(type);
+            if (optional.isPresent()) {
+                parser = optional.get().getParser();
+            }
+
+            // Finish
+            if (parser != null) {
+                return create(type, parser, parameters.toArray(new Parameter[0]));
+            } else {
+                return create(type, parameters.toArray(new Parameter[0]));
+            }
         }
 
         /**

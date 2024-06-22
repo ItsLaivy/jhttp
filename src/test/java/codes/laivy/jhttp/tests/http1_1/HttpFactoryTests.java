@@ -8,9 +8,12 @@ import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.encoding.GZipEncoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.DateUtils;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -34,11 +37,11 @@ public final class HttpFactoryTests {
     final class Requests {
 
         private final @NotNull String[] VALIDS = new String[]{
-                "GET /index.php HTTP/1.1\r\nHost: localhost\r\n\r\n",
-                "GET /index.php HTTP/1.1\r\nHost: 192.0.2.1:8080\r\n\r\n",
-                "GET /index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
-                "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
-                "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + GZipEncoding.builder().build().compress("Cool Text")
+                "GET /index.java HTTP/1.1\r\nHost: localhost\r\n\r\n",
+                "GET /index HTTP/1.1\r\nHost: 192.0.2.1:8080\r\n\r\n",
+                "GET /index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
+                "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\n\r\n",
+                "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + GZipEncoding.builder().build().compress("Cool Text")
         };
 
         Requests() throws EncodingException {
@@ -58,7 +61,7 @@ public final class HttpFactoryTests {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
-            @NotNull String string = "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
+            @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
             @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
 
@@ -66,7 +69,7 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(URIAuthority.create(new Basic("username", "password"), InetSocketAddress.createUnresolved("example.com", 8080)), request.getAuthority());
             Assertions.assertEquals(expected, request.getBody().getDecoded());
             Assertions.assertEquals(Method.GET, request.getMethod());
-            Assertions.assertEquals(URI.create("/index.php"), request.getUri());
+            Assertions.assertEquals(URI.create("/index"), request.getUri());
             Assertions.assertEquals(Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"), request.getHeaders().get(HOST)[0].getValue());
         }
         @Test
@@ -75,12 +78,34 @@ public final class HttpFactoryTests {
             @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
-            @NotNull String string = "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
+            @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
             @NotNull HttpRequest reference = HTTP1_1().getFactory().getRequest().parse(string);
             @NotNull HttpRequest clone = HTTP1_1().getFactory().getRequest().parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);
+        }
+
+        @Test
+        @Order(value = 3)
+        void contentType() throws Throwable {
+            @NotNull String string = "GET http://localhost/index HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
+
+            @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
+            @NotNull Headers headers = request.getHeaders();
+
+            Assertions.assertTrue(headers.contains(CONTENT_TYPE));
+            Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);
+            Assertions.assertEquals(MediaType.APPLICATION_JSON, headers.get(CONTENT_TYPE)[0].getValue());
+
+            Assertions.assertNotNull(request.getBody());
+            Assertions.assertNotNull(request.getBody().getContent());
+
+            // Match
+            @NotNull JsonObject object = new JsonObject();
+            object.addProperty("text", "test");
+
+            Assertions.assertEquals(object, request.getBody().getContent().getData());
         }
 
     }
@@ -134,6 +159,28 @@ public final class HttpFactoryTests {
             @NotNull HttpResponse clone = HTTP1_1().getFactory().getResponse().parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);
+        }
+
+        @Test
+        @Order(value = 3)
+        void contentType() throws Throwable {
+            @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
+
+            @NotNull HttpResponse response = HTTP1_1().getFactory().getResponse().parse(string);
+            @NotNull Headers headers = response.getHeaders();
+
+            Assertions.assertTrue(headers.contains(CONTENT_TYPE));
+            Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);
+            Assertions.assertEquals(MediaType.APPLICATION_JSON, headers.get(CONTENT_TYPE)[0].getValue());
+
+            Assertions.assertNotNull(response.getBody());
+            Assertions.assertNotNull(response.getBody().getContent());
+
+            // Match
+            @NotNull JsonObject object = new JsonObject();
+            object.addProperty("text", "test");
+
+            Assertions.assertEquals(object, response.getBody().getContent().getData());
         }
 
     }
