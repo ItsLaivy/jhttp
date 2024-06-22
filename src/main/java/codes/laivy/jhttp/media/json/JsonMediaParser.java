@@ -3,6 +3,7 @@ package codes.laivy.jhttp.media.json;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.message.Content;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.StringReader;
 import java.util.Objects;
 
-public final class JsonMediaParser implements MediaParser<JsonElement, JsonContent> {
+public final class JsonMediaParser implements MediaParser<JsonElement> {
 
     // Static initializers
 
@@ -31,7 +32,7 @@ public final class JsonMediaParser implements MediaParser<JsonElement, JsonConte
     // Modules
 
     @Override
-    public @NotNull JsonContent deserialize(@NotNull MediaType<JsonElement, JsonContent> media, @NotNull String string) throws MediaParserException {
+    public @NotNull JsonContent deserialize(@NotNull MediaType<JsonElement> media, @NotNull String string) throws MediaParserException {
         try {
             // Reader
             @NotNull JsonReader reader = new JsonReader(new StringReader(string));
@@ -46,12 +47,12 @@ public final class JsonMediaParser implements MediaParser<JsonElement, JsonConte
         }
     }
     @Override
-    public @NotNull String serialize(@NotNull JsonContent content) {
-        return content.getElement().toString();
+    public @NotNull String serialize(@NotNull Content<JsonElement> content) {
+        return content.getData().toString();
     }
 
     @Override
-    public boolean validate(@NotNull MediaType<JsonElement, JsonContent> media, @NotNull String string) {
+    public boolean validate(@NotNull MediaType<JsonElement> media, @NotNull String string) {
         try {
             // Reader
             @NotNull JsonReader reader = new JsonReader(new StringReader(string));
@@ -70,31 +71,23 @@ public final class JsonMediaParser implements MediaParser<JsonElement, JsonConte
 
     private static final class JsonContentImpl implements JsonContent {
 
-        private final @NotNull MediaType<JsonElement, JsonContent> media;
-
-        private final @NotNull String raw;
+        private final @NotNull MediaType<JsonElement> media;
         private final @NotNull JsonElement element;
 
-        private JsonContentImpl(@NotNull MediaType<JsonElement, JsonContent> media, @NotNull JsonElement element) {
+        private JsonContentImpl(@NotNull MediaType<JsonElement> media, @NotNull JsonElement element) {
             this.media = media;
-
-            this.raw = element.toString();
             this.element = element;
         }
 
         // Getters
 
         @Override
-        public @NotNull MediaType<JsonElement, JsonContent> getMediaType() {
+        public @NotNull MediaType<JsonElement> getMediaType() {
             return media;
         }
         @Override
-        public @NotNull JsonElement getElement() {
+        public @NotNull JsonElement getData() {
             return element;
-        }
-        @Override
-        public @NotNull String getRaw() {
-            return raw;
         }
 
         // Implementations
@@ -104,20 +97,16 @@ public final class JsonMediaParser implements MediaParser<JsonElement, JsonConte
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
             @NotNull JsonContentImpl that = (JsonContentImpl) object;
-            return Objects.equals(media, that.media) && Objects.equals(raw, that.raw);
+            return Objects.equals(media, that.media) && Objects.equals(element, that.element);
         }
         @Override
         public int hashCode() {
-            return Objects.hash(media, raw);
+            return Objects.hash(media, element);
         }
 
         @Override
         public @NotNull String toString() {
-            return "JsonContentImpl{" +
-                    "media=" + media +
-                    ", raw='" + raw + '\'' +
-                    ", element=" + element +
-                    '}';
+            return element.toString();
         }
 
     }

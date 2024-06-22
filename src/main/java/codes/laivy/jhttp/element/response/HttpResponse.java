@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.element.response;
 
+import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
-import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.element.HttpStatus;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ public interface HttpResponse {
             @NotNull HttpStatus status,
             @NotNull HttpVersion version,
             @NotNull MutableHeaders headers,
-            @Nullable Message message
+            @Nullable HttpBody body
     ) {
         return new HttpResponse() {
 
@@ -42,8 +42,8 @@ public interface HttpResponse {
                 return headers;
             }
             @Override
-            public @Nullable Message getMessage() {
-                return message;
+            public @Nullable HttpBody getBody() {
+                return body;
             }
 
             // Implementations
@@ -53,11 +53,11 @@ public interface HttpResponse {
                 if (this == object) return true;
                 if (object == null || getClass() != object.getClass()) return false;
                 @NotNull HttpResponse that = (HttpResponse) object;
-                return Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getMessage(), that.getMessage());
+                return Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
             }
             @Override
             public int hashCode() {
-                return Objects.hash(getStatus(), getVersion(), getHeaders(), getMessage());
+                return Objects.hash(getStatus(), getVersion(), getHeaders(), getBody());
             }
 
             @Override
@@ -89,9 +89,10 @@ public interface HttpResponse {
     @NotNull MutableHeaders getHeaders();
 
     /**
-     * Retrieves the message, which is the body of the response. It can be null if there is no message.
+     * Retrieves the body of the response. It can be null if there is no' body, or it's empty.
      * @return The message body of the response
      */
-    @Nullable Message getMessage();
+    @Nullable
+    HttpBody getBody();
 
 }

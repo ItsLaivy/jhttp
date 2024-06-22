@@ -8,36 +8,36 @@ import org.jetbrains.annotations.NotNull;
 public interface JsonContent extends Content<JsonElement> {
 
     @Override
-    @NotNull MediaType<JsonElement, JsonContent> getMediaType();
+    @NotNull MediaType<JsonElement> getMediaType();
 
     // Validators
 
     default boolean isJsonArray() {
-        return getElement().isJsonArray();
+        return getData().isJsonArray();
     }
     default boolean isJsonObject() {
-        return getElement().isJsonObject();
+        return getData().isJsonObject();
     }
     default boolean isJsonPrimitive() {
-        return getElement().isJsonPrimitive();
+        return getData().isJsonPrimitive();
     }
     default boolean isJsonNull() {
-        return getElement().isJsonNull();
+        return getData().isJsonNull();
     }
 
     // Getters
 
     default @NotNull JsonObject getAsJsonObject() {
-        return getElement().getAsJsonObject();
+        return getData().getAsJsonObject();
     }
     default @NotNull JsonArray getAsJsonArray() {
-        return getElement().getAsJsonArray();
+        return getData().getAsJsonArray();
     }
     default @NotNull JsonPrimitive getAsJsonPrimitive() {
-        return getElement().getAsJsonPrimitive();
+        return getData().getAsJsonPrimitive();
     }
     default @NotNull JsonNull getAsJsonNull() {
-        return getElement().getAsJsonNull();
+        return getData().getAsJsonNull();
     }
 
 }

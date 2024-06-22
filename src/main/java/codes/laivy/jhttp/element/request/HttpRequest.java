@@ -1,10 +1,10 @@
 package codes.laivy.jhttp.element.request;
 
+import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
-import codes.laivy.jhttp.message.Message;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.URIAuthority;
-import codes.laivy.jhttp.element.Method;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ public interface HttpRequest {
             final @Nullable URIAuthority authority,
             final @NotNull URI uri,
             final @NotNull MutableHeaders headers,
-            final @Nullable Message message
+            final @Nullable HttpBody body
     ) {
         return new HttpRequest() {
 
@@ -54,8 +54,8 @@ public interface HttpRequest {
                 return headers;
             }
             @Override
-            public @Nullable Message getMessage() {
-                return message;
+            public @Nullable HttpBody getBody() {
+                return body;
             }
 
             // Implementations
@@ -65,11 +65,11 @@ public interface HttpRequest {
                 if (this == object) return true;
                 if (object == null || getClass() != object.getClass()) return false;
                 @NotNull HttpRequest that = (HttpRequest) object;
-                return Objects.equals(getVersion(), that.getVersion()) && getMethod() == that.getMethod() && Objects.equals(getAuthority(), that.getAuthority()) && Objects.equals(getUri(), that.getUri()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getMessage(), that.getMessage());
+                return Objects.equals(getVersion(), that.getVersion()) && getMethod() == that.getMethod() && Objects.equals(getAuthority(), that.getAuthority()) && Objects.equals(getUri(), that.getUri()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
             }
             @Override
             public int hashCode() {
-                return Objects.hash(getVersion(), getMethod(), getAuthority(), getUri(), getHeaders(), getMethod());
+                return Objects.hash(getVersion(), getMethod(), getAuthority(), getUri(), getHeaders(), getMethod(), getBody());
             }
 
             @Override
@@ -109,9 +109,9 @@ public interface HttpRequest {
     @NotNull MutableHeaders getHeaders();
 
     /**
-     * Retrieves the message, which is the body of the request. It can be null if there is no message.
+     * Retrieves the body of the request. It can be null if there is no' body, or it's empty.
      * @return The message body of the request
      */
-    @Nullable Message getMessage();
+    @Nullable HttpBody getBody();
 
 }
