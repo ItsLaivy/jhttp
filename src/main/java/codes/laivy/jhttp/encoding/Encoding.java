@@ -38,6 +38,7 @@ public abstract class Encoding {
     public static @NotNull Collection<Encoding> retrieve() {
         @NotNull Set<Encoding> encodings = new HashSet<>(collection);
 
+        // todo: remove this, make it load just one time
         // If there's a custom encoding with any of these names, it will not be added
         // since Sets doesn't allow multiples elements with the same properties.
         encodings.add(ChunkedEncoding.builder().build());

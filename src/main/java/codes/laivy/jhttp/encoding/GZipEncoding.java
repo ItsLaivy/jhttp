@@ -25,6 +25,8 @@ public class GZipEncoding extends Encoding {
         super("gzip");
     }
 
+    // Implementations
+
     @Override
     public @NotNull String decompress(@NotNull String string) throws EncodingException {
         try (@NotNull ByteArrayInputStream byteStream = new ByteArrayInputStream(string.getBytes(StandardCharsets.ISO_8859_1));
@@ -42,7 +44,6 @@ public class GZipEncoding extends Encoding {
             throw new EncodingException("cannot decompress with gzip native stream", e);
         }
     }
-
     @Override
     public @NotNull String compress(@NotNull String string) throws EncodingException {
         byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);

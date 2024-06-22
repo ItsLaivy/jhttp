@@ -3,11 +3,10 @@ package codes.laivy.jhttp.encoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CompressEncoding extends Encoding {
 
@@ -18,83 +17,100 @@ public class CompressEncoding extends Encoding {
     }
 
     // Object
-    
+
     protected CompressEncoding() {
         super("compress");
     }
 
     @Override
     public @NotNull String decompress(@NotNull String string) throws EncodingException {
-        byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
+        byte[] bytes = string.getBytes();
+        if (bytes.length == 0) return new String(new byte[0]);
 
+        // Dictionary
         @NotNull Map<Integer, String> dictionary = new HashMap<>();
         for (int i = 0; i < 256; i++) {
             dictionary.put(i, "" + (char) i);
         }
 
-        @NotNull List<Byte> result = new LinkedList<>();
-        int oldCode = bytes[0];
-        result.add((byte) oldCode);
+        // Start decompression
+        @NotNull ByteArrayOutputStream result = new ByteArrayOutputStream();
+        int dictSize = 256;
 
-        for (int i = 1; i < bytes.length; i++) {
-            int code = bytes[i] & 0xff;
-            @NotNull String current;
+        try {
+            int oldCode = ((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF);
+            @NotNull String oldString = dictionary.get(oldCode);
+            result.write(oldString.getBytes(StandardCharsets.UTF_8));
 
-            if (dictionary.containsKey(code)) {
-                current = dictionary.get(code);
-            } else if (code == dictionary.size()) {
-                current = dictionary.get(oldCode) + dictionary.get(oldCode).charAt(0);
-            } else {
-                throw new IllegalArgumentException("Bad compressed code");
+            int i = 2;
+            while (i < bytes.length) {
+                int code = ((bytes[i] & 0xFF) << 8) | (bytes[i + 1] & 0xFF);
+                i += 2;
+
+                @NotNull String current;
+                if (dictionary.containsKey(code)) {
+                    current = dictionary.get(code);
+                } else if (code == dictSize) {
+                    current = oldString + oldString.charAt(0);
+                } else {
+                    throw new IllegalArgumentException("Bad compressed code");
+                }
+
+                result.write(current.getBytes(StandardCharsets.UTF_8));
+
+                dictionary.put(dictSize++, oldString + current.charAt(0));
+                oldString = current;
             }
-
-            for (char c : current.toCharArray()) {
-                result.add((byte) c);
-            }
-
-            dictionary.put(dictionary.size(), dictionary.get(oldCode) + current.charAt(0));
-            oldCode = code;
+        } catch (@NotNull IOException e) {
+            throw new RuntimeException(e);
         }
 
-        byte[] decompressed = new byte[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            decompressed[i] = result.get(i);
-        }
-
-        return new String(decompressed, StandardCharsets.ISO_8859_1);
+        // Finish
+        return result.toString();
     }
 
     @Override
     public @NotNull String compress(@NotNull String string) throws EncodingException {
-        byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
 
+        // Dictionary
         @NotNull Map<String, Integer> dictionary = new HashMap<>();
         for (int i = 0; i < 256; i++) {
-            dictionary.put(String.valueOf(i), i);
+            dictionary.put("" + (char) i, i);
         }
 
-        @NotNull List<Byte> result = new LinkedList<>();
+        // Start compression
+        @NotNull List<Integer> result = new ArrayList<>();
         @NotNull String current = "";
 
+        int dictSize = 256;
         for (byte b : bytes) {
-            String combined = current + (char) b;
+            char c = (char) (b & 0xFF);
+
+            @NotNull String combined = current + c;
             if (dictionary.containsKey(combined)) {
                 current = combined;
             } else {
-                result.add((byte) (int) dictionary.get(current));
-                dictionary.put(combined, dictionary.size());
-                current = "" + (char) b;
+                result.add(dictionary.get(current));
+                dictionary.put(combined, dictSize++);
+                current = "" + c;
             }
         }
-        result.add((byte) (int) dictionary.get(current));
 
-        byte[] compressed = new byte[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            compressed[i] = result.get(i);
+        if (!current.isEmpty()) {
+            result.add(dictionary.get(current));
         }
 
-        return new String(compressed, StandardCharsets.ISO_8859_1);
+        // Finish
+        @NotNull ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (int code : result) {
+            outputStream.write((code >> 8) & 0xFF);
+            outputStream.write(code & 0xFF);
+        }
+
+        return outputStream.toString();
     }
+
 
     // Classes
 
@@ -103,8 +119,8 @@ public class CompressEncoding extends Encoding {
         private Builder() {
         }
 
-        public @NotNull IdentityEncoding build() {
-            return new IdentityEncoding();
+        public @NotNull CompressEncoding build() {
+            return new CompressEncoding();
         }
 
     }

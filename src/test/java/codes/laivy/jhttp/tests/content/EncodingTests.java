@@ -24,6 +24,18 @@ public final class EncodingTests {
             Assertions.assertEquals(target, decompressed, "cannot proceed compress/decompress test using '" + encoding.getName() + "' encoding");
         }
     }
+    @Test
+    @Order(value = 0)
+    void blankCompressAndDecompress() throws EncodingException, IllegalHttpVersionException {
+        @NotNull String target = "";
+
+        for (@NotNull Encoding encoding : Encoding.toArray()) {
+            @NotNull String compressed = encoding.compress(target);
+            @NotNull String decompressed = encoding.decompress(compressed);
+
+            Assertions.assertEquals(target, decompressed, "cannot proceed blank compress/decompress test using '" + encoding.getName() + "' encoding");
+        }
+    }
 
 }
 

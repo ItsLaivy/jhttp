@@ -39,8 +39,7 @@ public abstract class HeaderKey<T> {
             field.setAccessible(true);
 
             if (field.getType() == HeaderKey.class) {
-                HeaderKey<?> key = (HeaderKey<?>) field.get(null);
-                return key;
+                return (HeaderKey<?>) field.get(null);
             }
         } catch (NoSuchFieldException | IllegalAccessException ignore) {
         } catch (Throwable throwable) {

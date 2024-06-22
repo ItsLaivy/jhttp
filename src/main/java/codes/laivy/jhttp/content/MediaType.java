@@ -18,7 +18,7 @@ public final class MediaType {
     private static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("([^;\\s]+)(?:;\\s*charset=([^;\\s]+))?(?:;\\s*(.*))?");
 
     public static @NotNull MediaType parse(@NotNull String string) throws ParseException {
-        @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)"); // Criação do Pattern
+        @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
         @NotNull Matcher matcher = pattern.matcher(string);
 
         @Nullable Type type = null;

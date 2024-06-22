@@ -17,6 +17,8 @@ public class IdentityEncoding extends Encoding {
         super("identity");
     }
 
+    // Implementations
+
     @Override
     public @NotNull String decompress(@NotNull String string) {
         return string;

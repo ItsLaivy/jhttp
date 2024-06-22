@@ -56,7 +56,6 @@ public class DeflateEncoding extends Encoding {
             throw new EncodingException("cannot decompress with gzip native stream", e);
         }
     }
-
     @Override
     public @NotNull String compress(@NotNull String string) throws EncodingException {
         byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
