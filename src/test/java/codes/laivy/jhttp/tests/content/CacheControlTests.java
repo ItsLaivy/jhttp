@@ -1,9 +1,12 @@
 package codes.laivy.jhttp.tests.content;
 
+import codes.laivy.jhttp.content.AlternativeService;
 import codes.laivy.jhttp.content.CacheControl;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
@@ -48,6 +51,14 @@ public final class CacheControlTests {
         Assertions.assertTrue(control.has(CacheControl.Key.NO_TRANSFORM));
         Assertions.assertTrue(control.has(CacheControl.Key.IMMUTABLE));
         Assertions.assertTrue(control.has(CacheControl.Key.ONLY_IF_CACHED));
+    }
+    @Test
+    @Order(value = 2)
+    void validation() throws ParseException, UnknownHostException, URISyntaxException {
+        @NotNull CacheControl reference = CacheControl.parse("max-age=60,s-maxage=61,no-cache,must-revalidate,proxy-revalidate,no-store,private,public,must-understand,no-transform,immutable,stale-while-revalidate=65,stale-if-error=62,max-stale=63,min-fresh=64,no-transform,only-if-cached");
+        @NotNull CacheControl clone = CacheControl.parse(reference.toString());
+
+        Assertions.assertEquals(reference, clone);
     }
 
 }

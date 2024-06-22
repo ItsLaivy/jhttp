@@ -43,5 +43,13 @@ public final class AlternativeServiceTests {
         Assertions.assertEquals(service.getAge(), Duration.ofSeconds(12345));
         Assertions.assertTrue(service.isPersistent());
     }
+    @Test
+    @Order(value = 2)
+    void validation() throws ParseException, UnknownHostException, URISyntaxException {
+        @NotNull AlternativeService reference = AlternativeService.parse("http/1.1=\"localhost:500/\"; ma=12345; persist=1");
+        @NotNull AlternativeService clone = AlternativeService.parse(reference.toString());
+
+        Assertions.assertEquals(reference, clone);
+    }
 
 }

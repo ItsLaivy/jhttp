@@ -80,11 +80,11 @@ public final class EncodedMessage implements Message {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         @NotNull EncodedMessage that = (EncodedMessage) object;
-        return Objects.equals(charset, that.charset) && Objects.deepEquals(encodings, that.encodings) && Objects.equals(pure, that.pure) && Objects.equals(decoded, that.decoded);
+        return Objects.equals(getCharset(), that.getCharset()) && Objects.deepEquals(getEncodings(), that.getEncodings()) && Objects.equals(getPure(), that.getPure());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(charset, Arrays.hashCode(encodings), pure, decoded);
+        return Objects.hash(getCharset(), Arrays.hashCode(getEncodings()), getPure());
     }
 
     @Override

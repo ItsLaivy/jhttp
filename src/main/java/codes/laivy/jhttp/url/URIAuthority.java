@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// todo: add #getProtocol method that returns HttpProtocol enum (@NotNull)
 public final class URIAuthority {
 
     // Static initializers

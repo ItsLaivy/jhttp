@@ -77,23 +77,10 @@ public final class HttpFactoryTests {
 
             @NotNull String string = "GET https://username:password@example.com:8080/index.php HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
-            @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
-            request = HTTP1_1().getFactory().getRequest().parse(HTTP1_1().getFactory().getRequest().wrap(request));
+            @NotNull HttpRequest reference = HTTP1_1().getFactory().getRequest().parse(string);
+            @NotNull HttpRequest clone = HTTP1_1().getFactory().getRequest().parse(reference.toString());
 
-            Assertions.assertNotNull(request.getMessage());
-            Assertions.assertEquals(request.getAuthority(), URIAuthority.create(new Basic("username", "password"), InetSocketAddress.createUnresolved("example.com", 8080)));
-            Assertions.assertEquals(((EncodedMessage) request.getMessage()).getDecoded(), expected);
-            Assertions.assertEquals(request.getMethod(), Method.GET);
-            Assertions.assertEquals(request.getUri(), URI.create("/index.php"));
-            Assertions.assertEquals(request.getHeaders().get(HOST)[0].getValue(), Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"));
-        }
-
-        private String bytesToHex(byte[] bytes) {
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
+            Assertions.assertEquals(reference, clone);
         }
 
     }

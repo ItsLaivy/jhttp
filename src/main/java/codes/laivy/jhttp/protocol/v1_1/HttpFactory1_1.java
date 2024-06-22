@@ -178,7 +178,6 @@ final class HttpFactory1_1 implements HttpFactory {
                 builder.append(message.toString());
             }
 
-            System.out.println(builder.toString().replace("\r", "%r").replace("\n", "%n\n"));
             return builder.toString();
         }
 

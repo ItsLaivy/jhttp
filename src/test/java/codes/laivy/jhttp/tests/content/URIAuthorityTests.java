@@ -45,12 +45,23 @@ public final class URIAuthorityTests {
     }
     @Test
     @Order(value = 2)
-    void validateUserinfo() throws UnknownHostException, URISyntaxException {
+    void assertion() throws UnknownHostException, URISyntaxException {
         @NotNull String test = "user:pass@localhost:80/page/test/index.php";
         @NotNull URIAuthority authority = URIAuthority.parse(test);
 
         Assertions.assertNotNull(authority.getUserInfo());
         Assertions.assertEquals(authority.getUserInfo(), new Credentials.Basic("user", "pass"));
+    }
+
+    @Test
+    @Order(value = 3)
+    void serialization() throws UnknownHostException, URISyntaxException {
+        @NotNull String test = "http://user:pass@localhost:80/page/test/index.php";
+
+        @NotNull URIAuthority reference = URIAuthority.parse(test);
+        @NotNull URIAuthority clone = URIAuthority.parse(reference.toString());
+
+        Assertions.assertEquals(reference, clone);
     }
 
 }
