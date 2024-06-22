@@ -4,22 +4,26 @@ import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
-import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
+import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
-import codes.laivy.jhttp.module.content.*;
+import codes.laivy.jhttp.module.content.AcceptRange;
+import codes.laivy.jhttp.module.content.ContentDisposition;
+import codes.laivy.jhttp.module.content.ContentRange;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.network.BitMeasure;
-import codes.laivy.jhttp.url.email.Email;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.url.Host;
-import codes.laivy.jhttp.url.URIAuthority;
-import codes.laivy.jhttp.utilities.*;
 import codes.laivy.jhttp.pseudo.PseudoString;
 import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
 import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
+import codes.laivy.jhttp.url.Host;
+import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.url.email.Email;
+import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.*;
 
 import java.io.UnsupportedEncodingException;
@@ -57,14 +61,14 @@ public abstract class HeaderKey<T> {
 
     // Provided
 
-    public static @NotNull HeaderKey<MediaType[]> ACCEPT = new Provided.AcceptHeaderKey();
+    public static @NotNull HeaderKey<MediaType<?, ?>[]> ACCEPT = new Provided.AcceptHeaderKey();
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new Provided.AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Duration> ACCEPT_CH_LIFETIME = new Provided.AcceptCHLifetimeHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new Provided.AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new Provided.AcceptLanguageHeaderKey();
-    public static @NotNull HeaderKey<MediaType[]> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
+    public static @NotNull HeaderKey<MediaType<?, ?>[]> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType.Type[]> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
     public static @NotNull HeaderKey<AcceptRange> ACCEPT_RANGES = new Provided.AcceptRangesHeaderKey();
     public static @NotNull HeaderKey<Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new Provided.BooleanHeaderKey("Access-Control-Allow-Credentials", Target.RESPONSE);
@@ -94,7 +98,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<ContentRange> CONTENT_RANGE = new Provided.ContentRangeHeaderKey();
     public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY = new Provided.ContentSecurityPolicyHeaderKey();
     public static @NotNull HeaderKey<ContentSecurityPolicy> CONTENT_SECURITY_POLICY_REPORT_ONLY = new Provided.ContentSecurityPolicyReportOnlyeHeaderKey();
-    public static @NotNull HeaderKey<MediaType> CONTENT_TYPE = new Provided.ContentTypeHeaderKey();
+    public static @NotNull HeaderKey<MediaType<?, ?>> CONTENT_TYPE = new Provided.ContentTypeHeaderKey();
     public static @NotNull HeaderKey<Cookie[]> COOKIE = new Provided.CookieHeaderKey();
     public static @NotNull HeaderKey<HeaderKey<?>[]> CRITICAL_CH = new Provided.CriticalCHHeaderKey();
     public static @NotNull HeaderKey<CrossOrigin.EmbedderPolicy> CROSS_ORIGIN_EMBEDDER_POLICY = new Provided.CrossOriginEmbedderPolicyHeaderKey();
@@ -1787,21 +1791,21 @@ public abstract class HeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class AcceptPatchHeaderKey extends HeaderKey<MediaType[]> {
+        private static final class AcceptPatchHeaderKey extends HeaderKey<MediaType<?, ?>[]> {
             private AcceptPatchHeaderKey() {
                 super("Accept-Patch", Target.RESPONSE);
             }
 
             @Override
-            public @NotNull Header<MediaType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<MediaType<?, ?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
                 @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull MediaType[] types = new MediaType[matcher.groupCount()];
+                @NotNull MediaType<?, ?>[] types = new MediaType[matcher.groupCount()];
 
                 int row = 0;
                 while (matcher.find()) {
                     try {
-                        types[row] = MediaType.parse(matcher.group());
+                        types[row] = MediaType.Parser.deserialize(matcher.group());
                     } catch (@NotNull ParseException e) {
                         throw new HeaderFormatException("cannot parse media type '" + matcher.group() + "'", e);
                     }
@@ -1812,10 +1816,10 @@ public abstract class HeaderKey<T> {
                 return create(types);
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType<?, ?>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull MediaType type : header.getValue()) {
+                for (@NotNull MediaType<?, ?> type : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
                     builder.append(type);
                 }
@@ -1976,22 +1980,22 @@ public abstract class HeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class AcceptHeaderKey extends HeaderKey<MediaType[]> {
+        private static final class AcceptHeaderKey extends HeaderKey<MediaType<?, ?>[]> {
             private AcceptHeaderKey() {
                 super("Accept", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<MediaType[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<MediaType<?, ?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-                @NotNull List<MediaType> types = new LinkedList<>();
+                @NotNull List<MediaType<?, ?>> types = new LinkedList<>();
 
                 try {
                     for (int group = 0; group < matcher.groupCount(); group++) {
                         @NotNull String name = matcher.group(group);
 
                         if (!name.isEmpty()) {
-                            types.add(MediaType.parse(name));
+                            types.add(MediaType.Parser.deserialize(name));
                         }
                     }
                 } catch (@NotNull ParseException e) {
@@ -2001,10 +2005,10 @@ public abstract class HeaderKey<T> {
                 return create(types.toArray(new MediaType[0]));
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType<?, ?>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull MediaType type : header.getValue()) {
+                for (@NotNull MediaType<?, ?> type : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
                     builder.append(type);
                 }
@@ -2012,22 +2016,22 @@ public abstract class HeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class ContentTypeHeaderKey extends HeaderKey<MediaType> {
+        private static final class ContentTypeHeaderKey extends HeaderKey<MediaType<?, ?>> {
             private ContentTypeHeaderKey() {
                 super("Content-Type", Target.BOTH);
             }
 
             @Override
-            public @NotNull Header<MediaType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<MediaType<?, ?>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(MediaType.parse(value));
+                    return create(MediaType.Parser.deserialize(value));
                 } catch (@NotNull ParseException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType> header) {
-                return header.getValue().toString();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType<?, ?>> header) {
+                return MediaType.Parser.serialize(header.getValue());
             }
         }
         private static final class TransferEncodingHeaderKey extends HeaderKey<PseudoEncoding[]> {

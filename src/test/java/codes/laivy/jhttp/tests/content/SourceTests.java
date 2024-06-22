@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Source;
-import codes.laivy.jhttp.module.content.MediaType;
+import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.domain.Domain;
@@ -89,7 +89,7 @@ public final class SourceTests {
         @Test
         @Order(value = 1)
         void assertions() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
-            @NotNull MediaType expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
+            @NotNull MediaType<?, ?> expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
 
             // Source
             @NotNull Source source = Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");

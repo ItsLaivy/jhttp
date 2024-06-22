@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
-import codes.laivy.jhttp.module.content.MediaType;
+import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.MissingHeaderException;
 import codes.laivy.jhttp.exception.encoding.EncodingException;

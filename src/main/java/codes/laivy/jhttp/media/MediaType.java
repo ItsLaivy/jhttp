@@ -1,6 +1,10 @@
-package codes.laivy.jhttp.module.content;
+package codes.laivy.jhttp.media;
 
+import codes.laivy.jhttp.media.json.JsonContent;
+import codes.laivy.jhttp.media.json.JsonMediaParser;
+import codes.laivy.jhttp.message.Content;
 import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
+import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,53 +14,37 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class MediaType {
+public final class MediaType<T, C extends Content<T>> {
 
     // Static initializers
 
-    @ApiStatus.Internal
-    private static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("([^;\\s]+)(?:;\\s*charset=([^;\\s]+))?(?:;\\s*(.*))?");
+    public static @NotNull MediaType<JsonElement, JsonContent> APPLICATION_JSON = create(new Type("application", "json"), JsonMediaParser.create());
 
-    public static @NotNull MediaType parse(@NotNull String string) throws ParseException {
-        @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
-        @NotNull Matcher matcher = pattern.matcher(string);
-
-        @Nullable Type type = null;
-        @NotNull List<Parameter> parameters = new LinkedList<>();
-
-        try {
-            while (matcher.find()) {
-                if (matcher.group(2) != null) {
-                    type = Type.parse(matcher.group(2));
-                } else {
-                    @NotNull String[] split = matcher.group(1).split("\\s*=\\s*");
-                    parameters.add(new Parameter(split[0], split[1]));
-                }
-            }
-        } catch (@NotNull Throwable throwable) {
-            throw new ParseException("cannot parse media type '" + string + "': " + throwable.getMessage(), -1);
-        }
-
-        if (type == null) {
-            throw new ParseException("cannot obtain name in media type text '" + string + "'", -1);
-        }
-
-        return new MediaType(type, parameters.toArray(new Parameter[0]));
+    public static <T, C extends Content<T>> @NotNull MediaType<T, C> create(
+            @NotNull Type type,
+            @NotNull MediaParser<T, C> parser,
+            @NotNull Parameter @NotNull ... parameters
+    ) {
+        return new MediaType<>(type, parser, parameters);
     }
-    public static @NotNull MediaType create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
-        return new MediaType(type, parameters);
+    public static @NotNull MediaType<?, ?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
+        return new MediaType<>(type, null, parameters);
     }
 
     // Object
 
     private final @NotNull Type type;
-    private final @NotNull Parameter[] parameters;
+    private final @NotNull Parameter @NotNull [] parameters;
+    private final @Nullable MediaParser<T, C> parser;
 
     private MediaType(
             @NotNull Type type,
+            @Nullable MediaParser<T, C> parser,
             @NotNull Parameter @NotNull [] parameters
     ) {
         this.type = type;
+        this.parser = parser;
+
         this.parameters = parameters;
     }
 
@@ -65,10 +53,14 @@ public final class MediaType {
     public @NotNull Type getType() {
         return type;
     }
+    public @Nullable MediaParser<T, C> getParser() {
+        return parser;
+    }
 
-    public @NotNull Parameter[] getParameters() {
+    public @NotNull Parameter @NotNull [] getParameters() {
         return parameters;
     }
+
     public @NotNull Optional<Parameter> getParameter(@NotNull String key) {
         return Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase(key)).findFirst();
     }
@@ -93,7 +85,7 @@ public final class MediaType {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        @NotNull MediaType that = (MediaType) o;
+        @NotNull MediaType<?, ?> that = (MediaType<?, ?>) o;
         return Objects.equals(type, that.type) && Arrays.equals(parameters, that.parameters);
     }
     @Override
@@ -103,17 +95,68 @@ public final class MediaType {
 
     @Override
     public @NotNull String toString() {
-        @NotNull StringBuilder builder = new StringBuilder();
-        builder.append(getType());
-
-        for (@NotNull Parameter parameter : getParameters()) {
-            builder.append("; ").append(parameter);
-        }
-
-        return builder.toString();
+        return Parser.serialize(this);
     }
 
     // Classes
+
+    public static final class Parser {
+        private Parser() {
+            throw new UnsupportedOperationException();
+        }
+
+        // Serializers
+
+        @ApiStatus.Internal
+        private static final @NotNull Pattern PARSE_PATTERN = Pattern.compile("([^;\\s]+)(?:;\\s*charset=([^;\\s]+))?(?:;\\s*(.*))?");
+
+        public static @NotNull String serialize(@NotNull MediaType<?, ?> media) {
+            @NotNull StringBuilder builder = new StringBuilder();
+            builder.append(media.getType());
+
+            for (@NotNull Parameter parameter : media.getParameters()) {
+                builder.append("; ").append(parameter);
+            }
+
+            return builder.toString();
+        }
+        public static @NotNull MediaType<?, ?> deserialize(@NotNull String string) throws ParseException {
+            @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
+            @NotNull Matcher matcher = pattern.matcher(string);
+
+            @Nullable Type type = null;
+            @NotNull List<Parameter> parameters = new LinkedList<>();
+
+            try {
+                while (matcher.find()) {
+                    if (matcher.group(2) != null) {
+                        type = Type.parse(matcher.group(2));
+                    } else {
+                        @NotNull String[] split = matcher.group(1).split("\\s*=\\s*");
+                        parameters.add(new Parameter(split[0], split[1]));
+                    }
+                }
+            } catch (@NotNull Throwable throwable) {
+                throw new ParseException("cannot parse media type '" + string + "': " + throwable.getMessage(), -1);
+            }
+
+            if (type == null) {
+                throw new ParseException("cannot obtain name in media type text '" + string + "'", -1);
+            }
+
+            return create(type, parameters.toArray(new Parameter[0]));
+        }
+
+        public static boolean validate(@NotNull String string) {
+            try {
+                deserialize(string);
+                return true;
+            } catch (@NotNull Throwable throwable) {
+                return false;
+            }
+        }
+
+    }
 
     public static final class Type implements CharSequence {
 

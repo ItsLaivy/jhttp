@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
-import codes.laivy.jhttp.module.content.MediaType;
+import codes.laivy.jhttp.media.MediaType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,11 +28,11 @@ public final class Data implements ContentSecurityPolicy.Source {
         @NotNull Matcher matcher = DATA_URL_PATTERN.matcher(string);
 
         if (matcher.matches()) {
-            @Nullable MediaType type = null;
+            @Nullable MediaType<?, ?> type = null;
             @NotNull String encoding = "UTF-8";
 
             if (!matcher.group(1).isEmpty()) {
-                type = matcher.group(1) != null ? MediaType.parse(matcher.group(1)) : null;
+                type = matcher.group(1) != null ? MediaType.Parser.deserialize(matcher.group(1)) : null;
                 encoding = type != null && type.getCharset() != null ? type.getCharset().raw() : "UTF-8";
             }
 
@@ -47,22 +47,22 @@ public final class Data implements ContentSecurityPolicy.Source {
         }
     }
 
-    public static @NotNull Data create(@Nullable MediaType type, byte @NotNull [] raw) {
+    public static @NotNull Data create(@Nullable MediaType<?, ?> type, byte @NotNull [] raw) {
         return new Data(type, false, null, raw);
     }
-    public static @NotNull Data createBase64(@Nullable MediaType type, byte @NotNull [] raw, byte @NotNull [] decoded) {
+    public static @NotNull Data createBase64(@Nullable MediaType<?, ?> type, byte @NotNull [] raw, byte @NotNull [] decoded) {
         return new Data(type, true, decoded, raw);
     }
 
     // Object
 
-    private final @Nullable MediaType mediaType;
+    private final @Nullable MediaType<?, ?> mediaType;
     private final boolean base64;
 
     private final byte @Nullable [] decoded;
     private final byte @NotNull [] raw;
 
-    private Data(@Nullable MediaType mediaType, boolean base64, byte @Nullable [] decoded, byte @NotNull [] raw) {
+    private Data(@Nullable MediaType<?, ?> mediaType, boolean base64, byte @Nullable [] decoded, byte @NotNull [] raw) {
         this.mediaType = mediaType;
         this.base64 = base64;
         this.decoded = decoded;
@@ -75,7 +75,7 @@ public final class Data implements ContentSecurityPolicy.Source {
         return Scheme.DATA;
     }
 
-    public @Nullable MediaType getMediaType() {
+    public @Nullable MediaType<?, ?> getMediaType() {
         return mediaType;
     }
 

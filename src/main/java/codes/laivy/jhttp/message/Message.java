@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.message;
 
+import codes.laivy.jhttp.media.MediaType;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
@@ -14,6 +15,7 @@ public interface Message extends CharSequence {
 
     // Object
 
+    @NotNull MediaType<?, ?> getMediaType();
     @NotNull Charset getCharset();
 
 }
