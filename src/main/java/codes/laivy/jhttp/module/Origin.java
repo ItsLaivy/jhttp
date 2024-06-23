@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.module;
 
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +13,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public interface Origin {
+public interface Origin extends ContentSecurityPolicy.Source {
 
     // Static initializers
 
@@ -60,18 +61,6 @@ public interface Origin {
 
         public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?)(/.*)??(?<path>/\\S*)?$");
 
-        public static @NotNull Origin deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
-            @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
-
-            if (matcher.matches()) {
-                @Nullable Domain<?> domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
-                @NotNull URI uri = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
-
-                return create(domain, uri);
-            } else {
-                throw new ParseException("cannot parse '" + string + "' into a valid origin", 0);
-            }
-        }
         public static @NotNull String serialize(@NotNull Origin origin) {
             if (origin.getDomain() != null) {
                 @NotNull StringBuilder builder = new StringBuilder(origin.getDomain().toString());
@@ -84,6 +73,18 @@ public interface Origin {
                 return builder.toString();
             } else {
                 return origin.getURI().toString();
+            }
+        }
+        public static @NotNull Origin deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+            @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
+
+            if (matcher.matches()) {
+                @Nullable Domain<?> domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
+                @NotNull URI uri = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
+
+                return create(domain, uri);
+            } else {
+                throw new ParseException("cannot parse '" + string + "' into a valid origin", 0);
             }
         }
 
