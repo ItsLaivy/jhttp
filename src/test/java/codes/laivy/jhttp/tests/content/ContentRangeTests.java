@@ -13,7 +13,7 @@ public final class ContentRangeTests {
     }
 
     private static final @NotNull String[] VALIDS = new String[] {
-            "bytes */*",
+            "bytes */100",
             "bytes 0-50/*",
             "bytes 0-50/100"
     };

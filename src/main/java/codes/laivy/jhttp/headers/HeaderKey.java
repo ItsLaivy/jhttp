@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("DeprecatedIsStillUsed")
 public abstract class HeaderKey<T> {
 
     // Static initializers
@@ -61,7 +62,9 @@ public abstract class HeaderKey<T> {
 
     // Provided
 
+    // todo: User-Agent
     public static @NotNull HeaderKey<MediaType<?>[]> ACCEPT = new Provided.AcceptHeaderKey();
+    // todo: only client hints headers
     public static @NotNull HeaderKey<HeaderKey<?>[]> ACCEPT_CH = new Provided.AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Duration> ACCEPT_CH_LIFETIME = new Provided.AcceptCHLifetimeHeaderKey();
@@ -77,8 +80,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Wildcard<@Nullable URIAuthority>> ACCEPT_CONTROL_ALLOW_ORIGIN = new Provided.AccessControlAllowOriginHeaderKey();
     public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_EXPOSE_HEADERS = new Provided.AcceptControlExposeHeadersHeaderKey();
     public static @NotNull HeaderKey<Duration> ACCEPT_CONTROL_MAX_AGE = new Provided.AcceptControlMaxAgeHeaderKey();
-    public static @NotNull HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> ACCEPT_CONTROL_REQUEST_HEADERS = new Provided.AcceptControlRequestHeadersHeaderKey();
-    public static @NotNull HeaderKey<Method[]> ACCEPT_CONTROL_REQUEST_METHOD = new Provided.AccessControlRequestMethodHeaderKey();
+    public static @NotNull HeaderKey<PseudoString<HeaderKey<?>>[]> ACCEPT_CONTROL_REQUEST_HEADERS = new Provided.AcceptControlRequestHeadersHeaderKey();
+    public static @NotNull HeaderKey<Method> ACCEPT_CONTROL_REQUEST_METHOD = new Provided.AccessControlRequestMethodHeaderKey();
     public static @NotNull HeaderKey<Duration> AGE = new Provided.AgeHeaderKey();
     public static @NotNull HeaderKey<Method[]> ALLOW = new Provided.AllowHeaderKey();
     public static @NotNull HeaderKey<Optional<AlternativeService[]>> ALT_SVC = new Provided.AltSvcHeaderKey();
@@ -105,7 +108,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<CrossOrigin.OpenerPolicy> CROSS_ORIGIN_OPENER_POLICY = new Provided.CrossOriginOpenerPolicyHeaderKey();
     public static @NotNull HeaderKey<CrossOrigin.ResourcePolicy> CROSS_ORIGIN_RESOURCE_POLICY = new Provided.CrossOriginResourcePolicyHeaderKey();
     public static @NotNull HeaderKey<OffsetDateTime> DATE = new Provided.DateHeaderKey();
-    public static @NotNull HeaderKey<Float> DEVICE_MEMORY = new Provided.DeviceMemoryHeaderKey();
+    public static @NotNull HeaderKey<BitMeasure> DEVICE_MEMORY = new Provided.DeviceMemoryHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<Boolean> DNT = new Provided.DNTHeaderKey();
     @ApiStatus.Experimental
@@ -1110,18 +1113,27 @@ public abstract class HeaderKey<T> {
                 return header.getValue() ? "1" : "0";
             }
         }
-        private static final class DeviceMemoryHeaderKey extends HeaderKey<Float> {
+        private static final class DeviceMemoryHeaderKey extends HeaderKey<BitMeasure> {
             private DeviceMemoryHeaderKey() {
                 super("Device-Memory", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Float> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                return create(Float.parseFloat(value));
+            public @NotNull Header<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                float size = Float.parseFloat(value);
+
+                if (size != 0.25f && size != 0.5f && size != 1f && size != 2f && size != 4f && size != 8f) {
+                    throw new HeaderFormatException("the Device-Memory header only accept: 0.25, 0.5, 1, 2, 4 or 8");
+                }
+
+                return create(BitMeasure.create(BitMeasure.Level.GIGABYTES, size));
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Float> header) {
-                return header.getValue().toString();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<BitMeasure> header) {
+                double giga = header.getValue().getGigabytes();
+                float closestValue = Collections.min(Arrays.asList(0.25f, 0.5f, 1f, 2f, 4f, 8f), Comparator.comparingDouble(a -> Math.abs(a - giga)));
+
+                return String.valueOf(closestValue);
             }
         }
         private static final class DateHeaderKey extends HeaderKey<OffsetDateTime> {
@@ -1535,74 +1547,48 @@ public abstract class HeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class AccessControlRequestMethodHeaderKey extends HeaderKey<Method[]> {
+        private static final class AccessControlRequestMethodHeaderKey extends HeaderKey<Method> {
             private AccessControlRequestMethodHeaderKey() {
                 super("Access-Control-Request-Method", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Method[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull Method[] methods = new Method[matcher.groupCount()];
-
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-
-                    try {
-                        methods[row] = Method.valueOf(group.toUpperCase());
-                        row++;
-                    } catch (@NotNull IllegalArgumentException ignore) {
-                        throw new HeaderFormatException("cannot parse method '" + group + "' from header '" + getName() + "'");
-                    }
-                }
-
-                return create(methods);
+            public @NotNull Header<Method> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                return create(Method.valueOf(value.toUpperCase()));
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Method[]> header) {
-                @NotNull StringBuilder builder = new StringBuilder();
-
-                for (@NotNull Method method : header.getValue()) {
-                    if (builder.length() > 0) builder.append(", ");
-                    builder.append(method.name().toLowerCase());
-                }
-
-                return builder.toString();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Method> header) {
+                return header.getValue().name();
             }
         }
-        private static final class AcceptControlRequestHeadersHeaderKey extends HeaderKey<Wildcard<PseudoString<HeaderKey<?>>>[]> {
+        private static final class AcceptControlRequestHeadersHeaderKey extends HeaderKey<PseudoString<HeaderKey<?>>[]> {
             private AcceptControlRequestHeadersHeaderKey() {
                 super("Access-Control-Request-Headers", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<PseudoString<HeaderKey<?>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
                 //noinspection unchecked
-                @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] headers = new Wildcard[matcher.groupCount()];
+                @NotNull PseudoString<HeaderKey<?>>[] headers = new PseudoString[matcher.groupCount()];
 
                 int row = 0;
                 while (matcher.find()) {
                     @NotNull String group = matcher.group();
-                    headers[row] = (group.trim().equals("*") ?
-                            Wildcard.create() :
-                            Wildcard.create(PseudoString.create(group, () -> true, () -> HeaderKey.create(group)))
-                    );
+                    headers[row] = PseudoString.create(group, () -> true, () -> HeaderKey.create(group));
                     row++;
                 }
 
                 return create(headers);
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoString<HeaderKey<?>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull Wildcard<PseudoString<HeaderKey<?>>> h : header.getValue()) {
-                    if (builder.length() > 0) builder.append(", ");
+                for (@NotNull PseudoString<HeaderKey<?>> h : header.getValue()) {
+                    if (builder.length() > 0) builder.append(",");
                     builder.append(h.toString().toLowerCase());
                 }
 
