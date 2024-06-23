@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.element;
 
-import codes.laivy.jhttp.message.Content;
+import codes.laivy.jhttp.content.Content;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

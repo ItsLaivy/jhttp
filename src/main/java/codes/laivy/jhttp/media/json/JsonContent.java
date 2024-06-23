@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.media.json;
 
+import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.message.Content;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 

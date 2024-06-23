@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.connection;
 
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.SSLSession;
 
@@ -23,12 +23,9 @@ public interface SecureHttpClient extends HttpClient {
     /**
      * Retrieves the SSL session associated with the secure HTTP client.
      *
-     * <p>This method returns {@code null} if no SSL session is established.</p>
-     *
-     * @return The SSL session associated with the secure HTTP client, or {@code null} if no session is established.
+     * @return The SSL session associated with the secure HTTP client.
      * @since 1.0
      */
-    @Nullable
-    SSLSession getSession();
-    
+    @NotNull SSLSession getSession();
+
 }

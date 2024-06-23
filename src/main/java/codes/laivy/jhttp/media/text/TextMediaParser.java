@@ -1,9 +1,9 @@
 package codes.laivy.jhttp.media.text;
 
+import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.message.Content;
 import org.jetbrains.annotations.NotNull;
 
 public final class TextMediaParser implements MediaParser<String> {

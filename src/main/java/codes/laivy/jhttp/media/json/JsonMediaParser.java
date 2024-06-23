@@ -1,9 +1,9 @@
 package codes.laivy.jhttp.media.json;
 
+import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.message.Content;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;

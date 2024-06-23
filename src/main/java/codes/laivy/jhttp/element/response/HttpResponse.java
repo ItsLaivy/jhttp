@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.element.response;
 
 import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -15,7 +16,7 @@ import java.util.Objects;
  * @author Daniel Richard (Laivy)
  * @version 1.0-SNAPSHOT
  */
-public interface HttpResponse {
+public interface HttpResponse extends HttpElement {
 
     // Static initializers
 
@@ -75,24 +76,5 @@ public interface HttpResponse {
      * @return the version of this response
      */
     @NotNull HttpStatus getStatus();
-
-    /**
-     * Retrieves the version of this HTTP response
-     * @return the version of this response
-     */
-    @NotNull HttpVersion getVersion();
-
-    /**
-     * Retrieves the headers of this response.
-     * @return The headers of the response
-     */
-    @NotNull MutableHeaders getHeaders();
-
-    /**
-     * Retrieves the body of the response. It can be null if there is no' body, or it's empty.
-     * @return The message body of the response
-     */
-    @Nullable
-    HttpBody getBody();
 
 }

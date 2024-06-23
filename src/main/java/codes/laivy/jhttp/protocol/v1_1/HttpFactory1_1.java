@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
+import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.HttpStatus;
@@ -17,7 +18,6 @@ import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.message.Content;
 import codes.laivy.jhttp.protocol.HttpFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;

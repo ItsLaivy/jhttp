@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.message;
+package codes.laivy.jhttp.content;
 
 import codes.laivy.jhttp.media.MediaType;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.media;
 
+import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.exception.media.MediaParserException;
-import codes.laivy.jhttp.message.Content;
 import org.jetbrains.annotations.NotNull;
 
 /**

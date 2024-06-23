@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.element.request;
 
 import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -17,7 +18,7 @@ import java.util.Objects;
  * @author Daniel Richard (Laivy)
  * @version 1.0-SNAPSHOT
  */
-public interface HttpRequest {
+public interface HttpRequest extends HttpElement {
 
     // Static initializers
 
@@ -85,12 +86,6 @@ public interface HttpRequest {
     @NotNull Method getMethod();
 
     /**
-     * Retrieves the version of this HTTP request
-     * @return the version of this request
-     */
-    @NotNull HttpVersion getVersion();
-
-    /**
      * Retrieves the authority of the request, which can be null.
      * @return The authority of the request
      */
@@ -101,17 +96,5 @@ public interface HttpRequest {
      * @return The URI path of the request
      */
     @NotNull URI getUri();
-
-    /**
-     * Retrieves the headers of this request.
-     * @return The headers of the request
-     */
-    @NotNull MutableHeaders getHeaders();
-
-    /**
-     * Retrieves the body of the request. It can be null if there is no' body, or it's empty.
-     * @return The message body of the request
-     */
-    @Nullable HttpBody getBody();
 
 }
