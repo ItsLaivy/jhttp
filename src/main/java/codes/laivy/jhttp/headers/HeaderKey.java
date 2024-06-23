@@ -265,22 +265,20 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<HeaderKey<?>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-
                 //noinspection unchecked
-                @NotNull Wildcard<HeaderKey<?>>[] keys = new Wildcard[matcher.groupCount()];
+                @NotNull Set<Wildcard<HeaderKey<?>>> keys = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    @NotNull String name = matcher.group(group);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     @NotNull Wildcard<HeaderKey<?>> key;
 
                     if (name.trim().equals("*")) key = Wildcard.create();
                     else key = Wildcard.create(HeaderKey.create(name));
 
-                    keys[group] = key;
+                    keys.add(key);
                 }
 
-                return create(keys);
+                //noinspection unchecked
+                return create(keys.toArray(new Wildcard[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<HeaderKey<?>>[]> header) {
@@ -303,11 +301,9 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<HeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-                @NotNull HeaderKey<?>[] keys = new HeaderKey[matcher.groupCount()];
+                @NotNull Set<HeaderKey<?>> keys = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    @NotNull String name = matcher.group(group);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     @NotNull HeaderKey<?> key = HeaderKey.create(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
@@ -315,10 +311,10 @@ public abstract class HeaderKey<T> {
                         continue;
                     }
 
-                    keys[group] = key;
+                    keys.add(key);
                 }
 
-                return create(keys);
+                return create(keys.toArray(new HeaderKey[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
@@ -518,7 +514,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@Nullable Host> header) {
-                return header.getValue().toString();
+                return header.getValue() != null ? header.getValue().toString() : "null";
             }
         }
         private static final class NetworkErrorLoggingHeaderKey extends HeaderKey<NetworkErrorLogging> {
@@ -564,11 +560,9 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<HeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-                @NotNull HeaderKey<?>[] keys = new HeaderKey[matcher.groupCount()];
+                @NotNull Set<HeaderKey<?>> keys = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    @NotNull String name = matcher.group(group);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     @NotNull HeaderKey<?> key = HeaderKey.create(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
@@ -576,10 +570,10 @@ public abstract class HeaderKey<T> {
                         continue;
                     }
 
-                    keys[group] = key;
+                    keys.add(key);
                 }
 
-                return create(keys);
+                return create(keys.toArray(new HeaderKey[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
@@ -619,11 +613,9 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Locale[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
                 @NotNull List<Locale> locales = new ArrayList<>();
 
-                while (matcher.find()) {
-                    @NotNull String name = matcher.group(matcher.group());
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     locales.add(Locale.forLanguageTag(name));
                 }
 
@@ -839,13 +831,11 @@ public abstract class HeaderKey<T> {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
-                    @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                    @NotNull Matcher matcher = pattern.matcher(value);
                     @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
 
-                    while (matcher.find()) {
+                    for (@NotNull String name : value.split("\\s*,\\s*")) {
                         try {
-                            tag.add(EntityTag.Parser.deserialize(matcher.group()));
+                            tag.add(EntityTag.Parser.deserialize(name));
                         } catch (ParseException e) {
                             throw new HeaderFormatException(e);
                         }
@@ -896,13 +886,11 @@ public abstract class HeaderKey<T> {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
-                    @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                    @NotNull Matcher matcher = pattern.matcher(value);
                     @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
 
-                    while (matcher.find()) {
+                    for (@NotNull String name : value.split("\\s*,\\s*")) {
                         try {
-                            tag.add(EntityTag.Parser.deserialize(matcher.group()));
+                            tag.add(EntityTag.Parser.deserialize(name));
                         } catch (ParseException e) {
                             throw new HeaderFormatException(e);
                         }
@@ -1203,10 +1191,9 @@ public abstract class HeaderKey<T> {
                 @NotNull Matcher matcher = pattern.matcher(value);
                 @NotNull List<Cookie> cookies = new LinkedList<>();
 
-                while (matcher.find()) {
+                for (@NotNull String cookie : value.split("\\s*;\\s*")) {
                     try {
-                        @NotNull Cookie cookie = Cookie.Parser.deserialize(matcher.group());
-                        cookies.add(cookie);
+                        cookies.add(Cookie.Parser.deserialize(cookie));
                     } catch (ParseException e) {
                         throw new HeaderFormatException(e);
                     }
@@ -1236,7 +1223,7 @@ public abstract class HeaderKey<T> {
             public @NotNull Header<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
                     return create(ContentSecurityPolicy.parse(value));
-                } catch (ParseException | UnsupportedEncodingException | FilesystemProtocolException e) {
+                } catch (@NotNull Throwable e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
                 }
             }
@@ -1254,7 +1241,7 @@ public abstract class HeaderKey<T> {
             public @NotNull Header<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
                     return create(ContentSecurityPolicy.parse(value));
-                } catch (ParseException | UnsupportedEncodingException | FilesystemProtocolException e) {
+                } catch (@NotNull Throwable e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
                 }
             }
@@ -1476,23 +1463,17 @@ public abstract class HeaderKey<T> {
                     return create(Optional.empty());
                 }
 
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull AlternativeService[] services = new AlternativeService[matcher.groupCount()];
+                @NotNull Set<AlternativeService> services = new HashSet<>();
 
-                // todo: row never updated
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     try {
-                        services[row] = AlternativeService.parse(group);
+                        services.add(AlternativeService.parse(name));
                     } catch (@NotNull ParseException | @NotNull UnknownHostException | @NotNull URISyntaxException e) {
-                        throw new HeaderFormatException("cannot parse alternative service '" + group + "'", e);
+                        throw new HeaderFormatException("cannot parse alternative service '" + name + "'", e);
                     }
                 }
 
-                return create(Optional.of(services));
+                return create(Optional.of(services.toArray(new AlternativeService[0])));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Optional<AlternativeService[]>> header) {
@@ -1517,23 +1498,17 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Method[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull Method[] methods = new Method[matcher.groupCount()];
+                @NotNull Set<Method> methods = new HashSet<>();
 
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     try {
-                        methods[row] = Method.valueOf(group.toUpperCase());
-                        row++;
+                        methods.add(Method.valueOf(name.toUpperCase()));
                     } catch (@NotNull IllegalArgumentException ignore) {
-                        throw new HeaderFormatException("cannot parse method '" + group + "' from header '" + getName() + "'");
+                        throw new HeaderFormatException("cannot parse method '" + name + "' from header '" + getName() + "'");
                     }
                 }
 
-                return create(methods);
+                return create(methods.toArray(new Method[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Method[]> header) {
@@ -1572,16 +1547,13 @@ public abstract class HeaderKey<T> {
                 @NotNull Matcher matcher = pattern.matcher(value);
 
                 //noinspection unchecked
-                @NotNull PseudoString<HeaderKey<?>>[] headers = new PseudoString[matcher.groupCount()];
+                @NotNull Set<PseudoString<HeaderKey<?>>> headers = new HashSet<>();
 
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-                    headers[row] = PseudoString.create(group, () -> true, () -> HeaderKey.create(group));
-                    row++;
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    headers.add(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)));
                 }
 
-                return create(headers);
+                return create(headers.toArray(new PseudoString[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoString<HeaderKey<?>>[]> header) {
@@ -1602,23 +1574,18 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-
-                //noinspection unchecked
-                @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] headers = new Wildcard[matcher.groupCount()];
+                @NotNull List<Wildcard<PseudoString<HeaderKey<?>>>> headers = new ArrayList<>();
 
                 int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-                    headers[row] = (group.trim().equals("*") ?
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    headers.add(name.trim().equals("*") ?
                             Wildcard.create() :
-                            Wildcard.create(PseudoString.create(group, () -> true, () -> HeaderKey.create(group)))
+                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)))
                     );
-                    row++;
                 }
 
-                return create(headers);
+                //noinspection unchecked
+                return create(headers.toArray(new Wildcard[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
@@ -1663,25 +1630,18 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<Method>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
+                @NotNull List<Wildcard<Method>> methods = new ArrayList<>();
 
-                //noinspection unchecked
-                @NotNull Wildcard<Method>[] methods = new Wildcard[matcher.groupCount()];
-
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     try {
-                        methods[row] = group.trim().equals("*") ? Wildcard.create() : Wildcard.create(Method.valueOf(group.toUpperCase()));
-                        row++;
+                        methods.add(name.trim().equals("*") ? Wildcard.create() : Wildcard.create(Method.valueOf(name.toUpperCase())));
                     } catch (@NotNull IllegalArgumentException ignore) {
-                        throw new HeaderFormatException("cannot parse method '" + group + "' from header '" + getName() + "'");
+                        throw new HeaderFormatException("cannot parse method '" + name + "' from header '" + getName() + "'");
                     }
                 }
 
-                return create(methods);
+                //noinspection unchecked
+                return create(methods.toArray(new Wildcard[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Method>[]> header) {
@@ -1702,23 +1662,17 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
+                @NotNull List<Wildcard<PseudoString<HeaderKey<?>>>> headers = new ArrayList<>();
 
-                //noinspection unchecked
-                @NotNull Wildcard<PseudoString<HeaderKey<?>>>[] headers = new Wildcard[matcher.groupCount()];
-
-                int row = 0;
-                while (matcher.find()) {
-                    @NotNull String group = matcher.group();
-                    headers[row] = (group.trim().equals("*") ?
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    headers.add(name.trim().equals("*") ?
                             Wildcard.create() :
-                            Wildcard.create(PseudoString.create(group, () -> true, () -> HeaderKey.create(group)))
+                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)))
                     );
-                    row++;
                 }
 
-                return create(headers);
+                //noinspection unchecked
+                return create(headers.toArray(new Wildcard[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<PseudoString<HeaderKey<?>>>[]> header) {
@@ -1753,17 +1707,13 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<MediaType.Type[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull MediaType.Type[] types = new MediaType.Type[matcher.groupCount()];
+                @NotNull List<MediaType.Type> types = new ArrayList<>();
 
-                int row = 0;
-                while (matcher.find()) {
-                    types[row] = MediaType.Type.parse(matcher.group());
-                    row++;
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    types.add(MediaType.Type.parse(name));
                 }
 
-                return create(types);
+                return create(types.toArray(new MediaType.Type[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType.Type[]> header) {
@@ -1784,22 +1734,17 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
-                @NotNull Matcher matcher = pattern.matcher(value);
-                @NotNull MediaType<?>[] types = new MediaType[matcher.groupCount()];
+                @NotNull List<MediaType<?>> types = new ArrayList<>();
 
-                int row = 0;
-                while (matcher.find()) {
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     try {
-                        types[row] = MediaType.Parser.deserialize(matcher.group());
+                        types.add(MediaType.Parser.deserialize(name));
                     } catch (@NotNull ParseException e) {
-                        throw new HeaderFormatException("cannot parse media type '" + matcher.group() + "'", e);
+                        throw new HeaderFormatException("cannot parse media type '" + name + "'", e);
                     }
-
-                    row++;
                 }
 
-                return create(types);
+                return create(types.toArray(new MediaType[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<MediaType<?>[]> header) {
@@ -1932,11 +1877,9 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<HeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
-                @NotNull HeaderKey<?>[] keys = new HeaderKey[matcher.groupCount()];
+                @NotNull List<HeaderKey<?>> keys = new ArrayList<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    @NotNull String name = matcher.group(group);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     @NotNull HeaderKey<?> key = HeaderKey.create(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
@@ -1944,10 +1887,10 @@ public abstract class HeaderKey<T> {
                         continue;
                     }
 
-                    keys[group] = key;
+                    keys.add(key);
                 }
 
-                return create(keys);
+                return create(keys.toArray(new HeaderKey[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<HeaderKey<?>[]> header) {
@@ -1977,12 +1920,8 @@ public abstract class HeaderKey<T> {
                 @NotNull List<MediaType<?>> types = new LinkedList<>();
 
                 try {
-                    for (int group = 0; group < matcher.groupCount(); group++) {
-                        @NotNull String name = matcher.group(group);
-
-                        if (!name.isEmpty()) {
-                            types.add(MediaType.Parser.deserialize(name));
-                        }
+                    for (@NotNull String name : value.split("\\s*,\\s*")) {
+                        types.add(MediaType.Parser.deserialize(name));
                     }
                 } catch (@NotNull ParseException e) {
                     throw new HeaderFormatException("cannot parse Accept header's content types", e);
@@ -2027,12 +1966,9 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
                 @NotNull List<PseudoEncoding> encodings = new LinkedList<>();
 
-                while (matcher.find()) {
-                    @NotNull String name = matcher.group(matcher.group());
-
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
                     @NotNull Optional<Encoding> optional = Encoding.retrieve(name);
                     encodings.add(optional.map(PseudoEncoding::createAvailable).orElseGet(() -> PseudoEncoding.createUnavailable(name)));
                 }
