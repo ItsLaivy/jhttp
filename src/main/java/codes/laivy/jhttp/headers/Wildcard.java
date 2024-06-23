@@ -66,7 +66,7 @@ public interface Wildcard<T> {
 
             @Override
             public @NotNull String toString() {
-                return getValue().toString();
+                return String.valueOf(getValue());
             }
         };
     }

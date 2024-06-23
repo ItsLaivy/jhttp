@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,8 +67,8 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
         return value;
     }
 
-    public @NotNull Scheme getType() {
-        return Scheme.FILESYSTEM;
+    public @NotNull ContentSecurityPolicy.Scheme getType() {
+        return ContentSecurityPolicy.Scheme.FILESYSTEM;
     }
 
     // Implementations

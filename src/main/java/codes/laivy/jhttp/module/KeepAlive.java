@@ -65,7 +65,7 @@ public interface KeepAlive {
 
         // Serializers
 
-        private static final @NotNull Pattern KEEP_ALIVE_PATTERN = Pattern.compile("^timeout=(?<timeout>\\d+)(?:\\s*,\\s*max=(?<max>\\d+))?$");
+        private static final @NotNull Pattern KEEP_ALIVE_PATTERN = Pattern.compile("^timeout\\s*=\\s*(?<timeout>\\d+)(?:\\s*,\\s*max\\s*=\\s*(?<max>\\d+))?$");
 
         public static @NotNull String serialize(@NotNull KeepAlive keepAlive) {
             return "timeout=" + keepAlive.getTimeout().getSeconds() + ", max=" + (keepAlive.getMaximum() != null ? keepAlive.getMaximum().getSeconds() : 0L);

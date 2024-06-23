@@ -172,7 +172,7 @@ public interface NetworkErrorLogging {
 
                 if (!object.has("report_to") || !object.get("report_to").isJsonPrimitive()) {
                     return false;
-                } else if (!object.has("max_age") || object.get("max_age").isJsonPrimitive()) {
+                } else if (!object.has("max_age") || !object.get("max_age").isJsonPrimitive()) {
                     return false;
                 } else if (object.has("include_subdomains") && !object.get("include_subdomains").isJsonPrimitive()) {
                     return false;

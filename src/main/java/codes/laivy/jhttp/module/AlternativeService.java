@@ -107,7 +107,9 @@ public final class AlternativeService {
     public @NotNull String toString() {
         @NotNull StringBuilder builder = new StringBuilder(new String(getVersion()) + "=\"" + getAuthority() + "\"");
 
-        builder.append("; ma=").append(getAge().getSeconds());
+        if (getAge() != null) {
+            builder.append("; ma=").append(getAge().getSeconds());
+        }
         if (isPersistent()) builder.append("; persist=1");
 
         return builder.toString();

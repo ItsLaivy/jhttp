@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Source;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.url.Data;
@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
@@ -88,11 +90,11 @@ public final class SourceTests {
 
         @Test
         @Order(value = 1)
-        void assertions() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
-            @NotNull MediaType<?> expected = MediaType.create(new MediaType.Type("application", "json"), new MediaType.Parameter[0]);
+        void assertions() throws Throwable {
+            @NotNull MediaType<?> expected = MediaType.create(new MediaType.Type("application", "json"));
 
             // Source
-            @NotNull Source source = Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
+            @NotNull ContentSecurityPolicy.Source source = ContentSecurityPolicy.Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
             Assertions.assertInstanceOf(Data.class, source);
 
             @NotNull Data data = (Data) source;
@@ -102,8 +104,8 @@ public final class SourceTests {
         }
         @Test
         @Order(value = 2)
-        void serialization() throws ParseException, UnsupportedEncodingException, FilesystemProtocolException {
-            @NotNull Data reference = (Data) Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
+        void serialization() throws Throwable {
+            @NotNull Data reference = (Data) ContentSecurityPolicy.Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
             @NotNull Data clone = Data.parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);

@@ -144,14 +144,14 @@ public interface EntityTag {
          * @throws IllegalArgumentException If the input string is not a valid EntityTag.
          */
         public static @NotNull EntityTag deserialize(@NotNull String string) throws ParseException {
-            @NotNull Pattern internal = Pattern.compile("\"([^\"]*)\"");
+            @NotNull Pattern internal = Pattern.compile("\"(?<tag>[^\"]*)\"");
             @NotNull Matcher matcher = internal.matcher(string);
 
             if (!validate(string) || !matcher.find()) {
                 throw new ParseException("cannot parse '" + string + "' as a valid entity tag", 0);
             } else {
-                boolean weak = string.startsWith("W/");
-                @NotNull String name = matcher.group();
+                boolean weak = string.startsWith("W/") || string.startsWith("w/");
+                @NotNull String name = matcher.group("tag");
 
                 return create(name, weak);
             }
@@ -165,11 +165,11 @@ public interface EntityTag {
          */
         public static boolean validate(@NotNull String string) {
             if ((string.startsWith("W/\"") || string.startsWith("\"")) && string.endsWith("\"")) {
-                @NotNull Pattern internal = Pattern.compile("\"([^\"]*)\"");
+                @NotNull Pattern internal = Pattern.compile("\"(?<tag>[^\"]*)\"");
                 @NotNull Matcher matcher = internal.matcher(string);
                 if (!matcher.find()) return false;
 
-                return matcher.group().matches(ETAG_NAME_PATTERN.pattern());
+                return matcher.group("tag").matches(ETAG_NAME_PATTERN.pattern());
             } else {
                 return false;
             }

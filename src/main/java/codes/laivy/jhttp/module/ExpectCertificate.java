@@ -82,13 +82,34 @@ public interface ExpectCertificate {
         }
         public static @NotNull ExpectCertificate deserialize(@NotNull String string) throws ParseException {
             if (validate(string)) {
-                @NotNull Matcher reportUri = Pattern.compile("(?<key>report-uri=\"(?<value>[^\"]*)\")").matcher(string);
-                string = string.replaceAll("(report-uri=\"[^\"]*\")", "");
+                @Nullable URI uri = null;
+                @NotNull Duration age;
+                boolean enforce;
 
-                @NotNull Duration age = Duration.ofSeconds(Integer.parseInt(Pattern.compile("(max-age=(?<age>\\d+))").matcher(string).group("age")));
-                @Nullable URI uri = reportUri.group("value") != null ? URI.create(reportUri.group("value")) : null;
-                boolean enforce = string.contains("enforce");
+                // Report uri
+                @NotNull Pattern reportUriPattern = Pattern.compile("(report-uri\\s*=\\s*\"(?<value>[^\"]*)\")");
+                @NotNull Matcher matcher = reportUriPattern.matcher(string);
 
+                if (matcher.find()) {
+                    uri = matcher.group("value") != null ? URI.create(matcher.group("value")) : null;
+                    string = string.replaceAll(reportUriPattern.pattern(), "");
+                }
+
+                // Max age
+                @NotNull Pattern maxAgePattern = Pattern.compile("(max-age\\s*=\\s*(?<age>\\d+))");
+                matcher = maxAgePattern.matcher(string);
+
+                if (matcher.find()) {
+                    age = Duration.ofSeconds(Integer.parseInt(matcher.group("age")));
+                    string = string.replaceAll(maxAgePattern.pattern(), "");
+                } else {
+                    throw new ParseException("cannot find max-age value", 0);
+                }
+
+                // Enforce
+                enforce = string.contains("enforce");
+
+                // Finish
                 return create(age, uri, enforce);
             } else {
                 throw new ParseException("cannot parse '" + string + "' as a valid expect certificate", 0);

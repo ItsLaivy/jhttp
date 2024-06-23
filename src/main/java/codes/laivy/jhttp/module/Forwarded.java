@@ -133,11 +133,59 @@ public interface Forwarded {
                 }
             };
         }
+        static @NotNull Target hidden() {
+            final @NotNull String hidden = "hidden";
+
+            return new Target() {
+                @Override
+                public boolean equals(@Nullable Object object) {
+                    if (this == object) return true;
+                    if (!(object instanceof Forwarded)) return false;
+                    @NotNull Forwarded that = (Forwarded) object;
+                    return Objects.equals(that.toString(), toString());
+                }
+                @Override
+                public int hashCode() {
+                    return Objects.hash(hidden);
+                }
+                @Override
+                public @NotNull String toString() {
+                    return hidden;
+                }
+            };
+        }
+        static @NotNull Target secret() {
+            final @NotNull String secret = "secret";
+
+            return new Target() {
+                @Override
+                public boolean equals(@Nullable Object object) {
+                    if (this == object) return true;
+                    if (!(object instanceof Forwarded)) return false;
+                    @NotNull Forwarded that = (Forwarded) object;
+                    return Objects.equals(that.toString(), toString());
+                }
+                @Override
+                public int hashCode() {
+                    return Objects.hash(secret);
+                }
+                @Override
+                public @NotNull String toString() {
+                    return secret;
+                }
+            };
+        }
 
         // Object
 
         default boolean isObfuscated() {
             return toString().startsWith("_");
+        }
+        default boolean isHidden() {
+            return toString().equalsIgnoreCase("hidden");
+        }
+        default boolean isSecret() {
+            return toString().equalsIgnoreCase("secret");
         }
 
         @NotNull String toString();
@@ -163,16 +211,20 @@ public interface Forwarded {
             @NotNull StringBuilder builder = new StringBuilder();
 
             if (forwarded.getBy() != null) {
-                builder.append("by=").append(forwarded.getBy());
+                builder.append("by=").append(forwarded.getBy()).append(";");
             } if (forwarded.getFor() != null) {
-                builder.append("for=").append(forwarded.getFor());
+                builder.append("for=").append(forwarded.getFor()).append(";");
             } if (forwarded.getHost() != null) {
-                builder.append("host=").append(forwarded.getHost());
+                builder.append("host=").append(forwarded.getHost()).append(";");
             } if (forwarded.getProtocol() != null) {
-                builder.append("proto=").append(forwarded.getProtocol().name().toLowerCase());
+                builder.append("proto=").append(forwarded.getProtocol().name().toLowerCase()).append(";");
             }
 
-            return builder.toString();
+            if (builder.charAt(builder.length() - 1) == ';') {
+                return builder.subSequence(0, builder.length() - 1).toString();
+            } else {
+                return builder.toString();
+            }
         }
         public static @NotNull Forwarded deserialize(@NotNull String string) throws ParseException {
             @NotNull Matcher matcher = FORWARDED_PATTERN.matcher(string);
@@ -188,8 +240,14 @@ public interface Forwarded {
                     @Nullable String value = matcher.group("by");
 
                     if (value != null) {
+                        value = (value.startsWith("\"") && value.endsWith("\"")) ? value.substring(1, value.length() - 1) : value;
+
                         if (value.equals("unknown")) {
                             by = Target.unknown();
+                        } else if (value.equals("hidden")) {
+                            by = Target.hidden();
+                        } else if (value.equals("secret")) {
+                            by = Target.secret();
                         } else if (value.startsWith("_")) {
                             by = Target.obfuscated(value);
                         } else if (Host.validate(value)) {
@@ -205,8 +263,14 @@ public interface Forwarded {
                     @Nullable String value = matcher.group("for");
 
                     if (value != null) {
+                        value = (value.startsWith("\"") && value.endsWith("\"")) ? value.substring(1, value.length() - 1) : value;
+
                         if (value.equals("unknown")) {
                             for_ = Target.unknown();
+                        } else if (value.equals("hidden")) {
+                            by = Target.hidden();
+                        } else if (value.equals("secret")) {
+                            by = Target.secret();
                         } else if (value.startsWith("_")) {
                             for_ = Target.obfuscated(value);
                         } else if (Host.validate(value)) {

@@ -76,8 +76,8 @@ public final class Blob implements ContentSecurityPolicy.Source {
 
     // Implementations
 
-    public @NotNull Scheme getType() {
-        return Scheme.BLOB;
+    public @NotNull ContentSecurityPolicy.Scheme getType() {
+        return ContentSecurityPolicy.Scheme.BLOB;
     }
 
     @Override

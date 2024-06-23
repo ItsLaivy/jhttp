@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.url;
 
-import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,8 +71,8 @@ public final class Data implements ContentSecurityPolicy.Source {
 
     // Getters
 
-    public @NotNull Scheme getType() {
-        return Scheme.DATA;
+    public @NotNull ContentSecurityPolicy.Scheme getType() {
+        return ContentSecurityPolicy.Scheme.DATA;
     }
 
     public @Nullable MediaType<?> getMediaType() {
