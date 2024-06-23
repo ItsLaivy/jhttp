@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.module;
 
-import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.element.HttpProtocol;
+import codes.laivy.jhttp.url.Host;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -4,7 +4,10 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Keyword;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Name;
-import codes.laivy.jhttp.url.*;
+import codes.laivy.jhttp.url.Blob;
+import codes.laivy.jhttp.url.Data;
+import codes.laivy.jhttp.url.FileSystem;
+import codes.laivy.jhttp.url.MediaStream;
 import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
@@ -19,15 +22,19 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static codes.laivy.jhttp.module.content.ContentSecurityPolicy.*;
+import static codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive;
 
 public final class ContentSecurityPolicy implements Iterable<Directive> {
 
     // Static initializers
 
     public static boolean validate(@NotNull String string) {
-        // todo: CSP validator
-        return true;
+        try {
+            parse(string);
+            return true;
+        } catch (@NotNull Throwable throwable) {
+            return false;
+        }
     }
     public static @NotNull ContentSecurityPolicy parse(@NotNull String string) throws ParseException, UnsupportedEncodingException, FilesystemProtocolException, UnknownHostException, URISyntaxException {
         if (validate(string)) {

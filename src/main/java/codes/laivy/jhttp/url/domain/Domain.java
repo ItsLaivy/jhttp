@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.url.domain;
 
+import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.Host;
-import codes.laivy.jhttp.element.HttpProtocol;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// todo: add #getProtocol method that returns HttpProtocol enum (@NotNull)
 public final class URIAuthority {
 
     // Static initializers
@@ -35,7 +34,7 @@ public final class URIAuthority {
         @NotNull Matcher matcher = pattern.matcher(string);
 
         if (matcher.find()) {
-            @NotNull String scheme = matcher.group(1);
+            @Nullable String scheme = matcher.group(1);
 
             try {
                 @Nullable String temp = matcher.group(3);

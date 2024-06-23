@@ -641,7 +641,6 @@ public final class HeaderTests {
     @Nested
     final class ContentSecurityPolicy extends HeaderTest<codes.laivy.jhttp.module.content.ContentSecurityPolicy> {
         private ContentSecurityPolicy() {
-            // todo: improve this tests
             super(
                     HeaderKey.CONTENT_SECURITY_POLICY,
 
@@ -658,7 +657,6 @@ public final class HeaderTests {
     @Nested
     final class ContentSecurityPolicyReportOnly extends HeaderTest<codes.laivy.jhttp.module.content.ContentSecurityPolicy> {
         private ContentSecurityPolicyReportOnly() {
-            // todo: improve this tests
             super(
                     HeaderKey.CONTENT_SECURITY_POLICY_REPORT_ONLY,
 

@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.module;
 
-import codes.laivy.jhttp.utilities.KeyUtilities;
 import codes.laivy.jhttp.element.Target;
+import codes.laivy.jhttp.utilities.KeyUtilities;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

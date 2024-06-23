@@ -1,9 +1,9 @@
 package codes.laivy.jhttp.element.response;
 
 import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.element.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

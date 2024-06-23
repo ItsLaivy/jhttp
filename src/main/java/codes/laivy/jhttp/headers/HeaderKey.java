@@ -5,7 +5,6 @@ import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
-import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.*;
@@ -26,7 +25,6 @@ import codes.laivy.jhttp.url.email.Email;
 import codes.laivy.jhttp.utilities.DateUtils;
 import org.jetbrains.annotations.*;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;

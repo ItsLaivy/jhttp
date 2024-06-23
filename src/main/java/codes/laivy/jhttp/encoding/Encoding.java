@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -28,15 +27,14 @@ public abstract class Encoding {
 
     // Static initializers
 
-    // todo: multi threading
-    private static final @NotNull Set<Encoding> collection = ConcurrentHashMap.newKeySet();
+    private static final @NotNull Set<Encoding> collection = new HashSet<>();
 
     static {
-        collection.add(ChunkedEncoding.builder().build());
-        collection.add(GZipEncoding.builder().build());
-        collection.add(DeflateEncoding.builder().build());
-        collection.add(CompressEncoding.builder().build());
-        collection.add(IdentityEncoding.builder().build());
+        add(ChunkedEncoding.builder().build());
+        add(GZipEncoding.builder().build());
+        add(DeflateEncoding.builder().build());
+        add(CompressEncoding.builder().build());
+        add(IdentityEncoding.builder().build());
     }
 
     /**
@@ -46,7 +44,9 @@ public abstract class Encoding {
      * @author Daniel Richard (Laivy)
      */
     public static @NotNull Collection<Encoding> retrieve() {
-        return Collections.unmodifiableSet(collection);
+        synchronized (collection) {
+            return Collections.unmodifiableSet(collection);
+        }
     }
 
     /**
@@ -68,19 +68,21 @@ public abstract class Encoding {
      * @author Daniel Richard (Laivy)
      */
     public static boolean add(@NotNull Encoding encoding) {
-        // Check if there's an encoding with that name already defined
-        if (collection.stream().anyMatch(enc -> enc.getName().equalsIgnoreCase(encoding.getName()))) {
-            return false;
-        }
-
-        // Check if there's another encoding with the same aliases
-        for (@NotNull Encoding that : retrieve()) {
-            if (Arrays.stream(that.getAliases()).anyMatch(new HashSet<>(Arrays.asList(encoding.getAliases()))::contains)) {
+        synchronized (collection) {
+            // Check if there's an encoding with that name already defined
+            if (collection.stream().anyMatch(enc -> enc.getName().equalsIgnoreCase(encoding.getName()))) {
                 return false;
             }
-        }
 
-        return collection.add(encoding);
+            // Check if there's another encoding with the same aliases
+            for (@NotNull Encoding that : retrieve()) {
+                if (Arrays.stream(that.getAliases()).anyMatch(new HashSet<>(Arrays.asList(encoding.getAliases()))::contains)) {
+                    return false;
+                }
+            }
+
+            return collection.add(encoding);
+        }
     }
 
     /**
@@ -91,7 +93,9 @@ public abstract class Encoding {
      * @author Daniel Richard (Laivy)
      */
     public static boolean remove(@NotNull Encoding encoding) {
-        return collection.remove(encoding);
+        synchronized (collection) {
+            return collection.remove(encoding);
+        }
     }
 
     /**

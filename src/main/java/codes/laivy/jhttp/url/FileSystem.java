@@ -10,7 +10,6 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.io.File;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public final class FileSystem<T> implements ContentSecurityPolicy.Source {
@@ -102,28 +101,52 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
 
         // Static initializers
 
-        // todo: multi threading
-        private static final @NotNull Set<Protocol<?>> collection = ConcurrentHashMap.newKeySet();
+        private static final @NotNull Set<Protocol<?>> collection = new HashSet<>();
+
+        // Defaults
+
+        public static @NotNull Protocol<File> FILE = new Protocol<File>("file") {
+            @Override
+            public @UnknownNullability File read(@NotNull String content) throws FilesystemProtocolException {
+                if (!content.startsWith("//")) {
+                    throw new FilesystemProtocolException("invalid filesystem 'file' protocol format '" + content + "'");
+                } else {
+                    return new File(content.substring(2));
+                }
+            }
+            @Override
+            public @NotNull String write(@UnknownNullability File content) {
+                return "//" + content.toString().replaceAll("\\\\", File.separator);
+            }
+        };
+
+        // Initializer
+
+        static {
+            add(FILE);
+        }
+
+        // Collection methods
 
         public static @NotNull Collection<Protocol<?>> retrieve() {
-            @NotNull Set<Protocol<?>> protocols = new HashSet<>(collection);
-
-            // If there's a custom protocol with any of these names, it will not be added
-            // since Sets doesn't allow multiples elements with the same properties.
-            // todo: add more default protocols
-            protocols.add(FILE);
-
-            return Collections.unmodifiableSet(protocols);
+            synchronized (collection) {
+                return Collections.unmodifiableSet(collection);
+            }
         }
         public static @NotNull Optional<Protocol<?>> retrieve(@NotNull String name) {
             return stream().filter(protocol -> protocol.getName().equalsIgnoreCase(name)).findFirst();
         }
 
         public static boolean add(@NotNull Protocol<?> protocol) {
-            return collection.add(protocol);
+            synchronized (collection) {
+                return collection.add(protocol);
+            }
         }
+
         public static boolean remove(@NotNull Protocol<?> protocol) {
-            return collection.remove(protocol);
+            synchronized (collection) {
+                return collection.remove(protocol);
+            }
         }
 
         public static boolean contains(@NotNull Protocol<?> protocol) {
@@ -146,27 +169,6 @@ public final class FileSystem<T> implements ContentSecurityPolicy.Source {
 
         public static @NotNull Protocol<?>[] toArray() {
             return retrieve().toArray(new Protocol[0]);
-        }
-
-        // Defaults
-
-        public static @NotNull Protocol<File> FILE = new Protocol<File>("file") {
-            @Override
-            public @UnknownNullability File read(@NotNull String content) throws FilesystemProtocolException {
-                if (!content.startsWith("//")) {
-                    throw new FilesystemProtocolException("invalid filesystem 'file' protocol format '" + content + "'");
-                } else {
-                    return new File(content.substring(2));
-                }
-            }
-            @Override
-            public @NotNull String write(@UnknownNullability File content) {
-                return "//" + content.toString().replaceAll("\\\\", File.separator);
-            }
-        };
-
-        static {
-            add(FILE);
         }
 
         // Object

@@ -1,12 +1,12 @@
 package codes.laivy.jhttp.authorization;
 
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.element.HttpStatus;
+import codes.laivy.jhttp.element.request.HttpRequest;
+import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
-import codes.laivy.jhttp.element.request.HttpRequest;
-import codes.laivy.jhttp.element.response.HttpResponse;
-import codes.laivy.jhttp.element.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

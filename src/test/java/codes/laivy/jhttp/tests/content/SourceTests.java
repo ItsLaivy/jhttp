@@ -1,16 +1,13 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
+import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 

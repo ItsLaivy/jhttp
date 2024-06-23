@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.module.content;
 
-import codes.laivy.jhttp.utilities.Range;
 import codes.laivy.jhttp.headers.Wildcard;
+import codes.laivy.jhttp.utilities.Range;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
