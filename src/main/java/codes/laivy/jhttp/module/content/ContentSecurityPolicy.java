@@ -37,32 +37,28 @@ public final class ContentSecurityPolicy implements Iterable<Directive> {
         }
     }
     public static @NotNull ContentSecurityPolicy parse(@NotNull String string) throws ParseException, UnsupportedEncodingException, FilesystemProtocolException, UnknownHostException, URISyntaxException {
-        if (validate(string)) {
-            @NotNull List<Directive> directives = new LinkedList<>();
-            for (@NotNull String temp : string.split("\\s*;\\s*")) {
-                @NotNull Name name = Name.getById(temp.split(" ", 2)[0]);
-                @NotNull Directive.Builder builder = new Directive.Builder(name);
+        @NotNull List<Directive> directives = new LinkedList<>();
+        for (@NotNull String temp : string.split("\\s*;\\s*")) {
+            @NotNull Name name = Name.getById(temp.split(" ", 2)[0]);
+            @NotNull Directive.Builder builder = new Directive.Builder(name);
 
-                for (@NotNull String part : temp.split(" ", 2)[1].split(" ")) {
-                    if (part.isEmpty()) continue;
+            for (@NotNull String part : temp.split(" ", 2)[1].split(" ")) {
+                if (part.isEmpty()) continue;
 
-                    if (part.startsWith("'") && part.endsWith("'")) {
-                        builder.add(Keyword.custom(part.substring(1, part.length() - 1)));
-                    } else try {
-                        builder.add(Scheme.getByName(part));
-                    } catch (@NotNull NullPointerException ignore) {
-                        builder.add(Source.parse(part));
-                    }
+                if (part.startsWith("'") && part.endsWith("'")) {
+                    builder.add(Keyword.custom(part.substring(1, part.length() - 1)));
+                } else try {
+                    builder.add(Scheme.getByName(part));
+                } catch (@NotNull NullPointerException ignore) {
+                    builder.add(Source.parse(part));
                 }
-
-                directives.add(builder.build());
             }
 
-
-            return create(directives.toArray(new Directive[0]));
-        } else {
-            throw new ParseException("cannot parse '" + string + "' into a valid content security policy", 0);
+            directives.add(builder.build());
         }
+
+
+        return create(directives.toArray(new Directive[0]));
     }
 
     public static @NotNull ContentSecurityPolicy create(@NotNull Directive @NotNull ... directives) {

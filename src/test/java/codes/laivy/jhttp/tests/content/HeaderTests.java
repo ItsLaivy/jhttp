@@ -980,7 +980,7 @@ public final class HeaderTests {
                     HeaderKey.FORWARDED,
 
                     new String[] {
-                            "by=unknown;for=unknown;host=jhttp.com;proto=http",
+                            "by=unknown;for=unknown;host=jhttp.org;proto=http",
                             "by=hidden;for=hidden;host=localhost;proto=https",
                             "by=secret;for=secret;host=danielmeinicke.com;proto=https",
                             "by=203.0.113.43;for=203.0.113.43;host=localhost;proto=https",
@@ -999,7 +999,7 @@ public final class HeaderTests {
                     HeaderKey.FROM,
 
                     new String[] {
-                            "contact@jhttp.com",
+                            "contact@jhttp.org",
                             "dnlfg.contato@gmail.com"
                     }, new String[] {
                             "",
