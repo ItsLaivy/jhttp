@@ -155,6 +155,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<HeaderKey<?>[]> TRAILER = new Provided.TrailerHeaderKey();
     public static @NotNull HeaderKey<PseudoEncoding[]> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
     public static @NotNull HeaderKey<Wildcard<HeaderKey<?>>[]> VARY = new Provided.VaryHeaderKey();
+    public static @NotNull HeaderKey<UserAgent> USER_AGENT = new Provided.UserAgentHeaderKey();
     // Object
 
     private final @NotNull String name;
@@ -256,6 +257,24 @@ public abstract class HeaderKey<T> {
             }
         }
 
+        private static final class UserAgentHeaderKey extends HeaderKey<UserAgent> {
+            private UserAgentHeaderKey() {
+                super("User-Agent", Target.REQUEST);
+            }
+
+            @Override
+            public @NotNull Header<UserAgent> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                try {
+                    return create(UserAgent.Parser.deserialize(value));
+                } catch (@NotNull Throwable throwable) {
+                    throw new HeaderFormatException("cannot parse '" + value + "' as a valid user agent header", throwable);
+                }
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<UserAgent> header) {
+                return UserAgent.Parser.serialize(header.getValue());
+            }
+        }
         private static final class VaryHeaderKey extends HeaderKey<Wildcard<HeaderKey<?>>[]> {
             private VaryHeaderKey() {
                 super("Vary", Target.RESPONSE);
@@ -263,7 +282,6 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<HeaderKey<?>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                //noinspection unchecked
                 @NotNull Set<Wildcard<HeaderKey<?>>> keys = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -341,20 +359,18 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                //noinspection unchecked
-                @NotNull Weight<PseudoEncoding>[] pairs = new Weight[matcher.groupCount()];
+                @NotNull Set<Weight<PseudoEncoding>> pairs = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    if (!matcher.find()) break;
-
+                while (matcher.find()) {
                     @NotNull String string = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
                     @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
-                    pairs[group] = optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string)));
+                    pairs.add(optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string))));
                 }
 
-                return create(pairs);
+                //noinspection unchecked
+                return create(pairs.toArray(new Weight[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
@@ -1544,13 +1560,13 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                //noinspection unchecked
                 @NotNull Set<PseudoString<HeaderKey<?>>> headers = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
                     headers.add(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)));
                 }
 
+                //noinspection unchecked
                 return create(headers.toArray(new PseudoString[0]));
             }
             @Override
@@ -1768,19 +1784,17 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("(?<locale>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                //noinspection unchecked
-                @NotNull Weight<Locale>[] pairs = new Weight[matcher.groupCount()];
+                @NotNull Set<Weight<Locale>> pairs = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    if (!matcher.find()) break;
-
+                while (matcher.find()) {
                     @NotNull String locale = matcher.group("locale");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs[group] = Weight.create(weight, Locale.forLanguageTag(locale));
+                    pairs.add(Weight.create(weight, Locale.forLanguageTag(locale)));
                 }
 
-                return create(pairs);
+                //noinspection unchecked
+                return create(pairs.toArray(new Weight[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<Locale>[]> header) {
@@ -1804,20 +1818,18 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                //noinspection unchecked
-                @NotNull Weight<PseudoEncoding>[] pairs = new Weight[matcher.groupCount()];
+                @NotNull Set<Weight<PseudoEncoding>> pairs = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    if (!matcher.find()) break;
-
+                while (matcher.find()) {
                     @NotNull String string = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
                     @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
-                    pairs[group] = optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string)));
+                    pairs.add(optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string))));
                 }
 
-                return create(pairs);
+                //noinspection unchecked
+                return create(pairs.toArray(new Weight[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
@@ -1841,19 +1853,17 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                //noinspection unchecked
-                @NotNull Weight<PseudoCharset>[] pairs = new Weight[matcher.groupCount()];
+                @NotNull Set<Weight<PseudoCharset>> pairs = new HashSet<>();
 
-                for (int group = 0; group < matcher.groupCount(); group++) {
-                    if (!matcher.find()) break;
-
+                while (matcher.find()) {
                     @NotNull String charset = matcher.group("charset");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs[group] = Weight.create(weight, PseudoCharset.create(charset));
+                    pairs.add(Weight.create(weight, PseudoCharset.create(charset)));
                 }
 
-                return create(pairs);
+                //noinspection unchecked
+                return create(pairs.toArray(new Weight[0]));
             }
 
             @Override
