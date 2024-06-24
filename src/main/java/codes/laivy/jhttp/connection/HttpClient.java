@@ -2,9 +2,7 @@ package codes.laivy.jhttp.connection;
 
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -22,18 +20,15 @@ import java.net.Socket;
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
-@ApiStatus.Experimental
 public interface HttpClient extends Closeable {
 
     /**
      * Retrieves the underlying socket of the HTTP client.
      *
      * @return The socket associated with this HTTP client.
-     * @throws IOException If an I/O error occurs while retrieving the socket.
      * @since 1.0
      */
-    @NotNull
-    Socket getSocket() throws IOException;
+    @NotNull Socket getSocket();
 
     /**
      * Reads an HTTP request from the client.
@@ -42,8 +37,7 @@ public interface HttpClient extends Closeable {
      * @throws IOException If an I/O error occurs while reading the request.
      * @since 1.0
      */
-    @NotNull
-    HttpRequest read() throws IOException;
+    @NotNull HttpRequest read() throws IOException;
 
     /**
      * Writes an HTTP response to the client.
@@ -63,11 +57,10 @@ public interface HttpClient extends Closeable {
     boolean isOpen();
 
     /**
-     * Retrieves a client instance associated with this HTTP client.
+     * Closes the http client connection
      *
-     * @return A client instance associated with this HTTP client.
      * @since 1.0
      */
-    @UnknownNullability
-    HttpClient getClient();
+    void close() throws IOException;
+
 }

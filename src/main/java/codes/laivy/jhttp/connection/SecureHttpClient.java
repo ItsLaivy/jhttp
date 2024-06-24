@@ -17,7 +17,6 @@ import javax.net.ssl.SSLSession;
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
-@ApiStatus.Experimental
 public interface SecureHttpClient extends HttpClient {
 
     /**

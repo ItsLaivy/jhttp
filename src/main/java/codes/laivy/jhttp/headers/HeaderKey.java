@@ -42,7 +42,7 @@ public abstract class HeaderKey<T> {
 
     public static final @NotNull Pattern NAME_FORMAT_REGEX = Pattern.compile("^[A-Za-z][A-Za-z0-9-]*$");
 
-    public static @NotNull HeaderKey<?> create(@NotNull String name) {
+    public static @NotNull HeaderKey<?> retrieve(@NotNull String name) {
         try {
             @NotNull Field field = HeaderKey.class.getDeclaredField(name.replace("-", "_").toUpperCase());
             field.setAccessible(true);
@@ -288,7 +288,7 @@ public abstract class HeaderKey<T> {
                     @NotNull Wildcard<HeaderKey<?>> key;
 
                     if (name.trim().equals("*")) key = Wildcard.create();
-                    else key = Wildcard.create(HeaderKey.create(name));
+                    else key = Wildcard.create(HeaderKey.retrieve(name));
 
                     keys.add(key);
                 }
@@ -320,7 +320,7 @@ public abstract class HeaderKey<T> {
                 @NotNull Set<HeaderKey<?>> keys = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    @NotNull HeaderKey<?> key = HeaderKey.create(name);
+                    @NotNull HeaderKey<?> key = HeaderKey.retrieve(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
                         // Ignore response headers
@@ -577,7 +577,7 @@ public abstract class HeaderKey<T> {
                 @NotNull Set<HeaderKey<?>> keys = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    @NotNull HeaderKey<?> key = HeaderKey.create(name);
+                    @NotNull HeaderKey<?> key = HeaderKey.retrieve(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
                         // Ignore response headers
@@ -1563,7 +1563,7 @@ public abstract class HeaderKey<T> {
                 @NotNull Set<PseudoString<HeaderKey<?>>> headers = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    headers.add(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)));
+                    headers.add(PseudoString.create(name, () -> true, () -> HeaderKey.retrieve(name)));
                 }
 
                 //noinspection unchecked
@@ -1594,7 +1594,7 @@ public abstract class HeaderKey<T> {
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
                     headers.add(name.trim().equals("*") ?
                             Wildcard.create() :
-                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)))
+                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.retrieve(name)))
                     );
                 }
 
@@ -1681,7 +1681,7 @@ public abstract class HeaderKey<T> {
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
                     headers.add(name.trim().equals("*") ?
                             Wildcard.create() :
-                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.create(name)))
+                            Wildcard.create(PseudoString.create(name, () -> true, () -> HeaderKey.retrieve(name)))
                     );
                 }
 
@@ -1888,7 +1888,7 @@ public abstract class HeaderKey<T> {
                 @NotNull List<HeaderKey<?>> keys = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    @NotNull HeaderKey<?> key = HeaderKey.create(name);
+                    @NotNull HeaderKey<?> key = HeaderKey.retrieve(name);
 
                     if (key.getTarget() == Target.RESPONSE) {
                         // Ignore response headers

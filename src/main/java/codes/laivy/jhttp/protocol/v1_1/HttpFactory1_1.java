@@ -347,7 +347,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull String value = parts[1];
 
             //noinspection unchecked
-            @NotNull HeaderKey<T> key = (HeaderKey<T>) HeaderKey.create(name);
+            @NotNull HeaderKey<T> key = (HeaderKey<T>) HeaderKey.retrieve(name);
             return key.read(getVersion(), value);
         }
 

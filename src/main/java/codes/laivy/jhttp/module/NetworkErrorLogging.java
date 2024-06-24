@@ -151,12 +151,12 @@ public interface NetworkErrorLogging {
 
                 if (object.has("request_headers")) {
                     for (@NotNull JsonElement element : object.getAsJsonArray("request_headers")) {
-                        requests.add(HeaderKey.create(element.getAsString()));
+                        requests.add(HeaderKey.retrieve(element.getAsString()));
                     }
                 }
                 if (object.has("response_headers")) {
                     for (@NotNull JsonElement element : object.getAsJsonArray("response_headers")) {
-                        responses.add(HeaderKey.create(element.getAsString()));
+                        responses.add(HeaderKey.retrieve(element.getAsString()));
                     }
                 }
 

@@ -176,7 +176,7 @@ public interface Connection {
 
             // Headers
             @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
-            for (@NotNull String name : keys.keySet()) headers.add(HeaderKey.create(name));
+            for (@NotNull String name : keys.keySet()) headers.add(HeaderKey.retrieve(name));
 
             // Finish
             return create(type, headers.toArray(new HeaderKey[0]));

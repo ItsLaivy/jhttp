@@ -44,6 +44,7 @@ public interface Origin extends ContentSecurityPolicy.Source {
             public @NotNull String toString() {
                 return Parser.serialize(this);
             }
+
         };
     }
 

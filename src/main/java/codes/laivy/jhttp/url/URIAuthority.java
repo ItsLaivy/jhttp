@@ -115,9 +115,11 @@ public final class URIAuthority {
         @NotNull StringBuilder builder = new StringBuilder();
 
         // Protocol ("http://" or "https://")
-        for (@NotNull HttpProtocol protocol : HttpProtocol.values()) {
-            if (protocol.getPort() == getPort()) {
-                builder.append(protocol.getName());
+        if (!getHostName().isEmpty()) {
+            for (@NotNull HttpProtocol protocol : HttpProtocol.values()) {
+                if (protocol.getPort() == getPort()) {
+                    builder.append(protocol.getName());
+                }
             }
         }
 
@@ -130,7 +132,7 @@ public final class URIAuthority {
         builder.append(getHostName());
 
         // Port
-        boolean visible = Arrays.stream(HttpProtocol.values()).noneMatch(protocol -> protocol.getPort() == getPort());
+        boolean visible = getHostName().isEmpty() || Arrays.stream(HttpProtocol.values()).noneMatch(protocol -> protocol.getPort() == getPort());
         if (visible) {
             builder.append(":").append(getPort());
         }

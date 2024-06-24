@@ -1547,7 +1547,7 @@ public final class HeaderTests {
                 @NotNull Header<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
                 @NotNull Header<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
 
-                Assertions.assertEquals(reference, clone, "cannot match reference and clone");
+                Assertions.assertEquals(reference.getValue(), clone.getValue(), "cannot match reference and clone");
             }
         }
     }

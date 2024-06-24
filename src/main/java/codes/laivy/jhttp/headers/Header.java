@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.headers;
 
+import codes.laivy.jhttp.network.BitMeasure;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,12 +39,15 @@ public interface Header<T> {
             }
 
             @Override
-            public boolean equals(Object obj) {
-                return obj instanceof Header && ((Header<?>) obj).getName().equalsIgnoreCase(getName());
+            public boolean equals(@Nullable Object object) {
+                if (this == object) return true;
+                if (!(object instanceof BitMeasure)) return false;
+                @NotNull Header<?> that = (Header<?>) object;
+                return getName().equalsIgnoreCase(that.getName()) && Objects.equals(getValue(), that.getValue());
             }
             @Override
             public int hashCode() {
-                return Objects.hash(getName());
+                return Objects.hash(getName(), getValue());
             }
         };
     }
