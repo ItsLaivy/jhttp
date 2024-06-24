@@ -8,6 +8,7 @@ import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.*;
+import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
@@ -147,7 +148,7 @@ public abstract class HeaderKey<T> {
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<Duration> RTT = new Provided.RTTHeaderKey();
     public static @NotNull HeaderKey<Boolean> SAVE_DATA = new Provided.SaveDataHeaderKey();
-    public static @NotNull HeaderKey<String> SERVER = new Provided.ServerHeaderKey();
+    public static @NotNull HeaderKey<Product> SERVER = new Provided.ServerHeaderKey();
     public static @NotNull HeaderKey<Cookie.Request> SET_COOKIE = new Provided.SetCookieHeaderKey();
     public static @NotNull HeaderKey<Origin> SOURCEMAP = new Provided.SourceMapHeaderKey();
     @ApiStatus.Experimental
@@ -703,18 +704,22 @@ public abstract class HeaderKey<T> {
                 return String.valueOf(header.getValue().getSeconds());
             }
         }
-        private static final class ServerHeaderKey extends HeaderKey<String> {
+        private static final class ServerHeaderKey extends HeaderKey<Product> {
             private ServerHeaderKey() {
                 super("Server", Target.RESPONSE);
             }
 
             @Override
-            public @NotNull Header<String> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                return Header.create(this, value);
+            public @NotNull Header<Product> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                try {
+                    return Header.create(this, Product.parse(value));
+                } catch (ParseException e) {
+                    throw new HeaderFormatException("cannot parse '" + value + "' as a valid product", e);
+                }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<String> header) {
-                return header.getValue();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Product> header) {
+                return header.getValue().toString();
             }
         }
         private static final class SetCookieHeaderKey extends HeaderKey<Cookie.Request> {

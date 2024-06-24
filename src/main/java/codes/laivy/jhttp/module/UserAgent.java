@@ -4,6 +4,7 @@ import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,11 +58,51 @@ public interface UserAgent {
 
         // Static initializers
 
+        public static @NotNull Product parse(@NotNull String string) throws ParseException {
+            @Nullable String name = null;
+            @NotNull String[] comments = new String[0];
+
+            for (@NotNull String part : string.split("\\s*(?![^()]*\\))")) {
+                if (StringUtils.isBlank(part)) {
+                    continue;
+                }
+
+                if (part.startsWith("(") && part.endsWith(")")) { // Comment
+                    if (name == null) {
+                        throw new ParseException("comments without product name", 0);
+                    }
+
+                    // Remove parenthesis
+                    part = part.substring(1, part.length() - 1);
+
+                    // Add comment to array
+                    comments = Arrays.copyOfRange(comments, 0, comments.length + 1);
+                    comments[comments.length - 1] = part;
+                } else { // Product
+                    name = part;
+                }
+            }
+
+            // Checkers
+            if (name == null) {
+                throw new ParseException("illegal product string", 0);
+            }
+
+            // Name and version
+            @NotNull String[] split = name.split("/", 2);
+
+            name = split[0];
+            @Nullable String version = split.length == 2 ? split[1] : null;
+
+            // Finish
+            return new Product(name, version, comments);
+        }
+
         public static @NotNull Product create(
                 @NotNull String name,
                 @Nullable String version,
 
-                @NotNull String @NotNull [] comments
+                @NotNull String @NotNull ... comments
         ) {
             return new Product(name, version, comments);
         }
@@ -156,7 +197,7 @@ public interface UserAgent {
         public static @NotNull UserAgent deserialize(@NotNull String string) throws IllegalStateException {
             @NotNull Map<String, String[]> map = new LinkedHashMap<>();
 
-            for (@NotNull String part : string.split("\\s*(?![^()]*\\))")) {
+            for (@NotNull String part : string.split("\\s+(?![^(]*\\))")) {
                 if (StringUtils.isBlank(part)) {
                     continue;
                 }

@@ -25,6 +25,12 @@ public interface HttpBody extends CharSequence {
 
     static @NotNull HttpBody create(
             final @Nullable Content<?> content,
+            final @NotNull String decoded
+    ) {
+        return create(content, decoded, decoded);
+    }
+    static @NotNull HttpBody create(
+            final @Nullable Content<?> content,
             final @NotNull String decoded,
             final @NotNull String raw
     ) {

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.ClosedChannelException;
 
 /**
  * A client interface for making HTTP requests.
@@ -34,10 +35,11 @@ public interface HttpClient extends Closeable {
      * Reads an HTTP request from the client.
      *
      * @return The HTTP request read from the client.
+     * @throws ClosedChannelException If the channel has been closed
      * @throws IOException If an I/O error occurs while reading the request.
      * @since 1.0
      */
-    @NotNull HttpRequest read() throws IOException;
+    @NotNull HttpRequest read() throws IOException, ClosedChannelException;
 
     /**
      * Writes an HTTP response to the client.

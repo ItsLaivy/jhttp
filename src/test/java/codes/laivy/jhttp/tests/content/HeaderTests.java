@@ -10,6 +10,7 @@ import codes.laivy.jhttp.headers.Weight;
 import codes.laivy.jhttp.headers.Wildcard;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.*;
+import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
 import codes.laivy.jhttp.network.BitMeasure;
@@ -1325,14 +1326,17 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Server extends HeaderTest<String> {
+    final class Server extends HeaderTest<Product> {
         private Server() {
             super(
                     HeaderKey.SERVER,
 
                     new String[] {
-                            "dwadawd ajwdoawda",
+                            "JHTTP/1.0",
+                            "Mozilla-Server/3.0"
                     }, new String[] {
+                            "",
+                            "dwadawd ajwdoawda",
                     }
             );
         }
