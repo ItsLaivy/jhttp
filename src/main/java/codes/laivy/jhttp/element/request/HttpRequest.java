@@ -9,8 +9,6 @@ import codes.laivy.jhttp.module.Cookie;
 import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.UserAgent;
-import codes.laivy.jhttp.module.connection.Connection;
-import codes.laivy.jhttp.module.content.ContentDisposition;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.Host;
@@ -20,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -115,19 +112,6 @@ public interface HttpRequest extends HttpElement {
     // Getters
 
     /**
-     * Retrieves the connection specified in the headers, if present.
-     *
-     * @return the connection specified in the headers, or {@code null} if not found
-     */
-    default @Nullable Connection getConnection() {
-        return getHeaders().first(HeaderKey.CONNECTION).map(Header::getValue).orElse(null);
-    }
-    default void setConnection(@Nullable Connection connection) {
-        if (connection == null) getHeaders().remove(HeaderKey.CONNECTION);
-        else getHeaders().put(HeaderKey.CONNECTION.create(connection));
-    }
-
-    /**
      * Retrieves the authorization credentials specified in the headers, if present.
      *
      * @return the authorization credentials, or {@code null} if not found
@@ -138,10 +122,6 @@ public interface HttpRequest extends HttpElement {
     default void setAuthorization(@Nullable Credentials credentials) {
         if (credentials == null) getHeaders().remove(HeaderKey.AUTHORIZATION);
         else getHeaders().put(HeaderKey.AUTHORIZATION.create(credentials));
-    }
-
-    default @Nullable OffsetDateTime getDate() {
-        return getHeaders().first(HeaderKey.DATE).map(Header::getValue).orElse(null);
     }
 
     /**
@@ -225,19 +205,6 @@ public interface HttpRequest extends HttpElement {
     }
 
     /**
-     * Retrieves the content disposition specified in the headers, if present.
-     *
-     * @return the content disposition, or {@code null} if not found
-     */
-    default @Nullable ContentDisposition getDisposition() {
-        return getHeaders().first(HeaderKey.CONTENT_DISPOSITION).map(Header::getValue).orElse(null);
-    }
-    default void setDisposition(@Nullable ContentDisposition disposition) {
-        if (disposition == null) getHeaders().remove(HeaderKey.CONTENT_DISPOSITION);
-        else getHeaders().put(HeaderKey.CONTENT_DISPOSITION.create(disposition));
-    }
-
-    /**
      * Retrieves the forwarded information from the request headers, if present.
      *
      * @return the forwarded information, or {@code null} if not found
@@ -261,16 +228,6 @@ public interface HttpRequest extends HttpElement {
     default void setReferrer(@Nullable Origin origin) {
         if (origin == null) getHeaders().remove(HeaderKey.REFERER);
         else getHeaders().put(HeaderKey.REFERER.create(origin));
-    }
-
-    /**
-     * Checks if the request involves uploading a file.
-     *
-     * @return {@code true} if the request is an upload, {@code false} otherwise
-     */
-    default boolean isUpload() {
-        @Nullable ContentDisposition disposition = getDisposition();
-        return disposition != null && disposition.getType() == ContentDisposition.Type.ATTACHMENT;
     }
 
     // Cookies

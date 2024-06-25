@@ -1,9 +1,15 @@
 package codes.laivy.jhttp.element;
 
+import codes.laivy.jhttp.headers.Header;
+import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.module.connection.Connection;
+import codes.laivy.jhttp.module.content.ContentDisposition;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.time.OffsetDateTime;
 
 /**
  * The {@code HttpElement} interface represents a basic HTTP element that comprises
@@ -37,5 +43,47 @@ public interface HttpElement {
      * @return the {@link HttpBody} representing the message body of this element, or {@code null} if none.
      */
     @Nullable HttpBody getBody();
+
+    // Getters
+
+    /**
+     * Retrieves the connection specified in the headers, if present.
+     *
+     * @return the connection specified in the headers, or {@code null} if not found
+     */
+    default @Nullable Connection getConnection() {
+        return getHeaders().first(HeaderKey.CONNECTION).map(Header::getValue).orElse(null);
+    }
+    default void setConnection(@Nullable Connection connection) {
+        if (connection == null) getHeaders().remove(HeaderKey.CONNECTION);
+        else getHeaders().put(HeaderKey.CONNECTION.create(connection));
+    }
+
+    default @Nullable OffsetDateTime getDate() {
+        return getHeaders().first(HeaderKey.DATE).map(Header::getValue).orElse(null);
+    }
+
+    /**
+     * Retrieves the content disposition specified in the headers, if present.
+     *
+     * @return the content disposition, or {@code null} if not found
+     */
+    default @Nullable ContentDisposition getDisposition() {
+        return getHeaders().first(HeaderKey.CONTENT_DISPOSITION).map(Header::getValue).orElse(null);
+    }
+    default void setDisposition(@Nullable ContentDisposition disposition) {
+        if (disposition == null) getHeaders().remove(HeaderKey.CONTENT_DISPOSITION);
+        else getHeaders().put(HeaderKey.CONTENT_DISPOSITION.create(disposition));
+    }
+
+    /**
+     * Checks if the request involves uploading a file.
+     *
+     * @return {@code true} if the request is an upload, {@code false} otherwise
+     */
+    default boolean isUpload() {
+        @Nullable ContentDisposition disposition = getDisposition();
+        return disposition != null && disposition.getType() == ContentDisposition.Type.ATTACHMENT;
+    }
 
 }
