@@ -109,12 +109,12 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
         }
         @Override
         public int hashCode() {
-            return Objects.hash(media, data, Arrays.hashCode(getLanguages()));
+            return Objects.hash(getMediaType(), getData(), Arrays.hashCode(getLanguages()));
         }
 
         @Override
         public @NotNull String toString() {
-            return data.toString();
+            return getData().toString();
         }
 
     }

@@ -69,7 +69,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Duration> ACCEPT_CH_LIFETIME = new Provided.AcceptCHLifetimeHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new Provided.AcceptCharsetHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
-    public static @NotNull HeaderKey<Weight<Locale>[]> ACCEPT_LANGUAGE = new Provided.AcceptLanguageHeaderKey();
+    public static @NotNull HeaderKey<Wildcard<Weight<Locale>[]>> ACCEPT_LANGUAGE = new Provided.AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<MediaType<?>[]> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType.Type[]> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
     public static @NotNull HeaderKey<AcceptRange> ACCEPT_RANGES = new Provided.AcceptRangesHeaderKey();
@@ -609,7 +609,7 @@ public abstract class HeaderKey<T> {
         }
         private static final class ContentLengthHeaderKey extends HeaderKey<BitMeasure> {
             private ContentLengthHeaderKey() {
-                super("Content-Language", Target.BOTH);
+                super("Content-Length", Target.BOTH);
             }
 
             @Override
@@ -1779,13 +1779,13 @@ public abstract class HeaderKey<T> {
         }
 
         // todo: accept language pseudo locale
-        private static final class AcceptLanguageHeaderKey extends HeaderKey<Weight<Locale>[]> {
+        private static final class AcceptLanguageHeaderKey extends HeaderKey<Wildcard<Weight<Locale>[]>> {
             private AcceptLanguageHeaderKey() {
                 super("Accept-Language", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Weight<Locale>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<Wildcard<Weight<Locale>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Pattern pattern = Pattern.compile("(?<locale>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
@@ -1793,24 +1793,29 @@ public abstract class HeaderKey<T> {
 
                 while (matcher.find()) {
                     @NotNull String locale = matcher.group("locale");
-                    @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
+                    if (locale.trim().equals("*")) return create(Wildcard.create());
 
+                    @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
                     pairs.add(Weight.create(weight, Locale.forLanguageTag(locale)));
                 }
 
                 //noinspection unchecked
-                return create(pairs.toArray(new Weight[0]));
+                return create(Wildcard.create(pairs.toArray(new Weight[0])));
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<Locale>[]> header) {
-                @NotNull StringBuilder builder = new StringBuilder();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Weight<Locale>[]>> header) {
+                if (header.getValue().isWildcard()) {
+                    return "*";
+                } else {
+                    @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull Weight<Locale> pseudo : header.getValue()) {
-                    if (builder.length() > 0) builder.append(", ");
-                    builder.append(pseudo);
+                    for (@NotNull Weight<Locale> pseudo : header.getValue().getValue()) {
+                        if (builder.length() > 0) builder.append(", ");
+                        builder.append(pseudo);
+                    }
+
+                    return builder.toString();
                 }
-
-                return builder.toString();
             }
         }
         private static final class AcceptEncodingHeaderKey extends HeaderKey<Weight<PseudoEncoding>[]> {

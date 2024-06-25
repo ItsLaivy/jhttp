@@ -132,7 +132,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptLanguage extends HeaderTest<Weight<Locale>[]> {
+    final class AcceptLanguage extends HeaderTest<Wildcard<Weight<Locale>[]>> {
         private AcceptLanguage() {
             super(
                     HeaderKey.ACCEPT_LANGUAGE,
