@@ -85,8 +85,11 @@ public final class StringUtils {
     }
 
     /**
+     * @param input the input string to be split
+     * @param delimiter the delimiter pattern to split by
+     *
      * @see #splitAndKeepDelimiter(String, String, int)
-     * @apiNote it's similar to the {@link #splitAndKeepDelimiter(String, String, int)} method, but without the limit parameter.
+     * @return an array of strings, split by the delimiter, including the delimiter in the same index of each segment
      */
     public static @NotNull String[] splitAndKeepDelimiter(@NotNull String input, @NotNull String delimiter) {
         return splitAndKeepDelimiter(input, delimiter, 0);
@@ -96,7 +99,8 @@ public final class StringUtils {
      * Checks if a string is blank.
      * <p>A string is considered blank if it is null, empty, or contains only whitespace characters.</p>
      *
-     * @apiNote JHTTP was made on Java 8, so it doesn't have the String#isBlank method.
+     * Note: JHTTP was made on Java 8, so it doesn't have the String#isBlank method.
+     *
      * @param str the string to check, may be null
      * @return {@code true} if the string is null, empty, or contains only whitespace characters, {@code false} otherwise
      *

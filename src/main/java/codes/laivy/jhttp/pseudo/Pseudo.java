@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  * like a reference or ID. The `retrieve` method retrieves this data using the raw value.
  * The `available` method returns whether this pseudo data is available for retrieval.
  * <p>
- * Example: In a Pseudo<String, Charset>, the String represents the charset ID,
+ * Example: In a Pseudo (String, Charset), the String represents the charset ID,
  * and the charset may not exist on the operating system, so it is the final type.
  * The String is the raw data, the charset ID.
  *

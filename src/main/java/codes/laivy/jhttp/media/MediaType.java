@@ -21,6 +21,7 @@ import java.util.stream.Stream;
  * and a parser that can handle the content of that type.
  *
  * @param <T> the type of the content that this media type handles
+ *
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */

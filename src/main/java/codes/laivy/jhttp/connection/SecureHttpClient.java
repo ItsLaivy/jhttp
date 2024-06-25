@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.connection;
 
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.SSLSession;

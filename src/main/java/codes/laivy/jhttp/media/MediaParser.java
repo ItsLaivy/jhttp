@@ -19,6 +19,7 @@ public interface MediaParser<T> {
      *
      * @param media the media type defining the format of the content
      * @param string the string representation of the content to be deserialized
+     * @param locales the locales of this content
      * @return the deserialized content object
      * @throws MediaParserException if an error occurs during deserialization
      */

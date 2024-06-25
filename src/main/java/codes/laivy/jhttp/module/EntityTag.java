@@ -142,6 +142,7 @@ public interface EntityTag {
          * @param string The string representation of the EntityTag.
          * @return The parsed EntityTag object.
          * @throws IllegalArgumentException If the input string is not a valid EntityTag.
+         * @throws ParseException If the string param isn't a valid entity tag
          */
         public static @NotNull EntityTag deserialize(@NotNull String string) throws ParseException {
             @NotNull Pattern internal = Pattern.compile("\"(?<tag>[^\"]*)\"");

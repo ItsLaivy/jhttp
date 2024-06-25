@@ -24,8 +24,9 @@ public interface Content<T> extends Cloneable {
     /**
      * Static factory method to create a new {@link Content} instance with the specified media type and data.
      *
-     * @param media the media type associated with the content
-     * @param data  the data of the content
+     * @param media    the media type associated with the content
+     * @param data     the data of the content
+     * @param locales  the locales of this content
      * @param <T>   the type of the content data
      * @return a new {@link Content} instance
      */
