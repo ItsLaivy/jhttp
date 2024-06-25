@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 public final class JsonMediaParser implements MediaParser<JsonElement> {
@@ -32,7 +34,7 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
     // Modules
 
     @Override
-    public @NotNull JsonContent deserialize(@NotNull MediaType<JsonElement> media, @NotNull String string) throws MediaParserException {
+    public @NotNull JsonContent deserialize(@NotNull MediaType<JsonElement> media, @NotNull String string, @NotNull Locale @NotNull ... locales) throws MediaParserException {
         try {
             // Reader
             @NotNull JsonReader reader = new JsonReader(new StringReader(string));
@@ -41,7 +43,7 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
 
             // Parse json element
             @NotNull JsonElement element = JsonParser.parseString(string);
-            return new JsonContentImpl(media, element);
+            return new JsonContentImpl(media, element, locales);
         } catch (@NotNull JsonSyntaxException e) {
             throw new MediaParserException("cannot parse '" + string + "' as a valid json media", e);
         }
@@ -72,11 +74,13 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
     private static final class JsonContentImpl implements JsonContent {
 
         private final @NotNull MediaType<JsonElement> media;
-        private final @NotNull JsonElement element;
+        private final @NotNull JsonElement data;
+        private final @NotNull Locale @NotNull [] locales;
 
-        private JsonContentImpl(@NotNull MediaType<JsonElement> media, @NotNull JsonElement element) {
+        private JsonContentImpl(@NotNull MediaType<JsonElement> media, @NotNull JsonElement data, @NotNull Locale @NotNull ... locales) {
             this.media = media;
-            this.element = element;
+            this.data = data;
+            this.locales = locales;
         }
 
         // Getters
@@ -86,8 +90,12 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
             return media;
         }
         @Override
+        public @NotNull Locale @NotNull [] getLanguages() {
+            return locales;
+        }
+        @Override
         public @NotNull JsonElement getData() {
-            return element;
+            return data;
         }
 
         // Implementations
@@ -97,16 +105,16 @@ public final class JsonMediaParser implements MediaParser<JsonElement> {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
             @NotNull JsonContentImpl that = (JsonContentImpl) object;
-            return Objects.equals(media, that.media) && Objects.equals(element, that.element);
+            return Objects.equals(getMediaType(), that.getMediaType()) && Objects.equals(getData(), that.getData()) && Arrays.equals(getLanguages(), that.getLanguages());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(media, element);
+            return Objects.hash(media, data, Arrays.hashCode(getLanguages()));
         }
 
         @Override
         public @NotNull String toString() {
-            return element.toString();
+            return data.toString();
         }
 
     }

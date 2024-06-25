@@ -4,6 +4,8 @@ import codes.laivy.jhttp.media.MediaType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -27,7 +29,7 @@ public interface Content<T> extends Cloneable {
      * @param <T>   the type of the content data
      * @return a new {@link Content} instance
      */
-    static <T> @NotNull Content<T> create(@NotNull MediaType<T> media, @NotNull T data) {
+    static <T> @NotNull Content<T> create(@NotNull MediaType<T> media, @NotNull T data, @NotNull Locale @NotNull ... locales) {
         return new Content<T>() {
 
             // Object
@@ -35,6 +37,10 @@ public interface Content<T> extends Cloneable {
             @Override
             public @NotNull MediaType<T> getMediaType() {
                 return media;
+            }
+            @Override
+            public @NotNull Locale @NotNull [] getLanguages() {
+                return locales;
             }
             @Override
             public @NotNull T getData() {
@@ -48,11 +54,11 @@ public interface Content<T> extends Cloneable {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
                 @NotNull Content<?> that = (Content<?>) o;
-                return Objects.equals(getMediaType(), that.getMediaType()) && Objects.equals(getData(), that.getData());
+                return Objects.equals(getMediaType(), that.getMediaType()) && Objects.equals(getData(), that.getData()) && Arrays.equals(getLanguages(), that.getLanguages());
             }
             @Override
             public int hashCode() {
-                return Objects.hash(getMediaType(), Objects.hash(getData()));
+                return Objects.hash(getMediaType(), getData(), Arrays.hashCode(getLanguages()));
             }
             @Override
             public @NotNull String toString() {
@@ -71,6 +77,14 @@ public interface Content<T> extends Cloneable {
      * @return the media type of this content
      */
     @NotNull MediaType<T> getMediaType();
+
+    /**
+     * Returns the currently supported languages by this content, if the array is empty, the content language header
+     * will not be added into the request/response.
+     *
+     * @return the languages of this content
+     */
+    @NotNull Locale @NotNull [] getLanguages();
 
     /**
      * Returns the data of this content. The data is of the type specified by the generic parameter T.

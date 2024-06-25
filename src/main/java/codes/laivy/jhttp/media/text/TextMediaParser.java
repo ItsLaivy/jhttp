@@ -6,6 +6,8 @@ import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
+
 public final class TextMediaParser implements MediaParser<String> {
 
     // Static initializers
@@ -22,8 +24,8 @@ public final class TextMediaParser implements MediaParser<String> {
     // Getters
 
     @Override
-    public @NotNull Content<String> deserialize(@NotNull MediaType<String> media, @NotNull String string) throws MediaParserException {
-        return Content.create(media, string);
+    public @NotNull Content<String> deserialize(@NotNull MediaType<String> media, @NotNull String string, @NotNull Locale @NotNull ... locales) throws MediaParserException {
+        return Content.create(media, string, locales);
     }
     @Override
     public @NotNull String serialize(@NotNull Content<String> content) {

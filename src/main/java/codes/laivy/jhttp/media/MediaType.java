@@ -38,7 +38,7 @@ public final class MediaType<T> {
      * @param parser     the parser to handle this media type
      * @param parameters the parameters associated with this media type
      * @param <T>        the type of the content that this media type handles
-     * @return the newly created media type
+     * @return           the newly created media type
      */
     public static <T> @NotNull MediaType<T> create(
             @NotNull Type type,
