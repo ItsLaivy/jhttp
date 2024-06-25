@@ -462,7 +462,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class ClearSiteData extends HeaderTest<Wildcard<SiteData>[]> {
+    final class ClearSiteData extends HeaderTest<Wildcard<SiteData[]>> {
         private ClearSiteData() {
             super(
                     HeaderKey.CLEAR_SITE_DATA,
@@ -1432,7 +1432,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Vary extends HeaderTest<Wildcard<HeaderKey<?>>[]> {
+    final class Vary extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
         private Vary() {
             super(
                     HeaderKey.VARY,
