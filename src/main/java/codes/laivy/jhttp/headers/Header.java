@@ -81,7 +81,7 @@ public interface Header<T> {
          * The client should remember these hints for 86400 seconds (24 hours). The Content-DPR header specifies that the resource
          * being returned is optimized for a device pixel ratio of 2.0.
          */
-        CLIENT_HINT("Accept-CH", "Accept-CH-Lifetime", "Content-DPR", "DPR", "Device-Memory", "Save-Data", "Viewport-Width", "Width"),
+        CLIENT_HINT("Accept-CH", "Accept-CH-Lifetime", "Content-DPR", "DPR", "Device-Memory", "Save-Data", "Viewport-Width", "Width", "Downlink", "ECT", "RTT", "Sec-CH-UA", "Sec-CH-UA-Arch", "Sec-CH-UA-Bitness", "Sec-CH-UA-Full-Version-List", "Sec-CH-UA-Full-Version", "Sec-CH-UA-Mobile", "Sec-CH-UA-Model", "Sec-CH-UA-Platform", "Sec-CH-UA-Platform-Version", "Sec-CH-Prefers-Color-Scheme", "Sec-CH-Prefers-Reduced-Motion"),
 
         /**
          * Headers for conditional requests.
@@ -141,7 +141,7 @@ public interface Header<T> {
          * Headers for routing requests through proxies.
          * These headers contain information about proxies that have forwarded the request, including client and server addresses.
          */
-        ROOTING("Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "Via"),
+        ROOTING("Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "Via", "Host"),
 
         /**
          * Headers for redirection.

@@ -83,7 +83,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull MediaType<?> @NotNull []> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType. @NotNull Type @NotNull []> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
     public static @NotNull HeaderKey<@NotNull AcceptRange> ACCEPT_RANGES = new Provided.AcceptRangesHeaderKey();
-    public static @NotNull HeaderKey<@NotNull Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new Provided.BooleanHeaderKey("Access-Control-Allow-Credentials", Target.RESPONSE);
+    public static @NotNull HeaderKey<@NotNull Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new Provided.AcceptControlAllowCredentials();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> ACCEPT_CONTROL_ALLOW_HEADERS = new Provided.AcceptControlAllowHeadersHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull Method @NotNull []>> ACCEPT_CONTROL_ALLOW_METHODS = new Provided.AccessControlAllowMethodsHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@Nullable URIAuthority>> ACCEPT_CONTROL_ALLOW_ORIGIN = new Provided.AccessControlAllowOriginHeaderKey();
@@ -195,6 +195,9 @@ public abstract class HeaderKey<T> {
     public final @NotNull Type[] getTypes() {
         return types;
     }
+    public final boolean hasType(@NotNull Type type) {
+        return type.matches(this);
+    }
 
     @Contract(pure = true)
     public final boolean isHopByHop() {
@@ -248,23 +251,20 @@ public abstract class HeaderKey<T> {
             throw new UnsupportedOperationException();
         }
 
-        // todo: remove this
-        private static final class BooleanHeaderKey extends HeaderKey<@NotNull Boolean> {
-            private BooleanHeaderKey(@NotNull String name, @NotNull Target target) {
-                super(name, target);
+        private static final class AcceptControlAllowCredentials extends HeaderKey<@NotNull Boolean> {
+            private AcceptControlAllowCredentials() {
+                super("Access-Control-Allow-Credentials", Target.RESPONSE);
             }
 
             @Override
             public @NotNull Header<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 return create(Boolean.parseBoolean(value));
             }
-
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Boolean> header) {
                 return header.getValue().toString();
             }
         }
-
         private static final class UserAgentHeaderKey extends HeaderKey<@NotNull UserAgent> {
             private UserAgentHeaderKey() {
                 super("User-Agent", Target.REQUEST);
@@ -299,7 +299,6 @@ public abstract class HeaderKey<T> {
                         keys.add(HeaderKey.retrieve(name));
                     }
 
-                    //noinspection unchecked
                     return create(Wildcard.create(keys.toArray(new HeaderKey[0])));
                 }
             }
@@ -321,8 +320,12 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> create(@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []> value) {
-                if (!value.isWildcard() && value.getValue().length == 0) {
-                    throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                if (!value.isWildcard()) {
+                    if (value.getValue().length == 0) {
+                        throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                    } else if (Arrays.stream(value.getValue()).anyMatch(key -> !key.getTarget().isRequests())) {
+                        throw new IllegalArgumentException("the '" + getName() + "' header value only accept request headers as value");
+                    }
                 }
                 return super.create(value);
             }
@@ -364,6 +367,24 @@ public abstract class HeaderKey<T> {
                 }
 
                 return builder.toString();
+            }
+
+            @Override
+            public @NotNull Header<HeaderKey<?>[]> create(HeaderKey<?> @NotNull [] value) {
+                if (Arrays.stream(value).anyMatch(
+                        key -> !key.hasType(Type.CONTENT) ||
+                                !key.hasType(Type.ROOTING) ||
+                                !key.hasType(Type.CONTROL) ||
+                                !key.hasType(Type.CONDITIONAL) ||
+                                !key.hasType(Type.AUTHENTICATION) ||
+                                !key.getName().equalsIgnoreCase("Trailer")
+                )) {
+                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept some content, rooting, control, conditional, authentication types or itself (Trailer)");
+                } else if (value.length == 0) {
+                    throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                }
+
+                return super.create(value);
             }
         }
         private static final class TEHeaderKey extends HeaderKey<@NotNull Weight< @NotNull PseudoEncoding> @NotNull []> {
@@ -624,10 +645,13 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull Header<@NotNull HeaderKey<?> @NotNull []> create(@NotNull HeaderKey<?> @UnknownNullability @NotNull [] value) {
-                if (value.length == 0) {
+            public @NotNull Header<HeaderKey<?>[]> create(HeaderKey<?> @NotNull [] value) {
+                if (Arrays.stream(value).anyMatch(key -> !key.isClientHint())) {
+                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept client hint headers as value");
+                } else if (value.length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
                 }
+
                 return super.create(value);
             }
         }
@@ -946,7 +970,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull Header<@NotNull Wildcard<@NotNull EntityTag @NotNull []>> create(@UnknownNullability @NotNull Wildcard<@NotNull EntityTag @NotNull []> value) {
+            public @NotNull Header<@NotNull Wildcard<@NotNull EntityTag @NotNull []>> create(@NotNull Wildcard<@NotNull EntityTag @NotNull []> value) {
                 if (!value.isWildcard() && value.getValue().length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
                 }
@@ -1636,7 +1660,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull Header<@NotNull Optional<@NotNull AlternativeService @NotNull []>> create(@UnknownNullability @NotNull Optional<@NotNull AlternativeService @NotNull []> value) {
+            public @NotNull Header<@NotNull Optional<@NotNull AlternativeService @NotNull []>> create(@NotNull Optional<@NotNull AlternativeService @NotNull []> value) {
                 if (value.isPresent() && value.get().length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
                 }
@@ -1712,7 +1736,6 @@ public abstract class HeaderKey<T> {
                     headers.add(HeaderKey.retrieve(name));
                 }
 
-                //noinspection unchecked
                 return create(headers.toArray(new HeaderKey[0]));
             }
             @Override
@@ -1752,7 +1775,6 @@ public abstract class HeaderKey<T> {
                         headers.add(HeaderKey.retrieve(name));
                     }
 
-                    //noinspection unchecked
                     return create(Wildcard.create(headers.toArray(new HeaderKey[0])));
                 }
             }
@@ -1868,7 +1890,6 @@ public abstract class HeaderKey<T> {
                         headers.add(HeaderKey.retrieve(name));
                     }
 
-                    //noinspection unchecked
                     return create(Wildcard.create(headers.toArray(new HeaderKey[0])));
                 }
             }
@@ -1890,9 +1911,14 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> create(@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []> value) {
-                if (!value.isWildcard() && value.getValue().length == 0) {
-                    throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                if (!value.isWildcard()) {
+                    if (value.getValue().length == 0) {
+                        throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                    } else if (Arrays.stream(value.getValue()).anyMatch(header -> !header.getTarget().isRequests())) {
+                        throw new IllegalArgumentException("The header '" + getName() + "' value must contain only request headers");
+                    }
                 }
+
                 return super.create(value);
             }
         }
