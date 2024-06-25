@@ -6,6 +6,7 @@ import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
+import codes.laivy.jhttp.headers.Header.Type;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.module.UserAgent.Product;
@@ -161,10 +162,12 @@ public abstract class HeaderKey<T> {
 
     private final @NotNull String name;
     private final @NotNull Target target;
+    private final @NotNull Type[] types;
 
     protected HeaderKey(@NotNull String name, @NotNull Target target) {
         this.name = name;
         this.target = target;
+        this.types = Arrays.stream(Type.values()).filter(type -> type.matches(this)).toArray(Type[]::new);
 
         if (!NAME_FORMAT_REGEX.matcher(name).matches()) {
             throw new IllegalArgumentException("this header key name '" + name + "' have illegal characters");
@@ -175,9 +178,22 @@ public abstract class HeaderKey<T> {
     public final @NotNull String getName() {
         return this.name;
     }
-
+    @Contract(pure = true)
     public final @NotNull Target getTarget() {
         return this.target;
+    }
+    @Contract(pure = true)
+    public final @NotNull Type[] getTypes() {
+        return types;
+    }
+
+    @Contract(pure = true)
+    public final boolean isHopByHop() {
+        return Type.HOP_BY_HOP.matches(this);
+    }
+    @Contract(pure = true)
+    public final boolean isEndToEnd() {
+        return !isHopByHop();
     }
 
     // Modules
@@ -186,7 +202,33 @@ public abstract class HeaderKey<T> {
     public abstract @NotNull String write(@NotNull HttpVersion version, @NotNull Header<T> header);
 
     public @NotNull Header<T> create(@UnknownNullability T value) {
-        return Header.create(this, value);
+        return new Header<T>() {
+            @Override
+            public @NotNull HeaderKey<T> getKey() {
+                return HeaderKey.this;
+            }
+            @Override
+            @Contract(pure = true)
+            public @UnknownNullability T getValue() {
+                return value;
+            }
+            @Override
+            public @NotNull String toString() {
+                return getName() + "=" + getValue();
+            }
+
+            @Override
+            public boolean equals(@Nullable Object object) {
+                if (this == object) return true;
+                if (!(object instanceof BitMeasure)) return false;
+                @NotNull Header<?> that = (Header<?>) object;
+                return getName().equalsIgnoreCase(that.getName()) && Objects.equals(getValue(), that.getValue());
+            }
+            @Override
+            public int hashCode() {
+                return Objects.hash(getName(), getValue());
+            }
+        };
     }
 
     // Implementations
@@ -226,20 +268,6 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<String> header) {
                 return header.getValue();
-            }
-        }
-        private static final class IntegerHeaderKey extends HeaderKey<Integer> {
-            private IntegerHeaderKey(@NotNull String name, @NotNull Target target) {
-                super(name, target);
-            }
-
-            @Override
-            public @NotNull Header<Integer> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                return create(Integer.parseInt(value));
-            }
-            @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Integer> header) {
-                return header.getValue().toString();
             }
         }
         private static final class BooleanHeaderKey extends HeaderKey<Boolean> {
