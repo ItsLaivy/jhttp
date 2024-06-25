@@ -106,8 +106,8 @@ public class Cookie {
         // Serializers
 
         private static final @NotNull Pattern COOKIE_NAME_PATTERN = Pattern.compile("^[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2E\\x30-\\x39\\x41-\\x5A\\x5E-\\x7A\\x7C\\x7E]+$");
-        private static final @NotNull Pattern COOKIE_VALUE_PATTERN = Pattern.compile("^(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]+|\"(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]|\")*\")$");
-        private static final @NotNull Pattern COOKIE_PATTERN = Pattern.compile("^(?<key>[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2E\\x30-\\x39\\x41-\\x5A\\x5E-\\x7A\\x7C\\x7E]+)\\s*=\\s*(?<value>[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]+|\"(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]|\")*\")$");
+        private static final @NotNull Pattern COOKIE_VALUE_PATTERN = Pattern.compile("^(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]+|\"(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]|\")*\")?$");
+        private static final @NotNull Pattern COOKIE_PATTERN = Pattern.compile("^(?<key>[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2E\\x30-\\x39\\x41-\\x5A\\x5E-\\x7A\\x7C\\x7E]+)\\s*=\\s*(?<value>[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]+|\"(?:[^\\x00-\\x1F\\x22\\x2C\\x3B\\x5C\\x7F]|\")*\")?$");
 
         /**
          * Serializes a {@code Cookie} to its string representation.
@@ -168,12 +168,22 @@ public class Cookie {
         /**
          * Creates a new {@code Builder} instance for constructing a {@code Request}.
          *
-         * @param name   the name of the cookie.
+         * @param name  the name of the cookie.
          * @param value the value of the cookie.
          * @return a new {@code Builder} instance.
          */
         public static @NotNull Builder builder(@NotNull String name, @NotNull String value) {
             return new Builder(name, value);
+        }
+
+        /**
+         * Creates a new {@code Builder} instance for a cookie expiration with the name
+         *
+         * @param name the name of the cookie that will be expired.
+         * @return a new cookie builder instance with the expiration order
+         */
+        public static @NotNull Builder expire(@NotNull String name) {
+            return Request.builder(name, "").expires(OffsetDateTime.MIN);
         }
 
         /**
@@ -210,6 +220,12 @@ public class Cookie {
             this.httpOnly = httpOnly;
             this.partitioned = partitioned;
             this.secure = secure;
+
+            if ((name.startsWith("__Secure-") || name.startsWith("__Host-")) && !isSecure()) {
+                throw new IllegalArgumentException("The prefix '__Secure-' or '__Host-' at cookie request name can only be used if the secure attribute is true");
+            } else if (name.startsWith("__Host-") && (getPath() == null || !getPath().toString().equals("/"))) {
+                throw new IllegalArgumentException("The cookie request path must be '/' when the name starts with '__Host-'");
+            }
         }
 
         // Getters

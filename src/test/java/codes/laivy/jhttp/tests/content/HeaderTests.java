@@ -1333,6 +1333,7 @@ public final class HeaderTests {
 
                     new String[] {
                             "JHTTP/1.0",
+                            "JHTTP/1.0 (jhttp.org)",
                             "Mozilla-Server/3.0"
                     }, new String[] {
                             "",

@@ -2,6 +2,7 @@ package codes.laivy.jhttp.connection;
 
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
+import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
@@ -37,9 +38,10 @@ public interface HttpClient extends Closeable {
      * @return The HTTP request read from the client.
      * @throws ClosedChannelException If the channel has been closed
      * @throws IOException If an I/O error occurs while reading the request.
+     * @throws IllegalHttpVersionException If the received message cannot be parsed as a valid http version
      * @since 1.0
      */
-    @NotNull HttpRequest read() throws IOException, ClosedChannelException;
+    @NotNull HttpRequest read() throws IOException, ClosedChannelException, IllegalHttpVersionException;
 
     /**
      * Writes an HTTP response to the client.
