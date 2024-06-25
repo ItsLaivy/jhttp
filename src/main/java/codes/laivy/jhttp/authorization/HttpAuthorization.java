@@ -32,9 +32,9 @@ public interface HttpAuthorization {
     static @NotNull HttpAuthorization create(final @NotNull HeaderKey<Credentials> key, @NotNull Predicate<Credentials> predicate) {
         return (socket, request) -> {
             // Bad Request (400)
-            @NotNull HttpResponse bad = request.getVersion().getFactory().getResponse().build(HttpStatus.BAD_REQUEST, Headers.createMutable(), null);
+            @NotNull HttpResponse bad = request.getVersion().getFactory().getResponse().build(HttpStatus.BAD_REQUEST, Headers.create(), null);
             // Unauthorized (401)
-            @NotNull HttpResponse unauthorized = request.getVersion().getFactory().getResponse().build(HttpStatus.UNAUTHORIZED, Headers.createMutable(), null);
+            @NotNull HttpResponse unauthorized = request.getVersion().getFactory().getResponse().build(HttpStatus.UNAUTHORIZED, Headers.create(), null);
 
             try {
                 // Authorization

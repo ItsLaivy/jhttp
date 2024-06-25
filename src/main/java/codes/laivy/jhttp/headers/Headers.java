@@ -12,14 +12,18 @@ public interface Headers extends Iterable<Header<?>> {
 
     // Static initializers
 
-    static @NotNull MutableHeaders createMutable() {
-        return new MutableHeadersProvider();
-    }
-    static @NotNull Headers createImmutable(@NotNull Header<?> @NotNull [] headers) {
-        return new ImmutableHeadersProvider(headers);
+    static @NotNull Headers create() {
+        return new HeadersImpl();
     }
 
     // Object
+
+    boolean put(@NotNull Header<?> header);
+    boolean add(@NotNull Header<?> header);
+
+    boolean remove(@NotNull Header<?> header);
+    boolean remove(@NotNull HeaderKey<?> key);
+    boolean remove(@NotNull String name);
 
     @NotNull Header<?> @NotNull [] get(@NotNull String name);
     boolean contains(@NotNull String name);
@@ -68,17 +72,6 @@ public interface Headers extends Iterable<Header<?>> {
         }
 
         return headers.toArray(new Header[0]);
-    }
-
-    interface MutableHeaders extends Headers {
-
-        boolean put(@NotNull Header<?> header);
-        boolean add(@NotNull Header<?> header);
-
-        boolean remove(@NotNull Header<?> header);
-        boolean remove(@NotNull HeaderKey<?> key);
-        boolean remove(@NotNull String name);
-
     }
 
 }

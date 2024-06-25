@@ -3,7 +3,7 @@ package codes.laivy.jhttp.element.response;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;
-import codes.laivy.jhttp.headers.Headers.MutableHeaders;
+import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +23,7 @@ public interface HttpResponse extends HttpElement {
     static @NotNull HttpResponse create(
             @NotNull HttpStatus status,
             @NotNull HttpVersion version,
-            @NotNull MutableHeaders headers,
+            @NotNull Headers headers,
             @Nullable HttpBody body
     ) {
         return new HttpResponse() {
@@ -39,7 +39,7 @@ public interface HttpResponse extends HttpElement {
                 return version;
             }
             @Override
-            public @NotNull MutableHeaders getHeaders() {
+            public @NotNull Headers getHeaders() {
                 return headers;
             }
             @Override

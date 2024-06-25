@@ -15,7 +15,7 @@ import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers.MutableHeaders;
+import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpFactory;
@@ -77,7 +77,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull String[] content = string.split(CRLF + CRLF, 2);
 
             // Headers
-            @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
+            @NotNull codes.laivy.jhttp.headers.Headers headers = codes.laivy.jhttp.headers.Headers.create();
             if (content[0].split(CRLF, 2).length > 1) {
                 for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split(CRLF)) {
                     @NotNull Header<?> header = getHeaders().parse(headerString);
@@ -198,7 +198,7 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable HttpBody body) {
+        public @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull codes.laivy.jhttp.headers.Headers headers, @Nullable HttpBody body) {
             return HttpRequest.create(getVersion(), method, authority, uri, headers, body);
         }
 
@@ -230,7 +230,7 @@ final class HttpFactory1_1 implements HttpFactory {
             @NotNull HttpStatus status = HttpStatus.getByCode(code);
 
             // Retrieve headers
-            @NotNull MutableHeaders headers = codes.laivy.jhttp.headers.Headers.createMutable();
+            @NotNull codes.laivy.jhttp.headers.Headers headers = codes.laivy.jhttp.headers.Headers.create();
 
             if (content[0].split(CRLF, 2).length > 1) {
                 for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split(CRLF)) {
@@ -322,7 +322,7 @@ final class HttpFactory1_1 implements HttpFactory {
         }
 
         @Override
-        public @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable HttpBody body) {
+        public @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull codes.laivy.jhttp.headers.Headers headers, @Nullable HttpBody body) {
             return HttpResponse.create(status, getVersion(), headers, body);
         }
 

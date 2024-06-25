@@ -1,10 +1,9 @@
 package codes.laivy.jhttp.element;
 
+import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static codes.laivy.jhttp.headers.Headers.MutableHeaders;
 
 /**
  * The {@code HttpElement} interface represents a basic HTTP element that comprises
@@ -28,9 +27,9 @@ public interface HttpElement {
     /**
      * Retrieves the headers of this HTTP element.
      *
-     * @return the {@link MutableHeaders} containing the headers of this element.
+     * @return the {@link Headers} containing the headers of this element.
      */
-    @NotNull MutableHeaders getHeaders();
+    @NotNull Headers getHeaders();
 
     /**
      * Retrieves the body of this HTTP element. The body can be {@code null} if there is no body or if it is empty.

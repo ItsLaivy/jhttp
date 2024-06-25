@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.headers;
 
-import codes.laivy.jhttp.headers.Headers.MutableHeaders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,13 +9,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-final class MutableHeadersProvider implements MutableHeaders {
+final class HeadersImpl implements Headers {
 
     // Object
 
     private final @NotNull List<Header<?>> list = new LinkedList<>();
 
-    MutableHeadersProvider() {
+    HeadersImpl() {
     }
 
     // Natives
@@ -69,7 +68,7 @@ final class MutableHeadersProvider implements MutableHeaders {
     public boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
-        @NotNull MutableHeadersProvider headers = (MutableHeadersProvider) object;
+        @NotNull HeadersImpl headers = (HeadersImpl) object;
         return Objects.equals(list, headers.list);
     }
     @Override

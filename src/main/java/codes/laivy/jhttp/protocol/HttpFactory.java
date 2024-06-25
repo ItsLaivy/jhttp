@@ -11,6 +11,7 @@ import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
+import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +20,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
-
-import static codes.laivy.jhttp.headers.Headers.MutableHeaders;
 
 public interface HttpFactory {
 
@@ -32,7 +31,7 @@ public interface HttpFactory {
         @NotNull HttpRequest parse(@NotNull String data) throws ParseException, MissingHeaderException, HeaderFormatException, IllegalHttpVersionException, UnknownHostException, URISyntaxException, EncodingException, MediaParserException;
         @NotNull String wrap(@NotNull HttpRequest request);
 
-        @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull MutableHeaders headers, @Nullable HttpBody body);
+        @NotNull HttpRequest build(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull codes.laivy.jhttp.headers.Headers headers, @Nullable HttpBody body);
 
         boolean isCompatible(@NotNull String data);
     }
@@ -40,7 +39,7 @@ public interface HttpFactory {
         @NotNull HttpResponse parse(@NotNull String data) throws ParseException, HeaderFormatException, EncodingException, IllegalHttpVersionException, MediaParserException;
         @NotNull String wrap(@NotNull HttpResponse response);
 
-        @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull MutableHeaders headers, @Nullable HttpBody body);
+        @NotNull HttpResponse build(@NotNull HttpStatus status, @NotNull codes.laivy.jhttp.headers.Headers headers, @Nullable HttpBody body);
 
         boolean isCompatible(@NotNull String data);
     }
