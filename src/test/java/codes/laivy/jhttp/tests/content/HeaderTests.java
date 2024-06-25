@@ -15,7 +15,6 @@ import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.pseudo.PseudoString;
 import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
 import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -223,7 +222,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlAllowHeaders extends HeaderTest<Wildcard<PseudoString<HeaderKey<?>>>[]> {
+    final class AcceptControlAllowHeaders extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
         private AcceptControlAllowHeaders() {
             super(
                     HeaderKey.ACCEPT_CONTROL_ALLOW_HEADERS,
@@ -240,7 +239,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlAllowMethods extends HeaderTest<Wildcard<Method>[]> {
+    final class AcceptControlAllowMethods extends HeaderTest<Wildcard<Method[]>> {
         private AcceptControlAllowMethods() {
             super(
                     HeaderKey.ACCEPT_CONTROL_ALLOW_METHODS,
@@ -278,7 +277,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlExposeHeaders extends HeaderTest<Wildcard<PseudoString<HeaderKey<?>>>[]> {
+    final class AcceptControlExposeHeaders extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
         private AcceptControlExposeHeaders() {
             super(
                     HeaderKey.ACCEPT_CONTROL_EXPOSE_HEADERS,
@@ -312,7 +311,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlRequestHeaders extends HeaderTest<PseudoString<HeaderKey<?>>[]> {
+    final class AcceptControlRequestHeaders extends HeaderTest<HeaderKey<?>[]> {
         private AcceptControlRequestHeaders() {
             super(
                     HeaderKey.ACCEPT_CONTROL_REQUEST_HEADERS,

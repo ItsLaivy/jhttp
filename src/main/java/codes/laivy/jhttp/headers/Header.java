@@ -48,7 +48,38 @@ public interface Header<T> {
 
         /**
          * Headers for client hints.
-         * These headers allow servers to provide hints to the client to optimize resource delivery based on client capabilities and preferences.
+         * <p>
+         * Client hints are HTTP headers used by servers to gather information about the client's device capabilities and preferences.
+         * These headers enable servers to optimize resource delivery based on the specific requirements and limitations of the client's device,
+         * resulting in improved performance and user experience.
+         * <p>
+         * By using client hints, servers can dynamically adapt the content they send to users, providing more relevant and efficient responses.
+         * This can help in reducing bandwidth usage, improving load times, and ensuring that the content is appropriately tailored to the user's context.
+         * <p>
+         * The following headers are classified as client hints:
+         * <ul>
+         *     <li><b>Accept-CH</b>: Instructs the client to send specific client hint headers in subsequent requests.</li>
+         *     <li><b>Accept-CH-Lifetime</b>: Indicates the duration (in seconds) that the client should remember and send the specified client hints.</li>
+         *     <li><b>Content-DPR</b>: Specifies the device pixel ratio of the client device that should be used when fetching resources.</li>
+         *     <li><b>DPR</b>: Device Pixel Ratio, indicates the pixel density of the client device.</li>
+         *     <li><b>Device-Memory</b>: Indicates the amount of device memory the client has, in gigabytes.</li>
+         *     <li><b>Save-Data</b>: A boolean value that indicates whether the user has enabled a reduced data usage mode in their browser.</li>
+         *     <li><b>Viewport-Width</b>: Indicates the width of the client's viewport in CSS pixels.</li>
+         *     <li><b>Width</b>: Specifies the desired width of the resource being requested, in physical pixels.</li>
+         * </ul>
+         * <p>
+         * Example usage of client hints:
+         * <pre>
+         * {@code
+         * HTTP/1.1 200 OK
+         * Accept-CH: DPR, Width, Viewport-Width
+         * Accept-CH-Lifetime: 86400
+         * Content-DPR: 2.0
+         * }
+         * </pre>
+         * In this example, the server instructs the client to send the DPR, Width, and Viewport-Width headers in subsequent requests.
+         * The client should remember these hints for 86400 seconds (24 hours). The Content-DPR header specifies that the resource
+         * being returned is optimized for a device pixel ratio of 2.0.
          */
         CLIENT_HINT("Accept-CH", "Accept-CH-Lifetime", "Content-DPR", "DPR", "Device-Memory", "Save-Data", "Viewport-Width", "Width"),
 
@@ -183,21 +214,89 @@ public interface Header<T> {
          * ensuring the integrity and efficiency of HTTP communication across distributed networks.
          */
         HOP_BY_HOP("Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization", "TE", "Trailers", "Transfer-Encoding", "Upgrade"),
+
+        /**
+         * Enum representing headers in HTTP that are forbidden to be set in certain contexts.
+         * <p>
+         * Forbidden header names are restricted from being set in HTTP requests made by JavaScript
+         * using the XMLHttpRequest or fetch() API in the browser to prevent security vulnerabilities
+         * such as Cross-Site Scripting (XSS).
+         * <p>
+         * The headers listed in this enum are commonly recognized as forbidden header names according to
+         * browser security policies. Attempting to set these headers using JavaScript may result in the
+         * browser ignoring or replacing the provided values to ensure user security and the integrity
+         * of the HTTP protocol.
+         * <p>
+         * These headers are restricted to prevent manipulation of critical HTTP request attributes
+         * that could otherwise be exploited to perform attacks or circumvent security measures.
+         * <p>
+         * The following headers are classified as forbidden names:
+         * <ul>
+         *     <li><b>Accept-Charset</b>: Specifies the character encodings that the client is willing to accept.</li>
+         *     <li><b>Accept-Encoding</b>: Specifies the content encodings that the client is willing to accept.</li>
+         *     <li><b>Access-Control-Request-Headers</b>: Indicates which HTTP headers can be used when making the actual request.</li>
+         *     <li><b>Access-Control-Request-Method</b>: Indicates which HTTP method can be used when making the actual request.</li>
+         *     <li><b>Connection</b>: Controls whether the network connection stays open after the current transaction finishes.</li>
+         *     <li><b>Content-Length</b>: Specifies the size of the request or response body in bytes.</li>
+         *     <li><b>Cookie</b>: Contains stored HTTP cookies previously sent by the server with Set-Cookie headers.</li>
+         *     <li><b>Cookie2</b>: Similar to Cookie but used in an obsolete version of the HTTP protocol.</li>
+         *     <li><b>Date</b>: Contains the date and time at which the message was sent.</li>
+         *     <li><b>DNT</b>: Do Not Track, a request for the server to disable tracking of the user.</li>
+         *     <li><b>Expect</b>: Indicates that particular server behaviors are required by the client.</li>
+         *     <li><b>Host</b>: Specifies the domain name of the server and (optionally) the TCP port number on which the server is listening.</li>
+         *     <li><b>Keep-Alive</b>: Controls the persistence of the network connection.</li>
+         *     <li><b>Origin</b>: Indicates the origin of the cross-origin request.</li>
+         *     <li><b>Referer</b>: Contains the address of the previous web page from which a link to the current request URL was followed.</li>
+         *     <li><b>TE</b>: Indicates the transfer encodings the user agent is willing to accept.</li>
+         *     <li><b>Trailer</b>: Indicates that the message body is terminated by a set of header fields.</li>
+         *     <li><b>Transfer-Encoding</b>: Specifies the form of encoding used to safely transfer the payload body to the user.</li>
+         *     <li><b>Upgrade</b>: Used to switch protocols.</li>
+         *     <li><b>Via</b>: Added by proxies, both forward and reverse proxies, and can appear in the request headers and the response headers.</li>
+         * </ul>
+         * Additionally, headers that start with "Proxy-" or "Pec-" (case-insensitive) are considered forbidden:
+         * <ul>
+         *     <li><b>Proxy-</b>: Headers starting with "Proxy-" are reserved for proxy-related operations.</li>
+         *     <li><b>Sec-</b>: Headers starting with "Sec-" are reserved for security-related operations.</li>
+         * </ul>
+         */
+        FORBIDDEN_NAME("Accept-Charset", "Accept-Encoding", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Connection", "Content-Length", "Cookie", "Cookie2", "Date", "DNT", "Expect", "Host", "Keep-Alive", "Origin", "Referer", "TE", "Trailer", "Transfer-Encoding", "Upgrade", "Via") {
+            @Override
+            public boolean matches(@NotNull HeaderKey<?> key) {
+                return super.matches(key) || key.getName().toLowerCase().startsWith("proxy-") || key.getName().toLowerCase().startsWith("sec-");
+            }
+        },
+
+        /**
+         * Enum representing CORS-satellited request headers, also known as "simple headers".
+         * These headers can be sent in a CORS request without triggering a preflight OPTIONS request.
+         * <p>
+         * CORS (Cross-Origin Resource Sharing) is a mechanism that allows web applications to request resources
+         * from a different domain than the one that served the web page.
+         * This is commonly used for APIs.
+         * <p>
+         * Simple headers are considered safe because their values have limited impact on the request's behavior
+         * and do not pose significant security risks.
+         * They are restricted to a specific set of headers that are
+         * commonly used and deemed secure for inclusion in CORS requests.
+         * <p>
+         * The following headers are classified as simple headers:
+         *
+         * <ul>
+         *     <li><b>Accept</b>: Indicates the media types that the client can understand.</li>
+         *     <li><b>Accept-Language</b>: Indicates the natural languages that the client prefers.</li>
+         *     <li><b>Content-Language</b>: Describes the natural language(s) of the intended audience for the enclosed content.</li>
+         *     <li><b>Content-Type</b>: Indicates the media type of the resource or the data being sent in the request.</li>
+         *     <li><b>Range</b>: Requests only part of an entity. Used for partial downloads and presumable downloads.</li>
+         * </ul>
+         */
+        SIMPLE_HEADER("Accept", "Accept-Language", "Content-Language", "Content-Type", "Range"),
+
         ;
 
         private final @NotNull String[] headers;
 
         Type(@NotNull String @NotNull ... headers) {
             this.headers = headers;
-        }
-
-        /**
-         * Retrieves the array of header keys for the current type.
-         *
-         * @return an array of HeaderKey objects representing the headers for the current type
-         */
-        public @NotNull HeaderKey<?> @NotNull [] getHeaders() {
-            return Arrays.stream(headers).map(HeaderKey::retrieve).toArray(HeaderKey[]::new);
         }
 
         /**
