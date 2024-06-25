@@ -112,7 +112,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptEncoding extends HeaderTest<Weight<PseudoEncoding>[]> {
+    final class AcceptEncoding extends HeaderTest<Wildcard<Weight<PseudoEncoding>[]>> {
         private AcceptEncoding() {
             super(
                     HeaderKey.ACCEPT_ENCODING,

@@ -83,6 +83,10 @@ public interface HttpRequest extends HttpElement {
 
     // Object
 
+    /**
+     * Retrieves the method of the request
+     * @return The method of the request
+     */
     @NotNull Method getMethod();
 
     /**

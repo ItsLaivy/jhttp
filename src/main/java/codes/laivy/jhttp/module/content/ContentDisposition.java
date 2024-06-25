@@ -55,6 +55,9 @@ public final class ContentDisposition {
         }
     }
 
+    public static @NotNull ContentDisposition create(@NotNull Type type, @Nullable String name) {
+        return create(type, name, Property.builder().build());
+    }
     public static @NotNull ContentDisposition create(@NotNull Type type, @Nullable String name, @Nullable Property property) {
         return new ContentDisposition(type, name, property);
     }

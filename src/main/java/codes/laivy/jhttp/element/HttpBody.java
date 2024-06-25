@@ -28,7 +28,6 @@ public interface HttpBody extends CharSequence {
     ) {
         return create(content, content.getMediaType().getParser().serialize(content));
     }
-
     static @NotNull HttpBody create(
             final @Nullable Content<?> content,
             final @NotNull String decoded

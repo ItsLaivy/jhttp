@@ -68,7 +68,7 @@ public abstract class HeaderKey<T> {
     @Deprecated
     public static @NotNull HeaderKey<Duration> ACCEPT_CH_LIFETIME = new Provided.AcceptCHLifetimeHeaderKey();
     public static @NotNull HeaderKey<Weight<PseudoCharset>[]> ACCEPT_CHARSET = new Provided.AcceptCharsetHeaderKey();
-    public static @NotNull HeaderKey<Weight<PseudoEncoding>[]> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
+    public static @NotNull HeaderKey<Wildcard<Weight<PseudoEncoding>[]>> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<Wildcard<Weight<Locale>[]>> ACCEPT_LANGUAGE = new Provided.AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<MediaType<?>[]> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType.Type[]> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
@@ -1818,13 +1818,17 @@ public abstract class HeaderKey<T> {
                 }
             }
         }
-        private static final class AcceptEncodingHeaderKey extends HeaderKey<Weight<PseudoEncoding>[]> {
+        private static final class AcceptEncodingHeaderKey extends HeaderKey<Wildcard<Weight<PseudoEncoding>[]>> {
             private AcceptEncodingHeaderKey() {
                 super("Accept-Encoding", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Weight<PseudoEncoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<Wildcard<Weight<PseudoEncoding>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                if (value.trim().equals("*")) {
+                    return create(Wildcard.create());
+                }
+
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
@@ -1839,18 +1843,23 @@ public abstract class HeaderKey<T> {
                 }
 
                 //noinspection unchecked
-                return create(pairs.toArray(new Weight[0]));
+                return create(Wildcard.create(pairs.toArray(new Weight[0])));
             }
+
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
-                @NotNull StringBuilder builder = new StringBuilder();
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Weight<PseudoEncoding>[]>> header) {
+                if (header.getValue().isWildcard()) {
+                    return "*";
+                } else {
+                    @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
-                    if (builder.length() > 0) builder.append(", ");
-                    builder.append(pseudo);
+                    for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue().getValue()) {
+                        if (builder.length() > 0) builder.append(", ");
+                        builder.append(pseudo);
+                    }
+
+                    return builder.toString();
                 }
-
-                return builder.toString();
             }
         }
         private static final class AcceptCharsetHeaderKey extends HeaderKey<Weight<PseudoCharset>[]> {

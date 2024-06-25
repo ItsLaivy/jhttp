@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -183,7 +184,7 @@ public class Cookie {
          * @return a new cookie builder instance with the expiration order
          */
         public static @NotNull Builder expire(@NotNull String name) {
-            return Request.builder(name, "").expires(OffsetDateTime.MIN);
+            return Request.builder(name, "").expires(Instant.MIN);
         }
 
         /**
@@ -200,7 +201,7 @@ public class Cookie {
         // Object
 
         private final @Nullable Domain<Name> domain;
-        private final @Nullable OffsetDateTime expires;
+        private final @Nullable Instant expires;
         private final @Nullable Duration maxAge;
         private final @Nullable URI path;
         private final @Nullable SameSite sameSite;
@@ -209,7 +210,7 @@ public class Cookie {
         private final boolean partitioned;
         private final boolean secure;
 
-        private Request(@NotNull String name, @NotNull String value, @Nullable Domain<Name> domain, @Nullable OffsetDateTime expires, @Nullable Duration maxAge, @Nullable URI path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
+        private Request(@NotNull String name, @NotNull String value, @Nullable Domain<Name> domain, @Nullable Instant expires, @Nullable Duration maxAge, @Nullable URI path, @Nullable SameSite sameSite, boolean httpOnly, boolean partitioned, boolean secure) {
             super(name, value);
 
             this.domain = domain;
@@ -244,7 +245,7 @@ public class Cookie {
          *
          * @return the expiration date of the cookie, or {@code null} if not set
          */
-        public @Nullable OffsetDateTime getExpires() {
+        public @Nullable Instant getExpires() {
             return expires;
         }
 
@@ -374,7 +375,7 @@ public class Cookie {
             private final @NotNull String value;
 
             private @Nullable Domain<Name> domain;
-            private @Nullable OffsetDateTime expires;
+            private @Nullable Instant expires;
             private @Nullable Duration maxAge;
             private @Nullable URI path;
             private @Nullable SameSite sameSite;
@@ -415,7 +416,7 @@ public class Cookie {
              * @return this builder
              */
             @Contract("_->this")
-            public @NotNull Builder expires(@NotNull OffsetDateTime expires) {
+            public @NotNull Builder expires(@NotNull Instant expires) {
                 this.expires = expires;
                 return this;
             }
@@ -530,7 +531,7 @@ public class Cookie {
 
                     builder.append("Domain=").append(domain).append("; ");
                 } if (request.getExpires() != null) {
-                    builder.append("Expires=").append(DateUtils.RFC822.convert(request.getExpires())).append("; ");
+                    builder.append("Expires=").append(DateUtils.RFC822.convert(request.getExpires().atOffset(ZoneOffset.UTC))).append("; ");
                 } if (request.getMaxAge() != null) {
                     builder.append("Max-Age=").append(request.getMaxAge().getSeconds()).append("; ");
                 } if (request.getPath() != null) {
@@ -562,7 +563,7 @@ public class Cookie {
                 @NotNull String value;
 
                 @Nullable Domain<Name> domain = null;
-                @Nullable OffsetDateTime expires = null;
+                @Nullable Instant expires = null;
                 @Nullable Duration maxAge = null;
                 @Nullable URI path = null;
                 @Nullable SameSite sameSite = null;
@@ -602,7 +603,7 @@ public class Cookie {
                         }
 
                         if (key.equalsIgnoreCase("expires")) {
-                            expires = DateUtils.RFC822.convert(data);
+                            expires = DateUtils.RFC822.convert(data).toInstant();
                         } else if (key.equalsIgnoreCase("max-age")) {
                             maxAge = Duration.ofSeconds(Long.parseLong(data));
                         } else if (key.equalsIgnoreCase("path")) {

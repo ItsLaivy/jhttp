@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.element;
 
+@Deprecated
 public enum Target {
 
     REQUEST(true, false),
