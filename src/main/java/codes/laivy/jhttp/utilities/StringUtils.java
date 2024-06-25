@@ -1,10 +1,10 @@
 package codes.laivy.jhttp.utilities;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.net.URI;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -118,6 +118,27 @@ public final class StringUtils {
         } catch (@NotNull NumberFormatException ignore) {
             return false;
         }
+    }
+
+    public static @NotNull Map<String, String> readQueryParams(@NotNull URI uri) {
+        @NotNull Map<String, String> map = new LinkedHashMap<>();
+        @Nullable String query = uri.getQuery();
+
+        if (query == null || StringUtils.isBlank(query)) {
+            return map;
+        }
+
+        for (@NotNull String parameter : query.split("&")) {
+            @NotNull String[] split = parameter.split("=", 2);
+
+            if (split.length == 2) {
+                map.put(split[0], split[1]);
+            } else if (split.length == 1) {
+                map.put(split[0], "");
+            }
+        }
+
+        return map;
     }
 
 }
