@@ -42,8 +42,8 @@ public interface Forwarded {
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
                 if (object == null || getClass() != object.getClass()) return false;
-                @NotNull Forwarded forwarded = (Forwarded) object;
-                return Objects.equals(getBy(), forwarded.getBy()) && Objects.equals(getFor(), forwarded.getFor()) && Objects.equals(getHost(), forwarded.getHost()) && getProtocol() == forwarded.getProtocol();
+                @NotNull Forwarded that = (Forwarded) object;
+                return Objects.equals(getBy(), that.getBy()) && Objects.equals(getFor(), that.getFor()) && Objects.equals(getHost(), that.getHost()) && getProtocol() == that.getProtocol();
             }
             @Override
             public int hashCode() {
@@ -79,9 +79,9 @@ public interface Forwarded {
                 @Override
                 public boolean equals(@Nullable Object object) {
                     if (this == object) return true;
-                    if (!(object instanceof Forwarded)) return false;
-                    @NotNull Forwarded that = (Forwarded) object;
-                    return Objects.equals(that.toString(), string);
+                    if (!(object instanceof Target)) return false;
+                    @NotNull Target that = (Target) object;
+                    return toString().equalsIgnoreCase(that.toString());
                 }
                 @Override
                 public int hashCode() {
@@ -98,9 +98,9 @@ public interface Forwarded {
                 @Override
                 public boolean equals(@Nullable Object object) {
                     if (this == object) return true;
-                    if (!(object instanceof Forwarded)) return false;
-                    @NotNull Forwarded that = (Forwarded) object;
-                    return Objects.equals(that.toString(), toString());
+                    if (!(object instanceof Target)) return false;
+                    @NotNull Target that = (Target) object;
+                    return toString().equalsIgnoreCase(that.toString());
                 }
                 @Override
                 public int hashCode() {
@@ -119,9 +119,9 @@ public interface Forwarded {
                 @Override
                 public boolean equals(@Nullable Object object) {
                     if (this == object) return true;
-                    if (!(object instanceof Forwarded)) return false;
-                    @NotNull Forwarded that = (Forwarded) object;
-                    return Objects.equals(that.toString(), toString());
+                    if (!(object instanceof Target)) return false;
+                    @NotNull Target that = (Target) object;
+                    return toString().equalsIgnoreCase(that.toString());
                 }
                 @Override
                 public int hashCode() {
@@ -140,9 +140,9 @@ public interface Forwarded {
                 @Override
                 public boolean equals(@Nullable Object object) {
                     if (this == object) return true;
-                    if (!(object instanceof Forwarded)) return false;
-                    @NotNull Forwarded that = (Forwarded) object;
-                    return Objects.equals(that.toString(), toString());
+                    if (!(object instanceof Target)) return false;
+                    @NotNull Target that = (Target) object;
+                    return toString().equalsIgnoreCase(that.toString());
                 }
                 @Override
                 public int hashCode() {
@@ -161,9 +161,9 @@ public interface Forwarded {
                 @Override
                 public boolean equals(@Nullable Object object) {
                     if (this == object) return true;
-                    if (!(object instanceof Forwarded)) return false;
-                    @NotNull Forwarded that = (Forwarded) object;
-                    return Objects.equals(that.toString(), toString());
+                    if (!(object instanceof Target)) return false;
+                    @NotNull Target that = (Target) object;
+                    return toString().equalsIgnoreCase(that.toString());
                 }
                 @Override
                 public int hashCode() {
@@ -242,11 +242,11 @@ public interface Forwarded {
                     if (value != null) {
                         value = (value.startsWith("\"") && value.endsWith("\"")) ? value.substring(1, value.length() - 1) : value;
 
-                        if (value.equals("unknown")) {
+                        if (value.equalsIgnoreCase("unknown")) {
                             by = Target.unknown();
-                        } else if (value.equals("hidden")) {
+                        } else if (value.equalsIgnoreCase("hidden")) {
                             by = Target.hidden();
-                        } else if (value.equals("secret")) {
+                        } else if (value.equalsIgnoreCase("secret")) {
                             by = Target.secret();
                         } else if (value.startsWith("_")) {
                             by = Target.obfuscated(value);
@@ -265,11 +265,11 @@ public interface Forwarded {
                     if (value != null) {
                         value = (value.startsWith("\"") && value.endsWith("\"")) ? value.substring(1, value.length() - 1) : value;
 
-                        if (value.equals("unknown")) {
+                        if (value.equalsIgnoreCase("unknown")) {
                             for_ = Target.unknown();
-                        } else if (value.equals("hidden")) {
+                        } else if (value.equalsIgnoreCase("hidden")) {
                             by = Target.hidden();
-                        } else if (value.equals("secret")) {
+                        } else if (value.equalsIgnoreCase("secret")) {
                             by = Target.secret();
                         } else if (value.startsWith("_")) {
                             for_ = Target.obfuscated(value);

@@ -96,7 +96,7 @@ public final class AlternativeService {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AlternativeService that = (AlternativeService) o;
-        return Objects.equals(age, that.age) && persistent == that.persistent && Arrays.equals(version, that.version) && Objects.equals(authority, that.authority);
+        return Objects.equals(getAge() != null ? getAge().getSeconds() : null, that.getAge() != null ? that.getAge().getSeconds() : null) && isPersistent() == that.isPersistent() && Arrays.equals(getVersion(), that.getVersion()) && Objects.equals(getAuthority(), that.getAuthority());
     }
     @Override
     public int hashCode() {

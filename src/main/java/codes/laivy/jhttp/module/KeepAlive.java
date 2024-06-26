@@ -36,8 +36,8 @@ public interface KeepAlive {
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
                 if (object == null || getClass() != object.getClass()) return false;
-                @NotNull KeepAlive keepAlive = (KeepAlive) object;
-                return Objects.equals(getTimeout(), keepAlive.getTimeout()) && Objects.equals(getMaximum(), keepAlive.getMaximum());
+                @NotNull KeepAlive that = (KeepAlive) object;
+                return Objects.equals(getTimeout(), that.getTimeout()) && Objects.equals(getMaximum(), that.getMaximum());
             }
             @Override
             public int hashCode() {
@@ -68,7 +68,13 @@ public interface KeepAlive {
         private static final @NotNull Pattern KEEP_ALIVE_PATTERN = Pattern.compile("^timeout\\s*=\\s*(?<timeout>\\d+)(?:\\s*,\\s*max\\s*=\\s*(?<max>\\d+))?$");
 
         public static @NotNull String serialize(@NotNull KeepAlive keepAlive) {
-            return "timeout=" + keepAlive.getTimeout().getSeconds() + ", max=" + (keepAlive.getMaximum() != null ? keepAlive.getMaximum().getSeconds() : 0L);
+            @NotNull StringBuilder builder = new StringBuilder("timeout=" + keepAlive.getTimeout().getSeconds());
+
+            if (keepAlive.getMaximum() != null) {
+                builder.append(", max=").append(keepAlive.getMaximum().getSeconds());
+            }
+
+            return builder.toString();
         }
         public static @NotNull KeepAlive deserialize(@NotNull String string) throws ParseException {
             @NotNull Matcher matcher = KEEP_ALIVE_PATTERN.matcher(string);

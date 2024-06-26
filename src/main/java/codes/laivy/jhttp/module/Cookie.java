@@ -184,7 +184,7 @@ public class Cookie {
          * @return a new cookie builder instance with the expiration order
          */
         public static @NotNull Builder expire(@NotNull String name) {
-            return Request.builder(name, "").expires(Instant.MIN);
+            return Request.builder(name, "").expires(Instant.ofEpochMilli(0));
         }
 
         /**

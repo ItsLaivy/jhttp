@@ -47,7 +47,7 @@ public interface Weight<T> {
                 if (this == object) return true;
                 if (!(object instanceof Weight<?>)) return false;
                 Weight<?> that = (Weight<?>) object;
-                return Objects.equals(weight, that.getWeight()) && value.equals(that.getValue());
+                return Objects.equals(getWeight(), that.getWeight()) && Objects.equals(getValue(), that.getValue());
             }
             @Override
             public int hashCode() {

@@ -81,7 +81,7 @@ public interface Wildcard<T> {
                 if (this == object) return true;
                 if (!(object instanceof Wildcard<?>)) return false;
                 Wildcard<?> that = (Wildcard<?>) object;
-                return !that.isWildcard() && that.getValue() == getValue();
+                return !that.isWildcard() && Objects.equals(getValue(), that.getValue());
             }
             @Override
             public int hashCode() {

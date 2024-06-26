@@ -65,7 +65,7 @@ public interface NetworkErrorLogging {
             public boolean equals(@Nullable Object object) {
                 if (this == object) return true;
                 if (!(object instanceof NetworkErrorLogging)) return false;
-                NetworkErrorLogging that = (NetworkErrorLogging) object;
+                @NotNull NetworkErrorLogging that = (NetworkErrorLogging) object;
                 return Objects.equals(getGroup(), that.getGroup()) && Objects.equals(getAge(), that.getAge()) && Arrays.equals(getRequests(), that.getRequests()) && Arrays.equals(getResponses(), that.getResponses()) && hasSubdomains() == that.hasSubdomains() && Objects.equals(getSuccessFraction(), that.getSuccessFraction()) && Objects.equals(getFailureFraction(), that.getFailureFraction());
             }
             @Override
@@ -100,7 +100,7 @@ public interface NetworkErrorLogging {
             @NotNull JsonObject object = new JsonObject();
 
             object.addProperty("report_to", nel.getGroup());
-            object.addProperty("max_age", nel.getAge().toMillis());
+            object.addProperty("max_age", nel.getAge().getSeconds());
 
             if (nel.hasSubdomains()) {
                 object.addProperty("include_subdomains", nel.hasSubdomains());

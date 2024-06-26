@@ -107,8 +107,8 @@ public interface Host {
         public boolean equals(Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
-            Name name1 = (Name) object;
-            return Objects.equals(name, name1.name) && Objects.equals(port, name1.port);
+            Name that = (Name) object;
+            return Objects.equals(name, that.name) && Objects.equals(port, that.port);
         }
         @Override
         public int hashCode() {
@@ -176,8 +176,8 @@ public interface Host {
         public boolean equals(Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
-            IPv4 iPv4 = (IPv4) object;
-            return Objects.equals(address, iPv4.address) && Objects.equals(port, iPv4.port);
+            IPv4 that = (IPv4) object;
+            return Objects.equals(address, that.address) && Objects.equals(port, that.port);
         }
         @Override
         public int hashCode() {

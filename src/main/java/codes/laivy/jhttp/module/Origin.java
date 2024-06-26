@@ -32,8 +32,8 @@ public interface Origin extends ContentSecurityPolicy.Source {
             public boolean equals(@Nullable Object o) {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
-                @NotNull Origin origin = (Origin) o;
-                return Objects.equals(domain, origin.getDomain()) && Objects.equals(uri, origin.getURI());
+                @NotNull Origin that = (Origin) o;
+                return Objects.equals(domain, that.getDomain()) && Objects.equals(uri, that.getURI());
             }
             @Override
             public int hashCode() {
@@ -66,7 +66,7 @@ public interface Origin extends ContentSecurityPolicy.Source {
             if (origin.getDomain() != null) {
                 @NotNull StringBuilder builder = new StringBuilder(origin.getDomain().toString());
 
-                if (!origin.getURI().toString().startsWith("/")) {
+                if (!origin.getURI().toString().isEmpty() && !origin.getURI().toString().startsWith("/")) {
                     builder.append("/");
                 }
 

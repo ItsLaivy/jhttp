@@ -6,10 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public interface UserAgent {
 
@@ -59,43 +60,18 @@ public interface UserAgent {
         // Static initializers
 
         public static @NotNull Product parse(@NotNull String string) throws ParseException {
-            @Nullable String name = null;
-            @NotNull String[] comments = new String[0];
+            @NotNull Matcher matcher = Pattern.compile("^(?<name>[^/]+)/?(?<version>[^ ]*)? *(?<comments>\\(.*?\\))*").matcher(string);
 
-            for (@NotNull String part : string.split("\\s*(?![^()]*\\))")) {
-                if (StringUtils.isBlank(part)) {
-                    continue;
-                }
+            if (matcher.find()) {
+                @NotNull String name = matcher.group("name");
+                @Nullable String version = matcher.group("version") != null && !matcher.group("version").isEmpty() ? matcher.group("version") : null;
+                @NotNull String @NotNull [] comments = matcher.group("comments") != null ? Arrays.stream(matcher.group("comments").split("\\s+(?![^(]*\\))")).map(str -> str.substring(1, str.length() - 1)).toArray(String[]::new) : new String[0];
 
-                if (part.startsWith("(") && part.endsWith(")")) { // Comment
-                    if (name == null) {
-                        throw new ParseException("comments without product name", 0);
-                    }
-
-                    // Remove parenthesis
-                    part = part.substring(1, part.length() - 1);
-
-                    // Add comment to array
-                    comments = Arrays.copyOfRange(comments, 0, comments.length + 1);
-                    comments[comments.length - 1] = part;
-                } else { // Product
-                    name = part;
-                }
+                // Finish
+                return new Product(name, version, comments);
+            } else {
+                throw new ParseException("cannot parse '" + string + "' as a valid user agent product", 0);
             }
-
-            // Checkers
-            if (name == null) {
-                throw new ParseException("illegal product string", 0);
-            }
-
-            // Name and version
-            @NotNull String[] split = name.split("/", 2);
-
-            name = split[0];
-            @Nullable String version = split.length == 2 ? split[1] : null;
-
-            // Finish
-            return new Product(name, version, comments);
         }
 
         public static @NotNull Product create(
@@ -194,52 +170,15 @@ public interface UserAgent {
             return builder.toString();
         }
 
-        public static @NotNull UserAgent deserialize(@NotNull String string) throws IllegalStateException {
-            @NotNull Map<String, String[]> map = new LinkedHashMap<>();
+        public static @NotNull UserAgent deserialize(@NotNull String string) throws IllegalStateException, ParseException {
+            @NotNull List<Product> products = new LinkedList<>();
 
-            for (@NotNull String part : string.split("\\s+(?![^(]*\\))")) {
-                if (StringUtils.isBlank(part)) {
-                    continue;
-                }
-
-                if (part.startsWith("(") && part.endsWith(")")) { // Comment
-                    // Product and comment
-                    @NotNull String product = map.keySet().stream().findFirst().orElseThrow(() -> new IllegalStateException("comment without products"));
-                    @NotNull String[] comments = map.get(product);
-
-                    // Remove parenthesis
-                    part = part.substring(1, part.length() - 1);
-
-                    // Add comment to array
-                    comments = Arrays.copyOfRange(comments, 0, comments.length + 1);
-                    comments[comments.length - 1] = part;
-                    map.put(product, comments);
-                } else { // Product
-                    map.put(part, new String[0]);
-                }
-            }
-
-            // Map into a product array
-            @NotNull Product[] products = new Product[map.size()];
-
-            int row = 0;
-            for (@NotNull Entry<String, String[]> entry : map.entrySet()) {
-                // Name and version
-                @NotNull String[] split = entry.getKey().split("/", 2);
-
-                @NotNull String name = split[0];
-                @Nullable String version = split.length == 2 ? split[1] : null;
-
-                // Comments
-                @NotNull String[] comments = entry.getValue();
-
-                // Instance
-                products[row] = Product.create(name, version, comments);
-                row++;
+            for (@NotNull String part : string.split("\\s(?!\\([^)]*\\)|[^()]*\\))")) {
+                products.add(Product.parse(part));
             }
 
             // Finish
-            return create(products);
+            return create(products.toArray(new Product[0]));
         }
 
         public static boolean validate(@NotNull String string) {

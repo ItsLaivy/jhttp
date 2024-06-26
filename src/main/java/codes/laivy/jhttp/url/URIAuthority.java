@@ -125,7 +125,7 @@ public final class URIAuthority {
 
         // User info
         if (getUserInfo() != null) {
-            builder.append(getUserInfo()).append("@");
+            builder.append(getUserInfo().getUsername()).append(":").append(getUserInfo().getPassword()).append("@");
         }
 
         // Host

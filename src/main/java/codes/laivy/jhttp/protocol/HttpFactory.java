@@ -11,7 +11,6 @@ import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
 import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

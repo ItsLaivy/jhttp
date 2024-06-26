@@ -37,7 +37,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static codes.laivy.jhttp.module.CrossOrigin.*;
+import static codes.laivy.jhttp.module.CrossOrigin.OpenerPolicy;
+import static codes.laivy.jhttp.module.CrossOrigin.ResourcePolicy;
 
 @SuppressWarnings("DeprecatedIsStillUsed")
 public abstract class HeaderKey<T> {
@@ -132,7 +133,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull HttpStatus> EXPECT = new Provided.ExpectHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<@NotNull ExpectCertificate> EXPECT_CT = new Provided.ExpectCTHeaderKey();
-    public static @NotNull HeaderKey<@NotNull OffsetDateTime> EXPIRES = new Provided.ExpiresHeaderKey();
+    public static @NotNull HeaderKey<@Nullable OffsetDateTime> EXPIRES = new Provided.ExpiresHeaderKey();
     public static @NotNull HeaderKey<@NotNull Forwarded> FORWARDED = new Provided.ForwardedHeaderKey();
     public static @NotNull HeaderKey<@NotNull Email> FROM = new Provided.FromHeaderKey();
     public static @NotNull HeaderKey<@NotNull Host> HOST = new Provided.HostHeaderKey();
@@ -496,6 +497,10 @@ public abstract class HeaderKey<T> {
                 @NotNull String[] split = value.split(" ", 2);
                 @NotNull Credentials credentials;
 
+                if (split.length != 2) {
+                    throw new HeaderFormatException("credentials missing values");
+                }
+
                 try {
                     if (split[0].equalsIgnoreCase("Bearer")) {
                         credentials = new Credentials.Bearer(split[1].toLowerCase());
@@ -505,7 +510,7 @@ public abstract class HeaderKey<T> {
                         credentials = Credentials.Unknown.create(value.toCharArray());
                     }
                 } catch (@NotNull ParseException e) {
-                    throw new HeaderFormatException("cannot parse credentials '" + value + "'", e);
+                    throw new HeaderFormatException("cannot parse '" + split[0] + "' credential '" + value + "'");
                 }
 
                 return create(credentials);
@@ -1094,7 +1099,7 @@ public abstract class HeaderKey<T> {
                 return Forwarded.Parser.serialize(header.getValue());
             }
         }
-        private static final class ExpiresHeaderKey extends HeaderKey<@NotNull OffsetDateTime> {
+        private static final class ExpiresHeaderKey extends HeaderKey<@Nullable OffsetDateTime> {
             private ExpiresHeaderKey() {
                 super("Expires", Target.RESPONSE);
             }
@@ -1102,14 +1107,20 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 if (value.trim().equals("0")) {
-                    return create(OffsetDateTime.MIN);
+                    return create(null);
                 } else {
-                    return create(DateUtils.RFC822.convert(value));
+                    @NotNull OffsetDateTime date = DateUtils.RFC822.convert(value);
+
+                    if (date.isBefore(OffsetDateTime.now())) {
+                        return create(null);
+                    }
+
+                    return create(date);
                 }
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<OffsetDateTime> header) {
-                if (header.getValue().isBefore(OffsetDateTime.now())) {
+                if (header.getValue() == null || header.getValue().isBefore(OffsetDateTime.now())) {
                     return "0";
                 } else {
                     return DateUtils.RFC822.convert(header.getValue());

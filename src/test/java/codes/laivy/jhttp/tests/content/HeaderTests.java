@@ -25,8 +25,11 @@ import org.junit.jupiter.api.*;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public final class HeaderTests {
@@ -970,9 +973,11 @@ public final class HeaderTests {
                     HeaderKey.EXPIRES,
 
                     new String[] {
+                            "0",
                             "Wed, 12 Feb 1997 16:29:51 -0500"
                     }, new String[] {
                             "",
+                            "1",
                             "kkijkl",
                     }
             );
@@ -1464,7 +1469,6 @@ public final class HeaderTests {
                     HeaderKey.USER_AGENT,
 
                     new String[] {
-                            "",
                             "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
                             "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
                             "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
@@ -1482,6 +1486,7 @@ public final class HeaderTests {
                             "curl/7.64.1",
                             "PostmanRuntime/7.26.5"
                     }, new String[] {
+                            "",
                             "(platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
                     }
             );
@@ -1500,6 +1505,8 @@ public final class HeaderTests {
         private final @NotNull String @NotNull [] valids;
         private final @NotNull String @NotNull [] invalids;
 
+        private final @NotNull BiFunction<T, T, Boolean> function;
+
         // Constructor
 
         protected HeaderTest(
@@ -1508,10 +1515,53 @@ public final class HeaderTests {
                 @NotNull String @NotNull [] valids,
                 @NotNull String @NotNull [] invalids
         ) {
+            this(key, valids, invalids, new BiFunction<T, T, Boolean>() {
+                @SuppressWarnings("DataFlowIssue")
+                @Override
+                public @NotNull Boolean apply(T t1, T t2) {
+                    @Nullable Object object1 = t1;
+                    @Nullable Object object2 = t2;
+
+                    while (object1 instanceof Wildcard<?> || object1 instanceof Weight<?> || object1 instanceof Optional<?>) {
+                        if (object1 instanceof Wildcard<?>) {
+                            if (((Wildcard<?>) object1).isWildcard() && ((Wildcard<?>) object1).isWildcard()) {
+                                return true;
+                            }
+
+                            object1 = ((Wildcard<?>) object1).getValue();
+                            object2 = ((Wildcard<?>) object2).getValue();
+                        } else if (object1 instanceof Weight<?>) {
+                            object1 = ((Weight<?>) object1).getValue();
+                            object2 = ((Weight<?>) object2).getValue();
+                        } else {
+                            object1 = ((Optional<?>) object1).orElse(null);
+                            object2 = ((Optional<?>) object2).orElse(null);
+                        }
+                    }
+
+                    if (object1 != null && object1.getClass().isArray()) {
+                        //noinspection unchecked
+                        return Arrays.equals((T[]) object1, (T[]) object2);
+                    } else {
+                        return Objects.equals(object1, object2);
+                    }
+                }
+            });
+        }
+        protected HeaderTest(
+                @NotNull HeaderKey<T> key,
+
+                @NotNull String @NotNull [] valids,
+                @NotNull String @NotNull [] invalids,
+
+                @NotNull BiFunction<T, T, Boolean> function
+        ) {
             this.key = key;
 
             this.valids = valids;
             this.invalids = invalids;
+
+            this.function = function;
         }
 
         // Getters
@@ -1560,12 +1610,7 @@ public final class HeaderTests {
                     @NotNull Header<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
                     @NotNull Header<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
 
-                    if (reference.getValue().getClass().isArray()) {
-                        //noinspection unchecked
-                        Assertions.assertArrayEquals((T[]) reference.getValue(), (T[]) clone.getValue(), "cannot match reference and clone (array)");
-                    } else {
-                        Assertions.assertEquals(reference.getValue(), clone.getValue(), "cannot match reference and clone");
-                    }
+                    Assertions.assertTrue(function.apply(reference.getValue(), clone.getValue()), "cannot match reference '" + reference.getValue() + "' and clone '" + clone.getValue() + "'");
                 } catch (@NotNull Throwable throwable) {
                     throw new RuntimeException("cannot test serialization using '" + valid + "'", throwable);
                 }

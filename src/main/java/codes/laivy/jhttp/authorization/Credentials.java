@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Flushable;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Objects;
 
 public interface Credentials extends CharSequence, Flushable {
@@ -205,7 +205,7 @@ public interface Credentials extends CharSequence, Flushable {
 
         @Override
         public byte @NotNull [] getBytes() {
-            return (getUsername() + ":" + new String(getPassword())).getBytes();
+            return ("Basic " + getUsername() + ":" + new String(getPassword())).getBytes();
         }
 
         @Override
@@ -222,7 +222,7 @@ public interface Credentials extends CharSequence, Flushable {
 
         @Override
         public @NotNull String toString() {
-            return Base64.getEncoder().encodeToString(getBytes());
+            return new String(getBytes(), StandardCharsets.UTF_8);
         }
 
     }
