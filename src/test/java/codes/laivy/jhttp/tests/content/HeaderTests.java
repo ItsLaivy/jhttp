@@ -28,7 +28,6 @@ import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.Optional;
 
-@SuppressWarnings("ALL")
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public final class HeaderTests {
 
@@ -76,6 +75,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class AcceptCHLifetime extends HeaderTest<Duration> {
         private AcceptCHLifetime() {
@@ -526,6 +526,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class ContentDPR extends HeaderTest<Float> {
         private ContentDPR() {
@@ -718,11 +719,12 @@ public final class HeaderTests {
 
                     new String[] {
                             "Sec-CH-Prefers-Reduced-Motion",
-                            "Sec-CH-Prefers-Reduced-Motion,Test",
-                            "Sec-CH-Prefers-Reduced-Motion   ,  Test",
+                            "Sec-CH-Prefers-Reduced-Motion,DPR",
+                            "Sec-CH-Prefers-Reduced-Motion   ,  DPR",
                     }, new String[] {
                             "",
-                            "Sec-CH-Prefers-Reduced-Motion;Test",
+                            "Sec-CH-Prefers-Reduced-Motion,Test",
+                            "Sec-CH-Prefers-Reduced-Motion;DPR",
                     }
             );
         }
@@ -817,6 +819,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class DNT extends HeaderTest<Boolean> {
         private DNT() {
@@ -853,6 +856,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class DPR extends HeaderTest<Float> {
         private DPR() {
@@ -940,6 +944,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class ExpectCT extends HeaderTest<ExpectCertificate> {
         private ExpectCT() {
@@ -1116,6 +1121,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class LargeAllocation extends HeaderTest<Optional<BitMeasure>> {
         private LargeAllocation() {
@@ -1236,6 +1242,7 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
     @Nested
     final class Pragma extends HeaderTest<Void> {
         private Pragma() {
@@ -1402,12 +1409,13 @@ public final class HeaderTests {
                     HeaderKey.TRAILER,
 
                     new String[] {
-                            "Sec-CH-Prefers-Reduced-Motion",
-                            "Sec-CH-Prefers-Reduced-Motion,Test",
-                            "Sec-CH-Prefers-Reduced-Motion   ,  Test",
+                            "Content-Length",
+                            "Content-Length,Content-Type",
+                            "Content-Length   ,  Content-Type",
                     }, new String[] {
                             "",
-                            "Sec-CH-Prefers-Reduced-Motion;Test",
+                            "Test",
+                            "Content-Length;Content-Type",
                     }
             );
         }
@@ -1548,10 +1556,19 @@ public final class HeaderTests {
         @Order(value = 2)
         void serialization() throws HeaderFormatException {
             for (@NotNull String valid : getValids()) {
-                @NotNull Header<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
-                @NotNull Header<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
+                try {
+                    @NotNull Header<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
+                    @NotNull Header<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
 
-                Assertions.assertEquals(reference.getValue(), clone.getValue(), "cannot match reference and clone");
+                    if (reference.getValue().getClass().isArray()) {
+                        //noinspection unchecked
+                        Assertions.assertArrayEquals((T[]) reference.getValue(), (T[]) clone.getValue(), "cannot match reference and clone (array)");
+                    } else {
+                        Assertions.assertEquals(reference.getValue(), clone.getValue(), "cannot match reference and clone");
+                    }
+                } catch (@NotNull Throwable throwable) {
+                    throw new RuntimeException("cannot test serialization using '" + valid + "'", throwable);
+                }
             }
         }
     }

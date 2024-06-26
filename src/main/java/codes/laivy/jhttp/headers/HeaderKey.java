@@ -371,17 +371,17 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<HeaderKey<?>[]> create(HeaderKey<?> @NotNull [] value) {
-                if (Arrays.stream(value).anyMatch(
-                        key -> !key.hasType(Type.CONTENT) ||
-                                !key.hasType(Type.ROOTING) ||
-                                !key.hasType(Type.CONTROL) ||
-                                !key.hasType(Type.CONDITIONAL) ||
-                                !key.hasType(Type.AUTHENTICATION) ||
-                                !key.getName().equalsIgnoreCase("Trailer")
-                )) {
-                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept some content, rooting, control, conditional, authentication types or itself (Trailer)");
-                } else if (value.length == 0) {
+                if (value.length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                } else if (!Arrays.stream(value).allMatch(
+                        key -> key.hasType(Type.CONTENT) ||
+                                key.hasType(Type.ROOTING) ||
+                                key.hasType(Type.CONTROL) ||
+                                key.hasType(Type.CONDITIONAL) ||
+                                key.hasType(Type.AUTHENTICATION) ||
+                                key.getName().equalsIgnoreCase("Trailer")
+                )) {
+                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept content, rooting, control, conditional, authentication types or itself (Trailer)");
                 }
 
                 return super.create(value);
@@ -557,7 +557,7 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<@Nullable Host> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 if (value.trim().equalsIgnoreCase("null")) {
-                    return create((Host) null);
+                    return create(null);
                 } else try {
                     return create(Host.parse(value));
                 } catch (ParseException e) {
@@ -602,7 +602,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ExpectCertificate> header) {
-                return header.getValue().toString();
+                return ExpectCertificate.Parser.serialize(header.getValue());
             }
         }
         private static final class CriticalCHHeaderKey extends HeaderKey<@NotNull HeaderKey<?> @NotNull []> {
@@ -646,10 +646,10 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<HeaderKey<?>[]> create(HeaderKey<?> @NotNull [] value) {
-                if (Arrays.stream(value).anyMatch(key -> !key.isClientHint())) {
-                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept client hint headers as value");
-                } else if (value.length == 0) {
+                if (value.length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                } else if (Arrays.stream(value).anyMatch(key -> !key.isClientHint())) {
+                    throw new IllegalArgumentException("the '" + getName() + "' header value only accept client hint headers as value");
                 }
 
                 return super.create(value);
@@ -687,7 +687,7 @@ public abstract class HeaderKey<T> {
                 @NotNull List<Locale> locales = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    locales.add(Locale.forLanguageTag(name));
+                    locales.add(new Locale(name));
                 }
 
                 return create(locales.toArray(new Locale[0]));
@@ -825,7 +825,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Cookie.Request> header) {
-                return header.getValue().toString();
+                return Cookie.Request.Parser.serialize(header.getValue());
             }
         }
         private static final class MaxForwardsHeaderKey extends HeaderKey<@NotNull Integer> {
@@ -911,7 +911,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<KeepAlive> header) {
-                return header.getValue().toString();
+                return KeepAlive.Parser.serialize(header.getValue());
             }
         }
         private static final class IfUnmodifiedSinceHeaderKey extends HeaderKey<@NotNull OffsetDateTime> {
@@ -962,7 +962,7 @@ public abstract class HeaderKey<T> {
 
                     for (@NotNull EntityTag tag : header.getValue().getValue()) {
                         if (builder.length() > 0) builder.append(", ");
-                        builder.append(tag);
+                        builder.append(EntityTag.Parser.serialize(tag));
                     }
 
                     return builder.toString();
@@ -1025,7 +1025,7 @@ public abstract class HeaderKey<T> {
 
                     for (@NotNull EntityTag tag : header.getValue().getValue()) {
                         if (builder.length() > 0) builder.append(", ");
-                        builder.append(tag);
+                        builder.append(EntityTag.Parser.serialize(tag));
                     }
 
                     return builder.toString();
@@ -1073,7 +1073,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Email> header) {
-                return header.getValue().toString();
+                return Email.Parser.serialize(header.getValue());
             }
         }
         private static final class ForwardedHeaderKey extends HeaderKey<@NotNull Forwarded> {
@@ -1091,7 +1091,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Forwarded> header) {
-                return header.getValue().toString();
+                return Forwarded.Parser.serialize(header.getValue());
             }
         }
         private static final class ExpiresHeaderKey extends HeaderKey<@NotNull OffsetDateTime> {
@@ -1151,7 +1151,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<EntityTag> header) {
-                return header.getValue().toString();
+                return EntityTag.Parser.serialize(header.getValue());
             }
         }
         private static final class ECTHeaderKey extends HeaderKey<@NotNull EffectiveConnectionType> {
@@ -1346,7 +1346,7 @@ public abstract class HeaderKey<T> {
 
                 for (@NotNull Cookie cookie : header.getValue()) {
                     if (builder.length() > 0) builder.append("; ");
-                    builder.append(cookie.getName()).append("=").append(cookie.getValue());
+                    builder.append(Cookie.Parser.serialize(cookie));
                 }
 
                 return builder.toString();
@@ -1411,7 +1411,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<ContentRange> header) {
-                return header.getValue().toString();
+                return ContentRange.Parser.serialize(header.getValue());
             }
         }
         private static final class ContentLocationHeaderKey extends HeaderKey<@NotNull Origin> {
@@ -1501,7 +1501,7 @@ public abstract class HeaderKey<T> {
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Connection> header) {
-                return header.getValue().toString();
+                return Connection.Parser.serialize(header.getValue());
             }
         }
         private static final class ClearSiteDataHeaderKey extends HeaderKey<@NotNull Wildcard<@NotNull SiteData @NotNull []>> {
@@ -1511,16 +1511,16 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<SiteData[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                if (value.trim().equals("*")) {
+                if (value.trim().equals("\"*\"") || value.trim().equals("*")) {
                     return create(Wildcard.create());
                 }
 
-                @NotNull Pattern pattern = Pattern.compile("\"(.*?)\"");
+                @NotNull Pattern pattern = Pattern.compile("\"(?<id>.*?)\"");
                 @NotNull Matcher matcher = pattern.matcher(value);
                 @NotNull Set<SiteData> data = new LinkedHashSet<>();
 
                 while (matcher.find()) {
-                    data.add(SiteData.getById(matcher.group(1)));
+                    data.add(SiteData.getById(matcher.group("id")));
                 }
 
                 return create(Wildcard.create(data.toArray(new SiteData[0])));
@@ -1528,13 +1528,13 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<SiteData[]>> header) {
                 if (header.getValue().isWildcard()) {
-                    return "*";
+                    return "\"*\"";
                 } else {
                     @NotNull StringBuilder builder = new StringBuilder();
 
                     for (@NotNull SiteData data : header.getValue().getValue()) {
                         if (builder.length() > 0) builder.append(", ");
-                        builder.append(data);
+                        builder.append("\"").append(data.getId()).append("\"");
                     }
 
                     return builder.toString();
@@ -2019,21 +2019,24 @@ public abstract class HeaderKey<T> {
 
             @Override
             public @NotNull Header<Wildcard<Weight<Locale>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull Pattern pattern = Pattern.compile("(?<locale>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
-                @NotNull Matcher matcher = pattern.matcher(value);
+                if (value.trim().equals("*")) {
+                    return create(Wildcard.create());
+                } else {
+                    @NotNull Pattern pattern = Pattern.compile("(?<locale>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
+                    @NotNull Matcher matcher = pattern.matcher(value);
 
-                @NotNull Set<Weight<Locale>> pairs = new HashSet<>();
+                    @NotNull Set<Weight<Locale>> pairs = new HashSet<>();
 
-                while (matcher.find()) {
-                    @NotNull String locale = matcher.group("locale");
-                    if (locale.trim().equals("*")) return create(Wildcard.create());
+                    while (matcher.find()) {
+                        @NotNull String locale = matcher.group("locale");
+                        @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
-                    pairs.add(Weight.create(weight, Locale.forLanguageTag(locale)));
+                        pairs.add(Weight.create(weight, new Locale(locale)));
+                    }
+
+                    //noinspection unchecked
+                    return create(Wildcard.create(pairs.toArray(new Weight[0])));
                 }
-
-                //noinspection unchecked
-                return create(Wildcard.create(pairs.toArray(new Weight[0])));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Weight<Locale>[]>> header) {

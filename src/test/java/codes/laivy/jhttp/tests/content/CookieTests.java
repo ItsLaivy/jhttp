@@ -76,7 +76,7 @@ public final class CookieTests {
             Assertions.assertEquals(SameSite.STRICT, request.getSameSite());
             Assertions.assertEquals(URI.create("/index"), request.getPath());
             Assertions.assertEquals(Duration.ofSeconds(123456), request.getMaxAge());
-            Assertions.assertEquals(DateUtils.RFC822.convert("Wed, 12 Feb 1997 16:29:51 -0500"), request.getExpires());
+            Assertions.assertEquals(DateUtils.RFC822.convert("Wed, 12 Feb 1997 16:29:51 -0500").toInstant(), request.getExpires());
         }
         @Test
         @Order(value = 2)

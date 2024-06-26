@@ -144,7 +144,7 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(expected, response.getBody().getDecoded());
 
             // Headers
-            Assertions.assertEquals("JHTTP Environment", response.getHeaders().get(SERVER)[0].getValue());
+            Assertions.assertEquals("JHTTP Environment", response.getHeaders().get(SERVER)[0].getValue().toString());
             Assertions.assertEquals(DateUtils.RFC822.convert("Mon, 27 Jul 2009 12:28:53 GMT"), response.getHeaders().get(DATE)[0].getValue());
         }
         @Test
