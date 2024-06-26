@@ -2,7 +2,7 @@ package codes.laivy.jhttp.media;
 
 import codes.laivy.jhttp.media.json.JsonMediaParser;
 import codes.laivy.jhttp.media.text.TextMediaParser;
-import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
+import codes.laivy.jhttp.deferred.provided.PseudoCharset;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -249,9 +249,9 @@ public final class MediaType<T> {
      *
      * @return the charset parameter if present, or null if not
      */
-    public @Nullable PseudoCharset getCharset() {
+    public @Nullable Deferred<Charset> getCharset() {
         @Nullable Parameter parameter = getParameter("charset").orElse(null);
-        return parameter != null ? PseudoCharset.create(parameter.getValue()) : null;
+        return parameter != null ? Deferred<Charset>.create(parameter.getValue()) : null;
     }
 
     /**

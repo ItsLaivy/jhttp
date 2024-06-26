@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.headers;
 
 import codes.laivy.jhttp.authorization.Credentials;
+import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
@@ -19,8 +20,6 @@ import codes.laivy.jhttp.module.content.ContentRange;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
-import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.email.Email;
@@ -30,6 +29,7 @@ import org.jetbrains.annotations.*;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -41,6 +41,7 @@ import static codes.laivy.jhttp.module.CrossOrigin.OpenerPolicy;
 import static codes.laivy.jhttp.module.CrossOrigin.ResourcePolicy;
 
 @SuppressWarnings("DeprecatedIsStillUsed")
+// todo: 26/06/2024 finish all headers mapping (already mapped ±80%)
 public abstract class HeaderKey<T> {
 
     // Static initializers
@@ -78,8 +79,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull HeaderKey<?> @NotNull []> ACCEPT_CH = new Provided.AcceptCHHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<@NotNull Duration> ACCEPT_CH_LIFETIME = new Provided.AcceptCHLifetimeHeaderKey();
-    public static @NotNull HeaderKey<@NotNull Weight<@NotNull PseudoCharset> @NotNull []> ACCEPT_CHARSET = new Provided.AcceptCharsetHeaderKey();
-    public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull PseudoEncoding> @NotNull []>> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Weight<@NotNull Deferred<Charset>> @NotNull []> ACCEPT_CHARSET = new Provided.AcceptCharsetHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull Deferred<Encoding>> @NotNull []>> ACCEPT_ENCODING = new Provided.AcceptEncodingHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull Locale> @NotNull[]>> ACCEPT_LANGUAGE = new Provided.AcceptLanguageHeaderKey();
     public static @NotNull HeaderKey<@NotNull MediaType<?> @NotNull []> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HeaderKey<MediaType. @NotNull Type @NotNull []> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
@@ -103,8 +104,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull ContentDisposition> CONTENT_DISPOSITION = new Provided.ContentDispositionHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<@NotNull Float> CONTENT_DPR = new Provided.ContentDPRHeaderKey();
-    // todo: there's a directives list allowed for this header
-    public static @NotNull HeaderKey<@NotNull PseudoEncoding @NotNull []> CONTENT_ENCODING = new Provided.ContentEncodingHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Deferred<Encoding> @NotNull []> CONTENT_ENCODING = new Provided.ContentEncodingHeaderKey();
     public static @NotNull HeaderKey<@NotNull Locale @NotNull []> CONTENT_LANGUAGE = new Provided.ContentLanguageHeaderKey();
     public static @NotNull HeaderKey<@NotNull BitMeasure> CONTENT_LENGTH = new Provided.ContentLengthHeaderKey();
     public static @NotNull HeaderKey<@NotNull Origin> CONTENT_LOCATION = new Provided.ContentLocationHeaderKey();
@@ -163,9 +163,9 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<Cookie. @NotNull Request> SET_COOKIE = new Provided.SetCookieHeaderKey();
     public static @NotNull HeaderKey<@NotNull Origin> SOURCEMAP = new Provided.SourceMapHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HeaderKey<@NotNull Weight<@NotNull PseudoEncoding> @NotNull []> TE = new Provided.TEHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Weight<@NotNull Deferred<Encoding>> @NotNull []> TE = new Provided.TEHeaderKey();
     public static @NotNull HeaderKey<@NotNull HeaderKey<?> @NotNull []> TRAILER = new Provided.TrailerHeaderKey();
-    public static @NotNull HeaderKey<@NotNull PseudoEncoding @NotNull []> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Deferred<Encoding> @NotNull []> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> VARY = new Provided.VaryHeaderKey();
     public static @NotNull HeaderKey<@NotNull UserAgent> USER_AGENT = new Provided.UserAgentHeaderKey();
     // Object
@@ -388,34 +388,33 @@ public abstract class HeaderKey<T> {
                 return super.create(value);
             }
         }
-        private static final class TEHeaderKey extends HeaderKey<@NotNull Weight< @NotNull PseudoEncoding> @NotNull []> {
+        private static final class TEHeaderKey extends HeaderKey<@NotNull Weight< @NotNull Deferred<Encoding>> @NotNull []> {
             private TEHeaderKey() {
                 super("TE", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Weight<PseudoEncoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<Weight<Deferred<Encoding>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                @NotNull Set<Weight<PseudoEncoding>> pairs = new HashSet<>();
+                @NotNull Set<Weight<Deferred<Encoding>>> pairs = new HashSet<>();
 
                 while (matcher.find()) {
-                    @NotNull String string = matcher.group("encoding");
+                    @NotNull String name = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
-                    pairs.add(optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string))));
+                    pairs.add(Weight.create(weight, Deferred.encoding(name)));
                 }
 
                 //noinspection unchecked
                 return create(pairs.toArray(new Weight[0]));
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoEncoding>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<Deferred<Encoding>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue()) {
+                for (@NotNull Weight<Deferred<Encoding>> pseudo : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
                     builder.append(pseudo);
                 }
@@ -1443,38 +1442,41 @@ public abstract class HeaderKey<T> {
                 return Origin.Parser.serialize(header.getValue());
             }
         }
-        private static final class ContentEncodingHeaderKey extends HeaderKey<@NotNull PseudoEncoding @NotNull []> {
+        private static final class ContentEncodingHeaderKey extends HeaderKey<@NotNull Deferred<Encoding> @NotNull []> {
             private ContentEncodingHeaderKey() {
                 super("Content-Encoding", Target.BOTH);
             }
 
             @Override
-            public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull List<PseudoEncoding> encodings = new ArrayList<>();
+            public @NotNull Header<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                //noinspection unchecked
+                @NotNull Deferred<Encoding>[] encodings = Arrays.stream(value.split("\\s*,\\s*")).map(Deferred::encoding).toArray(Deferred[]::new);
 
-                for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    @NotNull Optional<Encoding> optional = Encoding.retrieve(name);
-                    encodings.add(optional.map(PseudoEncoding::createAvailable).orElseGet(() -> PseudoEncoding.createUnavailable(name)));
-                }
-
-                return create(encodings.toArray(new PseudoEncoding[0]));
+                return create(encodings);
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoEncoding[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Deferred<Encoding>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull PseudoEncoding encoding : header.getValue()) {
+                for (@NotNull Deferred<Encoding> deferred : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
-                    builder.append(encoding.raw());
+                    builder.append(deferred);
                 }
 
                 return builder.toString();
             }
 
             @Override
-            public @NotNull Header<@NotNull PseudoEncoding @NotNull []> create(@NotNull PseudoEncoding @NotNull [] value) {
+            public @NotNull Header<@NotNull Deferred<Encoding> @NotNull []> create(@NotNull Deferred<Encoding> @NotNull [] value) {
                 if (value.length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
+                } else if (!Arrays.stream(value).map(Deferred::toString).allMatch(
+                        raw -> raw.equalsIgnoreCase("gzip") || raw.equalsIgnoreCase("X-gzip") ||
+                                raw.equalsIgnoreCase("compress") ||
+                                raw.equalsIgnoreCase("deflate") ||
+                                raw.equalsIgnoreCase("br") ||
+                                raw.equalsIgnoreCase("zstd"))) {
+                    throw new IllegalArgumentException("The header '" + getName() + "' value only accepts 'gzip'/'x-gzip', 'compress', 'deflate', 'br' or 'zstd' encodings");
                 }
                 return super.create(value);
             }
@@ -2022,7 +2024,6 @@ public abstract class HeaderKey<T> {
             }
         }
 
-        // todo: accept language pseudo locale
         private static final class AcceptLanguageHeaderKey extends HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull Locale> @NotNull []>> {
             private AcceptLanguageHeaderKey() {
                 super("Accept-Language", Target.REQUEST);
@@ -2073,13 +2074,13 @@ public abstract class HeaderKey<T> {
                 return super.create(value);
             }
         }
-        private static final class AcceptEncodingHeaderKey extends HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull PseudoEncoding> @NotNull []>> {
+        private static final class AcceptEncodingHeaderKey extends HeaderKey<@NotNull Wildcard<@NotNull Weight<@NotNull Deferred<Encoding>> @NotNull []>> {
             private AcceptEncodingHeaderKey() {
                 super("Accept-Encoding", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Wildcard<Weight<PseudoEncoding>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<Wildcard<Weight<Deferred<Encoding>>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 }
@@ -2087,14 +2088,13 @@ public abstract class HeaderKey<T> {
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                @NotNull Set<Weight<PseudoEncoding>> pairs = new HashSet<>();
+                @NotNull Set<Weight<Deferred<Encoding>>> pairs = new HashSet<>();
 
                 while (matcher.find()) {
-                    @NotNull String string = matcher.group("encoding");
+                    @NotNull String name = matcher.group("encoding");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    @NotNull Optional<Encoding> optional = Encoding.retrieve(string);
-                    pairs.add(optional.map(encoding -> Weight.create(weight, PseudoEncoding.createAvailable(encoding))).orElseGet(() -> Weight.create(weight, PseudoEncoding.createUnavailable(string))));
+                    pairs.add(Weight.create(weight, Deferred.encoding(name)));
                 }
 
                 //noinspection unchecked
@@ -2102,13 +2102,13 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Weight<PseudoEncoding>[]>> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Wildcard<Weight<Deferred<Encoding>>[]>> header) {
                 if (header.getValue().isWildcard()) {
                     return "*";
                 } else {
                     @NotNull StringBuilder builder = new StringBuilder();
 
-                    for (@NotNull Weight<PseudoEncoding> pseudo : header.getValue().getValue()) {
+                    for (@NotNull Weight<Deferred<Encoding>> pseudo : header.getValue().getValue()) {
                         if (builder.length() > 0) builder.append(", ");
                         builder.append(pseudo);
                     }
@@ -2118,30 +2118,30 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull Header<@NotNull Wildcard<Weight<PseudoEncoding> @NotNull []>> create(@NotNull Wildcard<Weight<PseudoEncoding> @NotNull []> wildcard) {
+            public @NotNull Header<@NotNull Wildcard<Weight<Deferred<Encoding>> @NotNull []>> create(@NotNull Wildcard<Weight<Deferred<Encoding>> @NotNull []> wildcard) {
                 if (!wildcard.isWildcard() && wildcard.getValue().length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
                 }
                 return super.create(wildcard);
             }
         }
-        private static final class AcceptCharsetHeaderKey extends HeaderKey<@NotNull Weight<@NotNull PseudoCharset> @NotNull []> {
+        private static final class AcceptCharsetHeaderKey extends HeaderKey<@NotNull Weight<@NotNull Deferred<Charset>> @NotNull []> {
             private AcceptCharsetHeaderKey() {
                 super("Accept-Charset", Target.REQUEST);
             }
 
             @Override
-            public @NotNull Header<Weight<PseudoCharset>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<Weight<Deferred<Charset>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
-                @NotNull Set<Weight<PseudoCharset>> pairs = new HashSet<>();
+                @NotNull Set<Weight<Deferred<Charset>>> pairs = new HashSet<>();
 
                 while (matcher.find()) {
                     @NotNull String charset = matcher.group("charset");
                     @Nullable Float weight = matcher.group("weight") != null ? Float.parseFloat(matcher.group("weight").replace(",", ".")) : null;
 
-                    pairs.add(Weight.create(weight, PseudoCharset.create(charset)));
+                    pairs.add(Weight.create(weight, Deferred.charset(charset)));
                 }
 
                 //noinspection unchecked
@@ -2149,10 +2149,10 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<PseudoCharset>[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Weight<Deferred<Charset>>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull Weight<PseudoCharset> pseudo : header.getValue()) {
+                for (@NotNull Weight<Deferred<Charset>> pseudo : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
                     builder.append(pseudo);
                 }
@@ -2161,7 +2161,7 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
-            public @NotNull Header<Weight<PseudoCharset>[]> create(Weight<PseudoCharset> @NotNull [] value) {
+            public @NotNull Header<Weight<Deferred<Charset>>[]> create(Weight<Deferred<Charset>> @NotNull [] value) {
                 if (value.length == 0) {
                     throw new IllegalArgumentException("The header '" + getName() + "' value must not be empty");
                 }
@@ -2276,29 +2276,25 @@ public abstract class HeaderKey<T> {
                 return MediaType.Parser.serialize(header.getValue());
             }
         }
-        private static final class TransferEncodingHeaderKey extends HeaderKey<@NotNull PseudoEncoding @NotNull []> {
+        private static final class TransferEncodingHeaderKey extends HeaderKey<@NotNull Deferred<Encoding> @NotNull []> {
             private TransferEncodingHeaderKey() {
                 super("Transfer-Encoding", Target.BOTH);
             }
 
             @Override
-            public @NotNull Header<PseudoEncoding[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                @NotNull List<PseudoEncoding> encodings = new LinkedList<>();
+            public @NotNull Header<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                //noinspection unchecked
+                @NotNull Deferred<Encoding>[] encodings = Arrays.stream(value.split("\\s*,\\s*")).map(Deferred::encoding).toArray(Deferred[]::new);
 
-                for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    @NotNull Optional<Encoding> optional = Encoding.retrieve(name);
-                    encodings.add(optional.map(PseudoEncoding::createAvailable).orElseGet(() -> PseudoEncoding.createUnavailable(name)));
-                }
-
-                return create(encodings.toArray(new PseudoEncoding[0]));
+                return create(encodings);
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<PseudoEncoding[]> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<Deferred<Encoding>[]> header) {
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@NotNull PseudoEncoding encoding : header.getValue()) {
+                for (@NotNull Deferred<Encoding> encoding : header.getValue()) {
                     if (builder.length() > 0) builder.append(", ");
-                    builder.append(encoding.raw());
+                    builder.append(encoding);
                 }
 
                 return builder.toString();

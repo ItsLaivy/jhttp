@@ -167,9 +167,19 @@ public abstract class Encoding {
 
     protected Encoding(@NotNull String name, @NotNull String @NotNull ... aliases) {
         this.name = name;
-        this.aliases = aliases;
+        this.aliases = Arrays.copyOf(aliases, aliases.length);
 
-        validate();
+        // Verifications
+        @NotNull Consumer<@NotNull String> consumer = string -> {
+            if (StringUtils.isBlank(string) || string.contains(",")) {
+                throw new IllegalArgumentException("illegal transfer encoding name/alias '" + string + "'");
+            }
+        };
+
+        consumer.accept(getName());
+        for (@NotNull String alias : getAliases()) {
+            consumer.accept(alias);
+        }
     }
 
     // Getters
@@ -182,19 +192,6 @@ public abstract class Encoding {
     }
 
     // Modules
-
-    private void validate() {
-        @NotNull Consumer<@NotNull String> consumer = string -> {
-            if (StringUtils.isBlank(string) || string.contains(",")) {
-                throw new IllegalArgumentException("illegal transfer encoding name/alias '" + string + "'");
-            }
-        };
-
-        consumer.accept(getName());
-        for (@NotNull String alias : getAliases()) {
-            consumer.accept(alias);
-        }
-    }
 
     public abstract @NotNull String decompress(@NotNull String string) throws EncodingException;
     public abstract @NotNull String compress(@NotNull String string) throws EncodingException;

@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.element.request;
 
 import codes.laivy.jhttp.authorization.Credentials;
+import codes.laivy.jhttp.connection.HttpClient;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
@@ -9,8 +10,9 @@ import codes.laivy.jhttp.module.Cookie;
 import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.UserAgent;
+import codes.laivy.jhttp.protocol.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
+import codes.laivy.jhttp.deferred.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -18,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -83,7 +86,7 @@ public interface HttpRequest extends HttpElement {
 
             @Override
             public @NotNull String toString() {
-                return getVersion().getFactory().getRequest().wrap(this);
+                return HttpRequestFactory.serialize(this);
             }
 
         };
@@ -193,10 +196,10 @@ public interface HttpRequest extends HttpElement {
      * @return the accepted encodings, or {@code null} if not found
      */
     @SuppressWarnings("unchecked")
-    default @NotNull Wildcard<Weight<PseudoEncoding>[]> getEncodings() {
+    default @NotNull Wildcard<Weight<Deferred<Encoding>>[]> getEncodings() {
         return getHeaders().first(HeaderKey.ACCEPT_ENCODING).map(Header::getValue).orElse(Wildcard.create(new Weight[0]));
     }
-    default void setEncodings(@NotNull Wildcard<Weight<PseudoEncoding>[]> wildcard) {
+    default void setEncodings(@NotNull Wildcard<Weight<Deferred<Encoding>>[]> wildcard) {
         if (!wildcard.isWildcard() && wildcard.getValue().length == 0) {
             getHeaders().remove(HeaderKey.ACCEPT_ENCODING);
         } else {
@@ -311,6 +314,86 @@ public interface HttpRequest extends HttpElement {
      */
     default @NotNull Map<String, String> getQueries() {
         return StringUtils.readQueryParams(getUri());
+    }
+
+    // Classes
+
+    /**
+     * A class that constructs an HTTP request.
+     * This class is part of the HttpRequestFactory.
+     * It is essential for handling cases where the client sends requests with fragmented or chunked encrypted messages.
+     * <p>
+     * When you initiate a parsing process using the HttpRequestFactory, it returns this Future containing
+     * the mandatory information at the start of the request, including the client, method, authority, and URI.
+     * The body is not included as it can be fragmented for various reasons.
+     * <p>
+     * Whenever the client sends a new message, it should send this new message to the factory again.
+     * The factory
+     * will get this Future, completing it if the response is finally concluded.
+     */
+    interface Future extends java.util.concurrent.Future<HttpRequest> {
+
+        /**
+         * Retrieves the HttpClient associated with this request future.
+         *
+         * @return The HttpClient associated with this request. Never null.
+         */
+        @NotNull HttpClient getClient();
+
+        /**
+         * Retrieves the version of this request future.
+         *
+         * @return the {@link HttpVersion} representing the version of this future.
+         */
+        @NotNull HttpVersion getVersion();
+
+        /**
+         * The date this request future has been created
+         *
+         * @return The creation date of this request future
+         */
+        @NotNull Instant getCreation();
+
+        /**
+         * Retrieves the method of the request
+         * @return The method of the request
+         */
+        @NotNull Method getMethod();
+
+        /**
+         * Retrieves the authority of the request, which can be null.
+         * @return The authority of the request
+         */
+        @Nullable URIAuthority getAuthority();
+
+        /**
+         * Retrieves the URI path of this request.
+         * @return The URI path of the request
+         */
+        @NotNull URI getUri();
+
+        /**
+         * Gets the headers from this http request future
+         * @return The header list of this http request future
+         */
+        @NotNull Headers getHeaders();
+
+        /**
+         * Returns the raw HTTP request as a string.
+         * The difference between this method and {@link #toString()}
+         * is that {@link #toString()} represents the string representation of the Future itself,
+         * while this method
+         * returns the actual HTTP request.
+         * <p>
+         * If the Future is not completed, this method will return a fragmented HTTP request.
+         *
+         * @return The raw HTTP request as a string. Never null.
+         */
+        @NotNull String getAsString();
+
+        @Override
+        @NotNull String toString();
+
     }
 
 }

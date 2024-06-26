@@ -15,8 +15,8 @@ import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.pseudo.provided.PseudoCharset;
-import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
+import codes.laivy.jhttp.deferred.provided.PseudoCharset;
+import codes.laivy.jhttp.deferred.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.email.Email;
 import org.jetbrains.annotations.NotNull;
@@ -97,7 +97,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptCharset extends HeaderTest<Weight<PseudoCharset>[]> {
+    final class AcceptCharset extends HeaderTest<Weight<Deferred<Charset>>[]> {
         private AcceptCharset() {
             super(
                     HeaderKey.ACCEPT_CHARSET,
@@ -114,7 +114,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptEncoding extends HeaderTest<Wildcard<Weight<PseudoEncoding>[]>> {
+    final class AcceptEncoding extends HeaderTest<Wildcard<Weight<Deferred<Encoding>>[]>> {
         private AcceptEncoding() {
             super(
                     HeaderKey.ACCEPT_ENCODING,
@@ -548,7 +548,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class ContentEncoding extends HeaderTest<PseudoEncoding[]> {
+    final class ContentEncoding extends HeaderTest<Deferred<Encoding>[]> {
         private ContentEncoding() {
             super(
                     HeaderKey.CONTENT_ENCODING,
@@ -1389,7 +1389,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class TE extends HeaderTest<Weight<PseudoEncoding>[]> {
+    final class TE extends HeaderTest<Weight<Deferred<Encoding>>[]> {
         private TE() {
             super(
                     HeaderKey.TE,
@@ -1426,7 +1426,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class TransferEncoding extends HeaderTest<PseudoEncoding[]> {
+    final class TransferEncoding extends HeaderTest<Deferred<Encoding>[]> {
         private TransferEncoding() {
             super(
                     HeaderKey.TRANSFER_ENCODING,

@@ -19,7 +19,7 @@ import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.pseudo.provided.PseudoEncoding;
+import codes.laivy.jhttp.deferred.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -128,11 +128,11 @@ final class HttpFactory1_1 implements HttpFactory {
                 // Message Encoding
                 @NotNull Encoding @Nullable [] encodings = null;
                 if (headers.contains(CONTENT_ENCODING)) {
-                    @NotNull PseudoEncoding[] array = headers.get(CONTENT_ENCODING)[0].getValue();
+                    @NotNull Deferred<Encoding>[] array = headers.get(CONTENT_ENCODING)[0].getValue();
 
                     // Only apply encoding if all the encodings are available (not pseudo)
-                    if (Arrays.stream(array).allMatch(PseudoEncoding::available)) {
-                        encodings = Arrays.stream(array).map(PseudoEncoding::retrieve).toArray(Encoding[]::new);
+                    if (Arrays.stream(array).allMatch(Deferred<Encoding>::available)) {
+                        encodings = Arrays.stream(array).map(Deferred<Encoding>::retrieve).toArray(Encoding[]::new);
                     }
                 }
 
@@ -263,11 +263,11 @@ final class HttpFactory1_1 implements HttpFactory {
                 // Message Encoding
                 @NotNull Encoding @Nullable [] encodings = null;
                 if (headers.contains(CONTENT_ENCODING)) {
-                    @NotNull PseudoEncoding[] array = headers.get(CONTENT_ENCODING)[0].getValue();
+                    @NotNull Deferred<Encoding>[] array = headers.get(CONTENT_ENCODING)[0].getValue();
 
                     // Only apply encoding if all the encodings are available (not pseudo)
-                    if (Arrays.stream(array).allMatch(PseudoEncoding::available)) {
-                        encodings = Arrays.stream(array).map(PseudoEncoding::retrieve).toArray(Encoding[]::new);
+                    if (Arrays.stream(array).allMatch(Deferred<Encoding>::available)) {
+                        encodings = Arrays.stream(array).map(Deferred<Encoding>::retrieve).toArray(Encoding[]::new);
                     }
                 }
 
