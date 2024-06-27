@@ -13,7 +13,6 @@ import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.UserAgent;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -86,7 +85,7 @@ public interface HttpRequest extends HttpElement {
 
             @Override
             public @NotNull String toString() {
-                return HttpRequestFactory.getInstance(getVersion()).serialize(this);
+                return getVersion().getRequestFactory().serialize(this);
             }
 
         };

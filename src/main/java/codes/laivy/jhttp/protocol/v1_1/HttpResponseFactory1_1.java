@@ -17,6 +17,7 @@ import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -30,18 +31,31 @@ import java.util.stream.Stream;
 import static codes.laivy.jhttp.Main.CRLF;
 import static codes.laivy.jhttp.headers.HeaderKey.*;
 
-final class HttpResponseFactory1_1 extends HttpResponseFactory {
+final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
     // Object
 
+    private final @NotNull HttpVersion version;
+
     HttpResponseFactory1_1(@NotNull HttpVersion1_1 version) {
-        super(version);
+        this.version = version;
+    }
+
+    // Getters
+
+    @Override
+    public @NotNull HttpVersion getVersion() {
+        return version;
     }
 
     // Modules
 
     @Override
     public @NotNull String serialize(@NotNull HttpResponse response) {
+        if (!response.getVersion().equals(getVersion())) {
+            throw new IllegalArgumentException("cannot serialize a '" + response.getVersion() + "' http response using a '" + getVersion() + "' http response factory");
+        }
+
         @NotNull StringBuilder builder = new StringBuilder(getVersion() + " " + response.getStatus().getCode() + " " + response.getStatus().getMessage() + CRLF);
 
         // Write headers
@@ -49,7 +63,7 @@ final class HttpResponseFactory1_1 extends HttpResponseFactory {
             if (!header.getKey().getTarget().isResponses()) continue;
             builder.append(getVersion().getHeaderFactory().serialize(header)).append(CRLF);
         }
-        
+
         // End request configurations
         builder.append(CRLF);
         

@@ -7,38 +7,13 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A factory class for creating and managing HTTP headers. This class provides methods
+ * A factory interface for creating and managing HTTP headers. This class provides methods
  * for serializing, parsing, and validating HTTP headers.
  *
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
-public class HeaderFactory {
-
-    // Static initializers
-
-    /**
-     * Retrieves an instance of HeaderFactory for the given HTTP version.
-     *
-     * @param version The HTTP version for which the HeaderFactory is required. Must not be null.
-     * @return An instance of HeaderFactory for the specified HTTP version. Never null.
-     */
-    static @NotNull HeaderFactory getInstance(@NotNull HttpVersion version) {
-        return version.getHeaderFactory();
-    }
-
-    // Object
-
-    private final @NotNull HttpVersion version;
-
-    /**
-     * Constructor for HeaderFactory.
-     *
-     * @param version The HTTP version used by this factory. Must not be null.
-     */
-    public HeaderFactory(@NotNull HttpVersion version) {
-        this.version = version;
-    }
+public interface HeaderFactory {
 
     // Getters
 
@@ -47,9 +22,7 @@ public class HeaderFactory {
      *
      * @return The HTTP version used by this factory. Never null.
      */
-    public final @NotNull HttpVersion getVersion() {
-        return version;
-    }
+    @NotNull HttpVersion getVersion();
 
     // Modules
 
@@ -61,7 +34,7 @@ public class HeaderFactory {
      * @throws IllegalArgumentException if the header value contains illegal characters.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public @NotNull String serialize(@NotNull Header<?> header) {
+    default @NotNull String serialize(@NotNull Header<?> header) {
         @NotNull String name = header.getKey().getName();
         @NotNull String value = ((HeaderKey) header.getKey()).write(getVersion(), header);
 
@@ -79,7 +52,7 @@ public class HeaderFactory {
      * @return The parsed HTTP header. Never null.
      * @throws HeaderFormatException if the string is not a valid header format.
      */
-    public @NotNull Header<?> parse(@NotNull String string) throws HeaderFormatException {
+    default @NotNull Header<?> parse(@NotNull String string) throws HeaderFormatException {
         @NotNull String[] split = string.split("\\s*:\\s*", 2);
 
         if (!string.contains(":")) {
@@ -105,7 +78,7 @@ public class HeaderFactory {
      * @return True if the string is a valid HTTP header, false otherwise.
      */
     @SuppressWarnings("RedundantIfStatement")
-    public boolean validate(@NotNull String string) {
+    default boolean validate(@NotNull String string) {
         @NotNull String[] split = string.split("\\s*:\\s*", 2);
 
         if (!string.contains(":")) {

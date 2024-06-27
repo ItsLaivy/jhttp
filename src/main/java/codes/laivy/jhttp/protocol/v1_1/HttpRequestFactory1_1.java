@@ -19,6 +19,7 @@ import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -34,7 +35,7 @@ import java.util.stream.Stream;
 import static codes.laivy.jhttp.Main.CRLF;
 import static codes.laivy.jhttp.headers.HeaderKey.*;
 
-final class HttpRequestFactory1_1 extends HttpRequestFactory {
+final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
     // Static initializers
 
@@ -58,15 +59,26 @@ final class HttpRequestFactory1_1 extends HttpRequestFactory {
 
     // Object
 
+    private final @NotNull HttpVersion version;
+
     HttpRequestFactory1_1(@NotNull HttpVersion1_1 version) {
-        super(version);
+        this.version = version;
+    }
+
+    // Getters
+
+    @Override
+    public @NotNull HttpVersion getVersion() {
+        return version;
     }
 
     // Modules
 
     @Override
     public @NotNull String serialize(@NotNull HttpRequest request) {
-        if (!request.getHeaders().contains(HeaderKey.HOST)) {
+        if (!request.getVersion().equals(getVersion())) {
+            throw new IllegalArgumentException("cannot serialize a '" + request.getVersion() + "' http request using a '" + getVersion() + "' http request factory");
+        } else if (!request.getHeaders().contains(HeaderKey.HOST)) {
             throw new IllegalStateException("the http requests from version " + getVersion() + " must have the '" + HeaderKey.HOST + "' header");
         } else if (request.getHeaders().count(HeaderKey.HOST) > 1) {
             throw new IllegalStateException("the http requests from version " + getVersion() + " cannot have multiples '" + HeaderKey.HOST + "' headers");
