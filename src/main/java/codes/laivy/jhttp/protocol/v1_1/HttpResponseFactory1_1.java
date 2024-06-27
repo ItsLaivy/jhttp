@@ -26,6 +26,10 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import static codes.laivy.jhttp.Main.CRLF;
@@ -36,9 +40,11 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
     // Object
 
     private final @NotNull HttpVersion version;
+    private final @NotNull Map<HttpClient, FutureImpl> futures;
 
     HttpResponseFactory1_1(@NotNull HttpVersion1_1 version) {
         this.version = version;
+        this.futures = new HashMap<>();
     }
 
     // Getters
@@ -76,8 +82,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
     }
 
     @SuppressWarnings("rawtypes")
-    @Override
-    public @NotNull HttpResponse parse(@NotNull String string) throws HttpResponseParseException {
+    public @NotNull HttpResponse parse(@NotNull String string, boolean parseMedia) throws HttpResponseParseException {
         if (!string.contains(CRLF + CRLF)) {
             throw new HttpResponseParseException("http request missing conclusion (headers to body transition CRLFs)");
         }
@@ -169,10 +174,24 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         // Finish
         return HttpResponse.create(getVersion(), status, headers, body);
     }
+    @Override
+    public @NotNull HttpResponse parse(@NotNull String string) throws HttpResponseParseException {
+        return parse(string, true);
+    }
 
     @Override
     public @NotNull Future parse(@NotNull HttpClient client, @NotNull String string) throws HttpResponseParseException {
-        return null;
+        @NotNull FutureImpl future;
+
+        if (futures.containsKey(client)) {
+            future = futures.get(client);
+            future.feed(string);
+        } else {
+            future = new FutureImpl(client, string);
+            futures.put(client, future);
+        }
+
+        return future;
     }
 
     @Override
@@ -206,11 +225,11 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
     // Classes
 
-    private static final class ResponseHeaders implements Headers {
+    private static class ResponseHeaders implements Headers {
 
         // Object
 
-        private final @NotNull List<Header<?>> list = new LinkedList<>();
+        protected final @NotNull List<Header<?>> list = new LinkedList<>();
 
         ResponseHeaders() {
         }
@@ -278,6 +297,180 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         @Override
         public @NotNull String toString() {
             return list.toString();
+        }
+
+    }
+    private static final class ImmutableHeaders extends ResponseHeaders {
+
+        private ImmutableHeaders(@NotNull Headers headers) {
+            for (@NotNull Header<?> header : headers) {
+                list.add(header);
+            }
+        }
+
+        @Override
+        public boolean add(@NotNull Header<?> header) {
+            throw new UnsupportedOperationException("you cannot change the headers of a future request");
+        }
+
+        @Override
+        public boolean remove(@NotNull Header<?> header) {
+            throw new UnsupportedOperationException("you cannot change the headers of a future request");
+        }
+
+        @Override
+        public boolean remove(@NotNull HeaderKey<?> key) {
+            throw new UnsupportedOperationException("you cannot change the headers of a future request");
+        }
+
+        @Override
+        public boolean remove(@NotNull String name) {
+            throw new UnsupportedOperationException("you cannot change the headers of a future request");
+        }
+    }
+
+    private final class FutureImpl implements Future {
+
+        private final @NotNull CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+
+        private final @NotNull HttpClient client;
+
+        private final @NotNull HttpVersion version;
+        private final @NotNull HttpStatus status;
+        private final @NotNull Headers headers;
+
+        private @NotNull String body;
+
+        public FutureImpl(
+                @NotNull HttpClient client,
+                @NotNull String body
+        ) throws HttpResponseParseException {
+            this.client = client;
+            this.body = body;
+
+            // Future checkers
+            future.whenComplete((done, exception) -> {
+                futures.remove(client);
+            });
+
+            // Request
+            @NotNull HttpResponse request = parse(body, false);
+            this.version = request.getVersion();
+            this.status = request.getStatus();
+            this.headers = new ImmutableHeaders(request.getHeaders());
+
+            // Security
+            check();
+        }
+
+        // Getters
+
+        @Override
+        public @NotNull HttpClient getClient() {
+            return client;
+        }
+        @Override
+        public @NotNull HttpVersion getVersion() {
+            return version;
+        }
+        @Override
+        public @NotNull HttpStatus getStatus() {
+            return status;
+        }
+        @Override
+        public @NotNull Headers getHeaders() {
+            return headers;
+        }
+
+        // Modules
+
+        private void check() {
+            try {
+                // Chunked Encoding
+                if (getHeaders().contains(TRANSFER_ENCODING)) {
+                    @NotNull Deferred<Encoding>[] encodings = getHeaders().get(TRANSFER_ENCODING)[0].getValue();
+                    @NotNull Deferred<Encoding> deferred = encodings[encodings.length - 1];
+
+                    if (deferred.available() && deferred.toString().equalsIgnoreCase("chunked")) {
+                        @NotNull Encoding encoding = deferred.retrieve();
+
+                        if (body.endsWith("0\r\n\r\n")) {
+                            body = encoding.decompress(body);
+
+
+                            // Completes the message with the new body
+                            @NotNull HttpResponse response = parse(getAsString());
+                            future.complete(response);
+
+                            return;
+                        }
+                    }
+                }
+
+                // Content Length
+                if (getHeaders().contains(CONTENT_LENGTH)) {
+                    // Check if the content length matches with the current body length and finish it true
+                    // Also complete exceptionally if the current body is higher than the required
+                    long required = getHeaders().get(CONTENT_LENGTH)[0].getValue().getBytes();
+
+                    if (required <= body.length()) {
+                        body = this.body.substring(0, (int) required);
+
+                        // Completes the message with the new body
+                        @NotNull HttpResponse response = parse(getAsString());
+                        future.complete(response);
+                    }
+                } else {
+                    // Completes the message; without the chunked transfer encoding or content length,
+                    // there's no reason to continue with the http response future
+
+                    @NotNull HttpResponse response = parse(getAsString());
+                    future.complete(response);
+                }
+            } catch (@NotNull Throwable throwable) {
+                // Any error report to the future
+                future.completeExceptionally(throwable);
+            }
+        }
+        public void feed(@NotNull String body) {
+            this.body += body;
+            check();
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return future.cancel(mayInterruptIfRunning);
+        }
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
+        @Override
+        public @NotNull HttpResponse get() throws InterruptedException, ExecutionException {
+            return future.get();
+        }
+        @Override
+        public @NotNull HttpResponse get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return future.get(timeout, unit);
+        }
+
+        // Implementations
+
+        @Override
+        public @NotNull String getAsString() {
+            return body;
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return "FutureImpl{" +
+                    "future=" + future +
+                    '}';
         }
 
     }
