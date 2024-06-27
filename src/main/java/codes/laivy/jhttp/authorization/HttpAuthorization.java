@@ -7,6 +7,7 @@ import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,9 +33,9 @@ public interface HttpAuthorization {
     static @NotNull HttpAuthorization create(final @NotNull HeaderKey<Credentials> key, @NotNull Predicate<Credentials> predicate) {
         return (socket, request) -> {
             // Bad Request (400)
-            @NotNull HttpResponse bad = request.getVersion().getFactory().getResponse().build(HttpStatus.BAD_REQUEST, Headers.create(), null);
+            @NotNull HttpResponse bad = HttpResponse.create(request.getVersion(), HttpStatus.BAD_REQUEST, Headers.create(), null);
             // Unauthorized (401)
-            @NotNull HttpResponse unauthorized = request.getVersion().getFactory().getResponse().build(HttpStatus.UNAUTHORIZED, Headers.create(), null);
+            @NotNull HttpResponse unauthorized = HttpResponse.create(request.getVersion(), HttpStatus.UNAUTHORIZED, Headers.create(), null);
 
             try {
                 // Authorization
@@ -86,6 +87,9 @@ public interface HttpAuthorization {
      * @author Daniel Richard (Laivy)
      * @since 1.0-SNAPSHOT
      */
+    // todo: improve this
+    @ApiStatus.ScheduledForRemoval
+    @Deprecated
     @Nullable HttpResponse validate(@NotNull HttpClient client, @NotNull HttpRequest request) throws IOException, InterruptedException;
 
 }

@@ -7,7 +7,6 @@ import org.jetbrains.annotations.*;
 import java.net.IDN;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Objects;
@@ -25,7 +24,7 @@ public final class URIAuthority {
         return PARSE_PATTERN.matcher(uri).matches();
     }
 
-    public static @NotNull URIAuthority parse(@NotNull String string) throws URISyntaxException, UnknownHostException {
+    public static @NotNull URIAuthority parse(@NotNull String string) throws URISyntaxException {
         @Nullable Basic userInfo = null;
         @NotNull String hostName;
         int port;
@@ -63,7 +62,7 @@ public final class URIAuthority {
                 port = HttpProtocol.HTTP.getPort();
             }
         } else {
-            throw new URISyntaxException(string, "cannot parse into a valid uri authority", 0);
+            throw new URISyntaxException(string, "cannot parse into a valid uri authority", -1);
         }
 
         return new URIAuthority(userInfo, InetSocketAddress.createUnresolved(hostName, port));

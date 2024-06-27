@@ -2,17 +2,18 @@ package codes.laivy.jhttp.element.request;
 
 import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.headers.*;
 import codes.laivy.jhttp.module.Cookie;
 import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.UserAgent;
-import codes.laivy.jhttp.protocol.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.deferred.provided.PseudoEncoding;
+import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
@@ -20,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -86,7 +86,7 @@ public interface HttpRequest extends HttpElement {
 
             @Override
             public @NotNull String toString() {
-                return HttpRequestFactory.serialize(this);
+                return HttpRequestFactory.getInstance(getVersion()).serialize(this);
             }
 
         };
@@ -346,13 +346,6 @@ public interface HttpRequest extends HttpElement {
          * @return the {@link HttpVersion} representing the version of this future.
          */
         @NotNull HttpVersion getVersion();
-
-        /**
-         * The date this request future has been created
-         *
-         * @return The creation date of this request future
-         */
-        @NotNull Instant getCreation();
 
         /**
          * Retrieves the method of the request

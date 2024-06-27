@@ -51,8 +51,8 @@ public final class HttpFactoryTests {
         @Order(value = 0)
         void validate() throws Throwable {
             for (@NotNull String valid : VALIDS) {
-                Assertions.assertTrue(HTTP1_1().getFactory().getRequest().isCompatible(valid), "cannot validate http 1.1 request '" + valid + "'");
-                HTTP1_1().getFactory().getRequest().parse(valid);
+                Assertions.assertTrue(HTTP1_1().getRequestFactory().validate(valid), "cannot validate http 1.1 request '" + valid + "'");
+                HTTP1_1().getRequestFactory().parse(valid);
             }
         }
         @Test
@@ -63,7 +63,7 @@ public final class HttpFactoryTests {
 
             @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
-            @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
+            @NotNull HttpRequest request = HTTP1_1().getRequestFactory().parse(string);
 
             Assertions.assertNotNull(request.getBody());
             Assertions.assertEquals(URIAuthority.create(new Basic("username", "password"), InetSocketAddress.createUnresolved("example.com", 8080)), request.getAuthority());
@@ -80,8 +80,8 @@ public final class HttpFactoryTests {
 
             @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
-            @NotNull HttpRequest reference = HTTP1_1().getFactory().getRequest().parse(string);
-            @NotNull HttpRequest clone = HTTP1_1().getFactory().getRequest().parse(reference.toString());
+            @NotNull HttpRequest reference = HTTP1_1().getRequestFactory().parse(string);
+            @NotNull HttpRequest clone = HTTP1_1().getRequestFactory().parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);
         }
@@ -91,7 +91,7 @@ public final class HttpFactoryTests {
         void contentType() throws Throwable {
             @NotNull String string = "GET http://localhost/index HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
 
-            @NotNull HttpRequest request = HTTP1_1().getFactory().getRequest().parse(string);
+            @NotNull HttpRequest request = HTTP1_1().getRequestFactory().parse(string);
             @NotNull Headers headers = request.getHeaders();
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));
@@ -125,8 +125,8 @@ public final class HttpFactoryTests {
         @Order(value = 0)
         void validate() throws Throwable {
             for (@NotNull String valid : VALIDS) {
-                Assertions.assertTrue(HTTP1_1().getFactory().getResponse().isCompatible(valid), "cannot validate http 1.1 response '" + valid + "'");
-                HTTP1_1().getFactory().getResponse().parse(valid);
+                Assertions.assertTrue(HTTP1_1().getResponseFactory().validate(valid), "cannot validate http 1.1 response '" + valid + "'");
+                HTTP1_1().getResponseFactory().parse(valid);
             }
         }
         @Test
@@ -137,7 +137,7 @@ public final class HttpFactoryTests {
 
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
-            @NotNull HttpResponse response = HTTP1_1().getFactory().getResponse().parse(string);
+            @NotNull HttpResponse response = HTTP1_1().getResponseFactory().parse(string);
 
             Assertions.assertNotNull(response.getBody());
             Assertions.assertEquals(HttpStatus.OK, response.getStatus());
@@ -155,8 +155,8 @@ public final class HttpFactoryTests {
 
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
 
-            @NotNull HttpResponse reference = HTTP1_1().getFactory().getResponse().parse(string);
-            @NotNull HttpResponse clone = HTTP1_1().getFactory().getResponse().parse(reference.toString());
+            @NotNull HttpResponse reference = HTTP1_1().getResponseFactory().parse(string);
+            @NotNull HttpResponse clone = HTTP1_1().getResponseFactory().parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);
         }
@@ -166,7 +166,7 @@ public final class HttpFactoryTests {
         void contentType() throws Throwable {
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
 
-            @NotNull HttpResponse response = HTTP1_1().getFactory().getResponse().parse(string);
+            @NotNull HttpResponse response = HTTP1_1().getResponseFactory().parse(string);
             @NotNull Headers headers = response.getHeaders();
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));

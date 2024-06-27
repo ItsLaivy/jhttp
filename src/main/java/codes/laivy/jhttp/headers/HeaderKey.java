@@ -1618,7 +1618,7 @@ public abstract class HeaderKey<T> {
             public @NotNull Header<URIAuthority> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
                     return create(URIAuthority.parse(value));
-                } catch (URISyntaxException | UnknownHostException e) {
+                } catch (@NotNull URISyntaxException e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a valid uri authority in header '" + getName() + "'", e);
                 }
             }
@@ -1830,7 +1830,7 @@ public abstract class HeaderKey<T> {
                     return create(Wildcard.create(null));
                 } else try {
                     return create(Wildcard.create(URIAuthority.parse(value)));
-                } catch (@NotNull UnknownHostException | @NotNull URISyntaxException e) {
+                } catch (@NotNull URISyntaxException e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a valid uri authority of '" + getName() + "' header", e);
                 }
             }

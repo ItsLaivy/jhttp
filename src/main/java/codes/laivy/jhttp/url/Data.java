@@ -33,7 +33,7 @@ public final class Data implements ContentSecurityPolicy.Source {
 
             if (!matcher.group(1).isEmpty()) {
                 type = matcher.group(1) != null ? MediaType.Parser.deserialize(matcher.group(1)) : null;
-                encoding = type != null && type.getCharset() != null ? type.getCharset().raw() : "UTF-8";
+                encoding = type != null && type.getCharset() != null ? type.getCharset().toString() : "UTF-8";
             }
 
             boolean base64 = matcher.group(2) != null;
@@ -133,7 +133,7 @@ public final class Data implements ContentSecurityPolicy.Source {
         }
 
         try {
-            @NotNull String encoding = getMediaType() != null && getMediaType().getCharset() != null ? getMediaType().getCharset().raw() : "UTF-8";
+            @NotNull String encoding = getMediaType() != null && getMediaType().getCharset() != null ? getMediaType().getCharset().toString() : "UTF-8";
             builder.append(",").append(URLEncoder.encode(new String(getRawData()), encoding));
         } catch (@NotNull UnsupportedEncodingException e) {
             throw new RuntimeException("cannot encode url '" + new String(getRawData()) + "'", e);

@@ -1,5 +1,8 @@
 package codes.laivy.jhttp.protocol;
 
+import codes.laivy.jhttp.protocol.factory.HeaderFactory;
+import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
+import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import org.jetbrains.annotations.*;
 
 import java.lang.reflect.Constructor;
@@ -7,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public abstract class HttpVersion {
-
+    
     // Static initializers
 
     private static @NotNull HttpVersion version(@NotNull String name) {
@@ -104,7 +107,9 @@ public abstract class HttpVersion {
 
     // Getters
 
-    public abstract @NotNull HttpFactory getFactory();
+    public abstract @NotNull HttpRequestFactory getRequestFactory();
+    public abstract @NotNull HttpResponseFactory getResponseFactory();
+    public abstract @NotNull HeaderFactory getHeaderFactory();
 
     @Contract(pure = true)
     public final int getMajor() {
@@ -130,7 +135,7 @@ public abstract class HttpVersion {
     }
 
     @Override
-    public @NotNull String toString() {
+    public final @NotNull String toString() {
         return "HTTP/" + getMajor() + "." + getMinor();
     }
 

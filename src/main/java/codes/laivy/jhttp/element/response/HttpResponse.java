@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.element.response;
 
+import codes.laivy.jhttp.connection.HttpClient;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;
@@ -9,6 +10,7 @@ import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.module.Cookie.Request;
 import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,8 +29,8 @@ public interface HttpResponse extends HttpElement {
     // Static initializers
 
     static @NotNull HttpResponse create(
-            @NotNull HttpStatus status,
             @NotNull HttpVersion version,
+            @NotNull HttpStatus status,
             @NotNull Headers headers,
             @Nullable HttpBody body
     ) {
@@ -37,12 +39,12 @@ public interface HttpResponse extends HttpElement {
             // Object
 
             @Override
-            public @NotNull HttpStatus getStatus() {
-                return status;
-            }
-            @Override
             public @NotNull HttpVersion getVersion() {
                 return version;
+            }
+            @Override
+            public @NotNull HttpStatus getStatus() {
+                return status;
             }
             @Override
             public @NotNull Headers getHeaders() {
@@ -69,7 +71,7 @@ public interface HttpResponse extends HttpElement {
 
             @Override
             public @NotNull String toString() {
-                return getVersion().getFactory().getResponse().wrap(this);
+                return HttpResponseFactory.getInstance(getVersion()).serialize(this);
             }
 
         };
@@ -115,5 +117,61 @@ public interface HttpResponse extends HttpElement {
         // Add header
         getHeaders().add(HeaderKey.SET_COOKIE.create(request));
     }
+
+    // Classes
+
+    /**
+     * A future representing the response of an HTTP request.
+     * This interface provides methods
+     * to access various details of the HTTP response.
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
+    interface Future extends java.util.concurrent.Future<HttpResponse> {
+
+        /**
+         * Retrieves the HttpClient associated with this response future.
+         *
+         * @return The HttpClient associated with this response. Never null.
+         */
+        @NotNull HttpClient getClient();
+
+        /**
+         * Retrieves the version of this response future.
+         *
+         * @return The {@link HttpVersion} representing the version of this future. Never null.
+         */
+        @NotNull HttpVersion getVersion();
+
+        /**
+         * Retrieves the status of this HTTP response future.
+         *
+         * @return The {@link HttpStatus} representing the status of this future. Never null.
+         */
+        @NotNull HttpStatus getStatus();
+
+        /**
+         * Gets the headers from this HTTP response future.
+         *
+         * @return The headers of this HTTP response future. Never null.
+         */
+        @NotNull Headers getHeaders();
+
+        /**
+         * Returns the raw HTTP response as a string. The difference between this method and {@link #toString()}
+         * is that {@link #toString()} represents the string representation of the Future itself, while this method
+         * returns the actual HTTP response.
+         * <p>
+         * If the Future is not completed, this method will return a fragmented HTTP response.
+         *
+         * @return The raw HTTP response as a string. Never null.
+         */
+        @NotNull String getAsString();
+
+        @Override
+        @NotNull String toString();
+    }
+
 
 }

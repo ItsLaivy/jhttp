@@ -1,8 +1,10 @@
 package codes.laivy.jhttp.tests.content;
 
 import codes.laivy.jhttp.authorization.Credentials;
+import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
+import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
@@ -15,14 +17,13 @@ import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.deferred.provided.PseudoCharset;
-import codes.laivy.jhttp.deferred.provided.PseudoEncoding;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.email.Email;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.*;
 
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;

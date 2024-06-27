@@ -3,6 +3,7 @@ package codes.laivy.jhttp.deferred;
 import codes.laivy.jhttp.encoding.Encoding;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -104,6 +105,16 @@ public class Deferred<T> {
      */
     public boolean available() {
         return data != null;
+    }
+
+    /**
+     * Gets the available value or the parameter value if not available yet
+     *
+     * @return the available deferred value or the parameter value if not available
+     */
+    public @UnknownNullability T orElse(@Nullable T value) {
+        if (available()) return retrieve();
+        else return value;
     }
 
     // Implementations

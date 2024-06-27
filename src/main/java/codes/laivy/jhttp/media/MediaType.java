@@ -1,14 +1,15 @@
 package codes.laivy.jhttp.media;
 
+import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.media.json.JsonMediaParser;
 import codes.laivy.jhttp.media.text.TextMediaParser;
-import codes.laivy.jhttp.deferred.provided.PseudoCharset;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -251,7 +252,7 @@ public final class MediaType<T> {
      */
     public @Nullable Deferred<Charset> getCharset() {
         @Nullable Parameter parameter = getParameter("charset").orElse(null);
-        return parameter != null ? Deferred<Charset>.create(parameter.getValue()) : null;
+        return parameter != null ? Deferred.charset(parameter.getValue()) : null;
     }
 
     /**
