@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
-public interface HeaderFactory {
+public interface HttpHeaderFactory {
 
     // Getters
 

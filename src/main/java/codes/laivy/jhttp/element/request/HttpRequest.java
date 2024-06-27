@@ -330,7 +330,7 @@ public interface HttpRequest extends HttpElement {
      * The factory
      * will get this Future, completing it if the response is finally concluded.
      */
-    interface Future extends java.util.concurrent.Future<HttpRequest> {
+    interface Future extends java.util.concurrent.Future<@NotNull HttpRequest> {
 
         /**
          * Retrieves the HttpClient associated with this request future.

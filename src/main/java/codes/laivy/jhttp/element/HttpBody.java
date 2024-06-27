@@ -19,6 +19,7 @@ import java.util.Objects;
  * @see Content
  * @since 1.0-SNAPSHOT
  */
+// todo: refactoration
 public interface HttpBody extends CharSequence {
 
     // Static initializers

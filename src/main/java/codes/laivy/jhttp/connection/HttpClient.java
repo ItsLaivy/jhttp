@@ -42,7 +42,7 @@ public interface HttpClient extends Closeable {
      * @throws IllegalHttpVersionException If the received message cannot be parsed as a valid http version
      * @since 1.0
      */
-    @NotNull HttpRequest read() throws IOException, ClosedChannelException, IllegalHttpVersionException, HttpRequestParseException;
+    @NotNull HttpRequest.Future read() throws IOException, ClosedChannelException, IllegalHttpVersionException, HttpRequestParseException;
 
     /**
      * Writes an HTTP response to the client.

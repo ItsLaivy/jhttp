@@ -10,7 +10,6 @@ import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.module.Cookie.Request;
 import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,7 +70,7 @@ public interface HttpResponse extends HttpElement {
 
             @Override
             public @NotNull String toString() {
-                return HttpResponseFactory.getInstance(getVersion()).serialize(this);
+                return getVersion().getResponseFactory().serialize(this);
             }
 
         };
@@ -128,7 +127,7 @@ public interface HttpResponse extends HttpElement {
      * @author Daniel Richard (Laivy)
      * @since 1.0-SNAPSHOT
      */
-    interface Future extends java.util.concurrent.Future<HttpResponse> {
+    interface Future extends java.util.concurrent.Future<@NotNull HttpResponse> {
 
         /**
          * Retrieves the HttpClient associated with this response future.

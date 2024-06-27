@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.protocol.HttpVersion;
-import codes.laivy.jhttp.protocol.factory.HeaderFactory;
+import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import org.jetbrains.annotations.ApiStatus;
@@ -12,7 +12,7 @@ final class HttpVersion1_1 extends HttpVersion {
 
     private final @NotNull HttpRequestFactory requestFactory;
     private final @NotNull HttpResponseFactory responseFactory;
-    private final @NotNull HeaderFactory headerFactory;
+    private final @NotNull HttpHeaderFactory headerFactory;
 
     public HttpVersion1_1() {
         super(
@@ -25,7 +25,7 @@ final class HttpVersion1_1 extends HttpVersion {
 
         this.requestFactory = new HttpRequestFactory1_1(this);
         this.responseFactory = new HttpResponseFactory1_1(this);
-        this.headerFactory = new HeaderFactory(this);
+        this.headerFactory = new HttpHeaderFactory1_1(this);
     }
 
     // Getters
@@ -39,7 +39,7 @@ final class HttpVersion1_1 extends HttpVersion {
         return responseFactory;
     }
     @Override
-    public @NotNull HeaderFactory getHeaderFactory() {
+    public @NotNull HttpHeaderFactory getHeaderFactory() {
         return headerFactory;
     }
 
