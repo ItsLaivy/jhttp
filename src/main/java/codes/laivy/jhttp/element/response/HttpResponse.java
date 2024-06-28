@@ -7,15 +7,12 @@ import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
-import codes.laivy.jhttp.module.Cookie.Request;
 import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * This interface represents an HTTP response.
@@ -84,37 +81,8 @@ public interface HttpResponse extends HttpElement {
      */
     @NotNull HttpStatus getStatus();
 
-    // Getters
-
     default @Nullable Product getServer() {
         return getHeaders().first(HeaderKey.SERVER).map(Header::getValue).orElse(null);
-    }
-    default void setServer(@Nullable Product product) {
-        if (product != null) getHeaders().put(HeaderKey.SERVER.create(product));
-        else getHeaders().remove(HeaderKey.SERVER);
-    }
-
-    // Cookies
-
-    default @NotNull Request @NotNull [] getCookies() {
-        return Arrays.stream(getHeaders().get(HeaderKey.SET_COOKIE)).map(Header::getValue).toArray(Request[]::new);
-    }
-    default @NotNull Optional<Request> getCookie(@NotNull String name) {
-        return Arrays.stream(getCookies())
-                .filter(cookie -> cookie.getName().equals(name))
-                .findFirst();
-    }
-
-    default void cookie(@NotNull Request request) {
-        // Remove the old cookie request if already exists
-        for (@NotNull Header<Request> header : getHeaders().get(HeaderKey.SET_COOKIE)) {
-            if (header.getValue().getName().equals(request.getName())) {
-                getHeaders().remove(header);
-            }
-        }
-
-        // Add header
-        getHeaders().add(HeaderKey.SET_COOKIE.create(request));
     }
 
     // Classes

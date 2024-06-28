@@ -8,7 +8,6 @@ import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.headers.*;
-import codes.laivy.jhttp.module.Cookie;
 import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Origin;
 import codes.laivy.jhttp.module.UserAgent;
@@ -111,7 +110,7 @@ public interface HttpRequest extends HttpElement {
      */
     @NotNull URI getUri();
 
-    // Getters
+    // Modules
 
     /**
      * Retrieves the authorization credentials specified in the headers, if present.
@@ -120,10 +119,6 @@ public interface HttpRequest extends HttpElement {
      */
     default @Nullable Credentials getAuthorization() {
         return getHeaders().first(HeaderKey.AUTHORIZATION).map(Header::getValue).orElse(null);
-    }
-    default void setAuthorization(@Nullable Credentials credentials) {
-        if (credentials == null) getHeaders().remove(HeaderKey.AUTHORIZATION);
-        else getHeaders().put(HeaderKey.AUTHORIZATION.create(credentials));
     }
 
     /**
@@ -136,9 +131,6 @@ public interface HttpRequest extends HttpElement {
         if (getHeaders().contains(HeaderKey.HOST)) return getHeaders().get(HeaderKey.HOST)[0].getValue();
         else throw new IllegalStateException("Cannot find 'Host' header from HTTP request");
     }
-    default void setHost(@NotNull Host host) {
-        getHeaders().put(HeaderKey.HOST.create(host));
-    }
 
     /**
      * Retrieves the user agent specified in the headers, if present.
@@ -147,10 +139,6 @@ public interface HttpRequest extends HttpElement {
      */
     default @Nullable UserAgent getUserAgent() {
         return getHeaders().first(HeaderKey.USER_AGENT).map(Header::getValue).orElse(null);
-    }
-    default void setUserAgent(@Nullable UserAgent agent) {
-        if (agent == null) getHeaders().remove(HeaderKey.USER_AGENT);
-        else getHeaders().put(HeaderKey.USER_AGENT.create(agent));
     }
 
     /**
@@ -181,13 +169,6 @@ public interface HttpRequest extends HttpElement {
     default @NotNull Wildcard<Weight<Locale>[]> getLocales() {
         return getHeaders().first(HeaderKey.ACCEPT_LANGUAGE).map(Header::getValue).orElse(Wildcard.create(new Weight[0]));
     }
-    default void setLocales(@NotNull Wildcard<Weight<Locale>[]> wildcard) {
-        if (!wildcard.isWildcard() && wildcard.getValue().length == 0) {
-            getHeaders().remove(HeaderKey.ACCEPT_LANGUAGE);
-        } else {
-            getHeaders().put(HeaderKey.ACCEPT_LANGUAGE.create(wildcard));
-        }
-    }
 
     /**
      * Retrieves the accepted encodings from the request headers, if present.
@@ -198,13 +179,6 @@ public interface HttpRequest extends HttpElement {
     default @NotNull Wildcard<Weight<Deferred<Encoding>>[]> getEncodings() {
         return getHeaders().first(HeaderKey.ACCEPT_ENCODING).map(Header::getValue).orElse(Wildcard.create(new Weight[0]));
     }
-    default void setEncodings(@NotNull Wildcard<Weight<Deferred<Encoding>>[]> wildcard) {
-        if (!wildcard.isWildcard() && wildcard.getValue().length == 0) {
-            getHeaders().remove(HeaderKey.ACCEPT_ENCODING);
-        } else {
-            getHeaders().put(HeaderKey.ACCEPT_ENCODING.create(wildcard));
-        }
-    }
 
     /**
      * Retrieves the forwarded information from the request headers, if present.
@@ -214,10 +188,6 @@ public interface HttpRequest extends HttpElement {
     default @Nullable Forwarded getForwarded() {
         return getHeaders().first(HeaderKey.FORWARDED).map(Header::getValue).orElse(null);
     }
-    default void setForwarded(@Nullable Forwarded forwarded) {
-        if (forwarded == null) getHeaders().remove(HeaderKey.FORWARDED);
-        else getHeaders().put(HeaderKey.FORWARDED.create(forwarded));
-    }
 
     /**
      * Retrieves the referrer from the request headers, if present.
@@ -226,63 +196,6 @@ public interface HttpRequest extends HttpElement {
      */
     default @Nullable Origin getReferrer() {
         return getHeaders().first(HeaderKey.REFERER).map(Header::getValue).orElse(null);
-    }
-    default void setReferrer(@Nullable Origin origin) {
-        if (origin == null) getHeaders().remove(HeaderKey.REFERER);
-        else getHeaders().put(HeaderKey.REFERER.create(origin));
-    }
-
-    // Cookies
-
-    /**
-     * Retrieves all cookies from the request headers.
-     *
-     * @return an array of cookies
-     */
-    default @NotNull Cookie @NotNull [] getCookies() {
-        return getHeaders().first(HeaderKey.COOKIE).map(Header::getValue).orElse(new Cookie[0]);
-    }
-
-    /**
-     * Retrieves a specific cookie by name from the request headers.
-     *
-     * @param name the name of the cookie
-     * @return an optional containing the cookie, or empty if not found
-     */
-    default @NotNull Optional<Cookie> getCookie(@NotNull String name) {
-        return Arrays.stream(getCookies())
-                .filter(cookie -> cookie.getName().equals(name))
-                .findFirst();
-    }
-
-    /**
-     * Adds or removes a cookie with the specified name and value to/from the HTTP headers.
-     * If the value is {@code null}, the cookie with the specified name will be removed.
-     *
-     * @param name  the name of the cookie
-     * @param value the value of the cookie, or {@code null} to remove the cookie
-     */
-    default void cookie(@NotNull String name, @Nullable String value) {
-        @NotNull Cookie[] cookies;
-
-        if (value != null) {
-            // Check if the cookie already exists
-            if (getCookie(name).isPresent()) return;
-
-            // Get cookies and add the new one
-            @NotNull Cookie cookie = Cookie.create(name, value);
-
-            cookies = getCookies();
-            cookies = Arrays.copyOfRange(cookies, 0, cookies.length + 1);
-            cookies[cookies.length - 1] = cookie;
-        } else {
-            @NotNull List<Cookie> list = new ArrayList<>(Arrays.asList(getCookies()));
-            list.removeIf(c -> c.getName().equals(name));
-
-            cookies = list.toArray(new Cookie[0]);
-        }
-
-        getHeaders().put(HeaderKey.COOKIE.create(cookies));
     }
 
     // Query and Path
