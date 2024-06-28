@@ -20,16 +20,17 @@ import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import codes.laivy.jhttp.utilities.StringUtils;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static codes.laivy.jhttp.Main.CRLF;
@@ -39,7 +40,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
     // Object
 
-    private final @NotNull HttpVersion version;
+    private final @NotNull HttpVersion1_1 version;
     private final @NotNull Map<HttpClient, FutureImpl> futures;
 
     HttpResponseFactory1_1(@NotNull HttpVersion1_1 version) {
@@ -50,7 +51,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
     // Getters
 
     @Override
-    public @NotNull HttpVersion getVersion() {
+    public @NotNull HttpVersion1_1 getVersion() {
         return version;
     }
 
@@ -332,10 +333,11 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
     private final class FutureImpl implements Future {
 
         private final @NotNull CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+        private @UnknownNullability ScheduledFuture<?> timeout;
 
         private final @NotNull HttpClient client;
 
-        private final @NotNull HttpVersion version;
+        private final @NotNull HttpVersion1_1 version;
         private final @NotNull HttpStatus status;
         private final @NotNull Headers headers;
 
@@ -355,7 +357,8 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
             // Request
             @NotNull HttpResponse request = parse(body, false);
-            this.version = request.getVersion();
+
+            this.version = HttpResponseFactory1_1.this.getVersion();
             this.status = request.getStatus();
             this.headers = new ImmutableHeaders(request.getHeaders());
 
@@ -465,12 +468,36 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         public @NotNull String getAsString() {
             return body;
         }
-
         @Override
         public @NotNull String toString() {
             return "FutureImpl{" +
                     "future=" + future +
                     '}';
+        }
+
+        // Future
+
+        @Override
+        @Contract("_->this")
+        public @NotNull Future whenComplete(@NotNull BiConsumer<? super HttpResponse, ? super Throwable> action) {
+            future.whenComplete(action);
+            return this;
+        }
+        @Override
+        @Contract("_->this")
+        public @NotNull Future orTimeout(@NotNull Duration duration) {
+            // Schedule a timeout task
+            if (timeout != null) timeout.cancel(true);
+            timeout = HttpVersion1_1.FUTURE_TIMEOUT_SCHEDULED.schedule(() -> {
+                cancel(true);
+            }, duration.toMillis(), TimeUnit.MILLISECONDS);
+
+            whenComplete((value, exception) -> {
+                timeout.cancel(false);
+            });
+
+            // Finish
+            return this;
         }
 
     }

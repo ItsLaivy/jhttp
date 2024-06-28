@@ -19,7 +19,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 
 /**
  * This interface represents an HTTP request.
@@ -243,6 +246,7 @@ public interface HttpRequest extends HttpElement {
      * The factory
      * will get this Future, completing it if the response is finally concluded.
      */
+    // todo: #isChunked method
     interface Future extends java.util.concurrent.Future<@NotNull HttpRequest> {
 
         /**
@@ -298,6 +302,47 @@ public interface HttpRequest extends HttpElement {
 
         @Override
         @NotNull String toString();
+
+        // Future
+
+        /**
+         * Attaches the given action to be invoked when this future completes.
+         * The action is executed with the result of the HTTP request and any throwable
+         * that was thrown during the request execution. The action will be run after
+         * the HTTP request completes, either successfully or with an error.
+         *
+         * <p>The action is provided with two parameters:
+         * <ul>
+         *   <li>The {@link HttpRequest} object representing the completed HTTP request.</li>
+         *   <li>A {@link Throwable} object representing any error that occurred, or {@code null} if the request completed successfully.</li>
+         * </ul>
+         *
+         * <p>This method is useful for performing additional operations or cleanup
+         * after the request is complete, regardless of the outcome.
+         *
+         * @param action the action to be executed when the future completes
+         * @return a {@link Future} that represents the result of the action
+         * @throws NullPointerException if the specified action is {@code null}
+         */
+        @NotNull Future whenComplete(@NotNull BiConsumer<? super HttpRequest, ? super Throwable> action);
+
+        /**
+         * Specifies a timeout for the HTTP request. If the request does not complete
+         * within the given duration, the future will be completed exceptionally with
+         * a {@link TimeoutException}.
+         *
+         * <p>The duration parameter defines the maximum time to wait for the request to complete.
+         * If the duration elapses before the request completes, the future is automatically
+         * canceled and a {@link TimeoutException} is thrown.
+         *
+         * <p>This method is useful for ensuring that the request does not the app froze indefinitely
+         * and provides a way to handle long-running requests.
+         *
+         * @param duration the maximum time to wait for the request to complete
+         * @return a {@link Future} that represents the result of the timeout operation
+         * @throws NullPointerException if the specified duration is {@code null}
+         */
+        @NotNull Future orTimeout(@NotNull Duration duration);
 
     }
 

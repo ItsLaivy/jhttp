@@ -54,10 +54,6 @@ public interface HttpElement {
     default @Nullable Connection getConnection() {
         return getHeaders().first(HeaderKey.CONNECTION).map(Header::getValue).orElse(null);
     }
-    default void setConnection(@Nullable Connection connection) {
-        if (connection == null) getHeaders().remove(HeaderKey.CONNECTION);
-        else getHeaders().put(HeaderKey.CONNECTION.create(connection));
-    }
 
     default @Nullable OffsetDateTime getDate() {
         return getHeaders().first(HeaderKey.DATE).map(Header::getValue).orElse(null);
@@ -70,10 +66,6 @@ public interface HttpElement {
      */
     default @Nullable ContentDisposition getDisposition() {
         return getHeaders().first(HeaderKey.CONTENT_DISPOSITION).map(Header::getValue).orElse(null);
-    }
-    default void setDisposition(@Nullable ContentDisposition disposition) {
-        if (disposition == null) getHeaders().remove(HeaderKey.CONTENT_DISPOSITION);
-        else getHeaders().put(HeaderKey.CONTENT_DISPOSITION.create(disposition));
     }
 
     /**

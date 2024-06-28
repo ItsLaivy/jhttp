@@ -7,8 +7,13 @@ import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 @ApiStatus.Internal
 final class HttpVersion1_1 extends HttpVersion {
+
+    public static final @NotNull ScheduledExecutorService FUTURE_TIMEOUT_SCHEDULED = Executors.newScheduledThreadPool(1);
 
     private final @NotNull HttpRequestFactory requestFactory;
     private final @NotNull HttpResponseFactory responseFactory;

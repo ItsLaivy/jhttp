@@ -12,7 +12,10 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 
 /**
  * This interface represents an HTTP response.
@@ -88,13 +91,14 @@ public interface HttpResponse extends HttpElement {
     // Classes
 
     /**
-     * A future representing the response of an HTTP request.
+     * A future representing the response of an HTTP response.
      * This interface provides methods
      * to access various details of the HTTP response.
      *
      * @author Daniel Richard (Laivy)
      * @since 1.0-SNAPSHOT
      */
+    // todo: #isChunked method
     interface Future extends java.util.concurrent.Future<@NotNull HttpResponse> {
 
         /**
@@ -138,6 +142,48 @@ public interface HttpResponse extends HttpElement {
 
         @Override
         @NotNull String toString();
+
+        // Future
+
+        /**
+         * Attaches the given action to be invoked when this future completes.
+         * The action is executed with the result of the HTTP response and any throwable
+         * that was thrown during the response execution. The action will be run after
+         * the HTTP response completes, either successfully or with an error.
+         *
+         * <p>The action is provided with two parameters:
+         * <ul>
+         *   <li>The {@link HttpResponse} object representing the completed HTTP response.</li>
+         *   <li>A {@link Throwable} object representing any error that occurred, or {@code null} if the response completed successfully.</li>
+         * </ul>
+         *
+         * <p>This method is useful for performing additional operations or cleanup
+         * after the response is complete, regardless of the outcome.
+         *
+         * @param action the action to be executed when the future completes
+         * @return a {@link Future} that represents the result of the action
+         * @throws NullPointerException if the specified action is {@code null}
+         */
+        @NotNull Future whenComplete(@NotNull BiConsumer<? super HttpResponse, ? super Throwable> action);
+
+        /**
+         * Specifies a timeout for the HTTP response. If the response does not complete
+         * within the given duration, the future will be completed exceptionally with
+         * a {@link TimeoutException}.
+         *
+         * <p>The duration parameter defines the maximum time to wait for the response to complete.
+         * If the duration elapses before the response completes, the future is automatically
+         * canceled and a {@link TimeoutException} is thrown.
+         *
+         * <p>This method is useful for ensuring that the response does not the app froze indefinitely
+         * and provides a way to handle long-running requests.
+         *
+         * @param duration the maximum time to wait for the response to complete
+         * @return a {@link Future} that represents the result of the timeout operation
+         * @throws NullPointerException if the specified duration is {@code null}
+         */
+        @NotNull Future orTimeout(@NotNull Duration duration);
+
     }
 
 

@@ -24,16 +24,17 @@ import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static codes.laivy.jhttp.Main.CRLF;
@@ -400,6 +401,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
     private final class FutureImpl implements Future {
 
         private final @NotNull CompletableFuture<HttpRequest> future = new CompletableFuture<>();
+        private @UnknownNullability ScheduledFuture<?> timeout;
 
         private final @NotNull HttpClient client;
 
@@ -545,12 +547,36 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
         public @NotNull String getAsString() {
             return body;
         }
-
         @Override
         public @NotNull String toString() {
             return "FutureImpl{" +
                     "future=" + future +
                     '}';
+        }
+
+        // Future
+
+        @Override
+        @Contract("_->this")
+        public @NotNull Future whenComplete(@NotNull BiConsumer<? super HttpRequest, ? super Throwable> action) {
+            future.whenComplete(action);
+            return this;
+        }
+        @Override
+        @Contract("_->this")
+        public @NotNull Future orTimeout(@NotNull Duration duration) {
+            // Schedule a timeout task
+            if (timeout != null) timeout.cancel(true);
+            timeout = HttpVersion1_1.FUTURE_TIMEOUT_SCHEDULED.schedule(() -> {
+                cancel(true);
+            }, duration.toMillis(), TimeUnit.MILLISECONDS);
+
+            whenComplete((value, exception) -> {
+                timeout.cancel(false);
+            });
+
+            // Finish
+            return this;
         }
 
     }
