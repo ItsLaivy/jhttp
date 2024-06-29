@@ -97,6 +97,9 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull Method @NotNull []> ALLOW = new Provided.AllowHeaderKey();
     public static @NotNull HeaderKey<@NotNull Optional<@NotNull AlternativeService @NotNull []>> ALT_SVC = new Provided.AltSvcHeaderKey();
     public static @NotNull HeaderKey<@NotNull URIAuthority> ALT_USED = new Provided.AltUsedHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_ELIGIBLE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_REGISTER_SOURCE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_REGISTER_TRIGGER = new Provided.();
     public static @NotNull HeaderKey<@NotNull Credentials> AUTHORIZATION = new Provided.AuthorizationHeaderKey();
     public static @NotNull HeaderKey<@NotNull CacheControl> CACHE_CONTROL = new Provided.CacheControlHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull SiteData @NotNull []>> CLEAR_SITE_DATA = new Provided.ClearSiteDataHeaderKey();
@@ -119,6 +122,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull ResourcePolicy> CROSS_ORIGIN_RESOURCE_POLICY = new Provided.CrossOriginResourcePolicyHeaderKey();
     public static @NotNull HeaderKey<@NotNull OffsetDateTime> DATE = new Provided.DateHeaderKey();
     public static @NotNull HeaderKey<@NotNull BitMeasure> DEVICE_MEMORY = new Provided.DeviceMemoryHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > DIGEST = new Provided.();
     @Deprecated
     public static @NotNull HeaderKey<@NotNull Boolean> DNT = new Provided.DNTHeaderKey();
     @ApiStatus.Experimental
@@ -149,25 +153,84 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull Integer> MAX_FORWARDS = new Provided.MaxForwardsHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull NetworkErrorLogging> NEL = new Provided.NetworkErrorLoggingHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > NO_VARY_SEARCH = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > OBSERVE_BROWSING_TOPICS = new Provided.();
     public static @NotNull HeaderKey<@Nullable Host> ORIGIN = new Provided.OriginHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Boolean> ORIGIN_AGENT_CLUSTER = new Provided.OriginAgentClusterHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > PERMISSIONS_POLICY = new Provided.();
     @Deprecated
     public static @NotNull HeaderKey<@UnknownNullability Void> PRAGMA = new Provided.PragmaHeaderKey();
     public static @NotNull HeaderKey<@NotNull Credentials> PROXY_AUTHORIZATION = new Provided.ProxyAuthorizationHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > RANGE = new Provided.();
     public static @NotNull HeaderKey<@NotNull Origin> REFERER = new Provided.RefererHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > REFERER_POLICY = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > REPORTING_ENDPOINTS = new Provided.();
+    @ApiStatus.Experimental
+    public static @NotNull HeaderKey<@NotNull > REPR_DIGEST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > RETRY_AFTER = new Provided.();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Duration> RTT = new Provided.RTTHeaderKey();
     public static @NotNull HeaderKey<@NotNull Boolean> SAVE_DATA = new Provided.SaveDataHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > SEC_BROWSING_TOPICS = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_PREFERS_COLOR_SCHEME = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_PREFERS_REDUCED_MOTION = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_PREFERS_REDUCED_TRANSPARENCY = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_ARCH = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_BITNESS = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_FULL_VERSION = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_FULL_VERSION_LIST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_MOBILE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_MODEL = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_PLATFORM = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_CH_UA_PLATFORM_VERSION = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_FETCH_DEST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_FETCH_MODE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_FETCH_SITE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_FETCH_USER = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_GPC = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_PURPOSE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SEC_WEBSOCKET_ACCEPT = new Provided.();
     public static @NotNull HeaderKey<@NotNull Product> SERVER = new Provided.ServerHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > SERVER_TIMING = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > SERVICE_WORKER_NAVIGATION_PRELOAD = new Provided.();
     public static @NotNull HeaderKey<Cookie. @NotNull Request> SET_COOKIE = new Provided.SetCookieHeaderKey();
+    @ApiStatus.Experimental
+    public static @NotNull HeaderKey<@NotNull > SET_LOGIN = new Provided.();
     public static @NotNull HeaderKey<@NotNull Origin> SOURCEMAP = new Provided.SourceMapHeaderKey();
     @ApiStatus.Experimental
+    public static @NotNull HeaderKey<@NotNull > SPECULATION_RULES = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > STRICT_TRANSPORT_SECURITY = new Provided.();
+    @ApiStatus.Experimental
+    public static @NotNull HeaderKey<@NotNull > SUPPORTS_LOADING_MODE = new Provided.();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Weight<@NotNull Deferred<Encoding>> @NotNull []> TE = new Provided.TEHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > TIMING_ALLOW_ORIGIN = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > TK = new Provided.();
     public static @NotNull HeaderKey<@NotNull HeaderKey<?> @NotNull []> TRAILER = new Provided.TrailerHeaderKey();
     public static @NotNull HeaderKey<@NotNull Deferred<Encoding> @NotNull []> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Upgrade> UPGRADE = new Provided.UpgradeHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > UPGRADE_INSECURE_REQUESTS = new Provided.();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> VARY = new Provided.VaryHeaderKey();
     public static @NotNull HeaderKey<@NotNull UserAgent> USER_AGENT = new Provided.UserAgentHeaderKey();
+    public static @NotNull HeaderKey<@NotNull > VARY = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > VIA = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > VIEWPORT_WIDTH = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WANT_CONTENT_DIGEST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WANT_DIGEST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WANT_REPR_DIGEST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WARNING = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WIDTH = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > WWW_AUTHENTICATE = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_CONTENT_TYPE_OPTIONS = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_DNS_PREFETCH_CONTROL = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_FORWARDED_FOR = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_FORWARDED_HOST = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_FORWARDED_PROTO = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_FRAME_OPTIONS = new Provided.();
+    public static @NotNull HeaderKey<@NotNull > X_XSS_PROTECTION = new Provided.();
+
     // Object
 
     private final @NotNull String name;
@@ -252,6 +315,24 @@ public abstract class HeaderKey<T> {
             throw new UnsupportedOperationException();
         }
 
+        private static final class UpgradeHeaderKey extends HeaderKey<@NotNull Upgrade> {
+            private UpgradeHeaderKey() {
+                super("Upgrade", Target.BOTH);
+            }
+
+            @Override
+            public @NotNull Header<@NotNull Upgrade> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                try {
+                    return create(Upgrade.Parser.deserialize(value));
+                } catch (ParseException e) {
+                    throw new HeaderFormatException(e);
+                }
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull Upgrade> header) {
+                return Upgrade.Parser.serialize(header.getValue());
+            }
+        }
         private static final class AcceptControlAllowCredentials extends HeaderKey<@NotNull Boolean> {
             private AcceptControlAllowCredentials() {
                 super("Access-Control-Allow-Credentials", Target.RESPONSE);

@@ -497,12 +497,14 @@ public final class HeaderTests {
                             "keep-alive, Upgrade, Authorization",
                             "keep-alive,Upgrade  , Authorization, Forwarded, Content-Digest",
                             "keep-alive",
+                            "upgrade",
                             "close",
                             "close  ,  Upgrade  , Authorization  , Forwarded  ,  Content-Digest"
                     }, new String[] {
                             "",
                             "*",
-                            "diwmda"
+                            "diwmda",
+                            "vary"
                     }
             );
         }
@@ -1489,6 +1491,24 @@ public final class HeaderTests {
                     }, new String[] {
                             "",
                             "(platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
+                    }
+            );
+        }
+    }
+    @Nested
+    final class Upgrade extends HeaderTest<codes.laivy.jhttp.module.Upgrade> {
+        private Upgrade() {
+            super(
+                    HeaderKey.UPGRADE,
+
+                    new String[] {
+                            "example/1, foo/2",
+                            "example/1",
+                            "example",
+                            "websocket    ,   example/2.2, foo",
+                    }, new String[] {
+                            "",
+                            "example-/1,4, 21 daw dko",
                     }
             );
         }
