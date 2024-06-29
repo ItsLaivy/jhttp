@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.protocol.factory;
 
-import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.element.response.HttpResponse.Future;
 import codes.laivy.jhttp.exception.parser.request.HttpResponseParseException;

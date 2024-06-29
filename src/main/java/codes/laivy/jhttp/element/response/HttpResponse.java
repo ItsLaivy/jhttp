@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.element.response;
 
-import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;

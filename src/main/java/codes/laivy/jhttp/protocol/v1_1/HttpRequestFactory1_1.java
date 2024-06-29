@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
-import codes.laivy.jhttp.connection.HttpClient;
+import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;

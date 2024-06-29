@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.connection;
+package codes.laivy.jhttp.client;
 
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
