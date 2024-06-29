@@ -12,6 +12,7 @@ import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.module.CrossOrigin.EmbedderPolicy;
 import codes.laivy.jhttp.module.UserAgent.Product;
+import codes.laivy.jhttp.module.attribution.Eligible;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.module.connection.EffectiveConnectionType;
 import codes.laivy.jhttp.module.content.AcceptRange;
@@ -24,6 +25,8 @@ import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.url.email.Email;
 import codes.laivy.jhttp.utilities.DateUtils;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.jetbrains.annotations.*;
 
 import java.lang.reflect.Field;
@@ -97,9 +100,14 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull Method @NotNull []> ALLOW = new Provided.AllowHeaderKey();
     public static @NotNull HeaderKey<@NotNull Optional<@NotNull AlternativeService @NotNull []>> ALT_SVC = new Provided.AltSvcHeaderKey();
     public static @NotNull HeaderKey<@NotNull URIAuthority> ALT_USED = new Provided.AltUsedHeaderKey();
-    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_ELIGIBLE = new Provided.();
-    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_REGISTER_SOURCE = new Provided.();
-    public static @NotNull HeaderKey<@NotNull > ATTRIBUTION_REPORTING_REGISTER_TRIGGER = new Provided.();
+    @ApiStatus.Experimental
+    public static @NotNull HeaderKey<@NotNull Eligible> ATTRIBUTION_REPORTING_ELIGIBLE = new Provided.AttributionReportingEligibleHeaderKey();
+    @ApiStatus.Experimental
+    // todo: attribution reporting register source object
+    public static @NotNull HeaderKey<@NotNull JsonObject> ATTRIBUTION_REPORTING_REGISTER_SOURCE = new Provided.AttributionReportingRegisterSourceHeaderKey();
+    @ApiStatus.Experimental
+    // todo: attribution reporting register trigger object
+    public static @NotNull HeaderKey<@NotNull JsonObject> ATTRIBUTION_REPORTING_REGISTER_TRIGGER = new Provided.AttributionReportingRegisterTriggerHeaderKey();
     public static @NotNull HeaderKey<@NotNull Credentials> AUTHORIZATION = new Provided.AuthorizationHeaderKey();
     public static @NotNull HeaderKey<@NotNull CacheControl> CACHE_CONTROL = new Provided.CacheControlHeaderKey();
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull SiteData @NotNull []>> CLEAR_SITE_DATA = new Provided.ClearSiteDataHeaderKey();
@@ -122,7 +130,8 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull ResourcePolicy> CROSS_ORIGIN_RESOURCE_POLICY = new Provided.CrossOriginResourcePolicyHeaderKey();
     public static @NotNull HeaderKey<@NotNull OffsetDateTime> DATE = new Provided.DateHeaderKey();
     public static @NotNull HeaderKey<@NotNull BitMeasure> DEVICE_MEMORY = new Provided.DeviceMemoryHeaderKey();
-    public static @NotNull HeaderKey<@NotNull > DIGEST = new Provided.();
+    @Deprecated
+    public static @NotNull HeaderKey<@NotNull Digest @NotNull []> DIGEST = new Provided.DigestHeaderKey();
     @Deprecated
     public static @NotNull HeaderKey<@NotNull Boolean> DNT = new Provided.DNTHeaderKey();
     @ApiStatus.Experimental
@@ -315,6 +324,80 @@ public abstract class HeaderKey<T> {
             throw new UnsupportedOperationException();
         }
 
+        private static final class DigestHeaderKey extends HeaderKey<@NotNull Digest @NotNull []> {
+            private DigestHeaderKey() {
+                super("Digest", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull Header<@NotNull Digest[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                try {
+                    @NotNull String[] split = value.split("\\s*,\\s*");
+                    @NotNull Set<Digest> digests = new HashSet<>();
+
+                    for (@NotNull String string : split) {
+                        digests.add(Digest.Parser.deserialize(string));
+                    }
+
+                    return create(digests.toArray(new Digest[0]));
+                } catch (ParseException e) {
+                    throw new HeaderFormatException(e);
+                }
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull Digest[]> header) {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull Digest digest : header.getValue()) {
+                    if (builder.length() > 0) builder.append(",");
+                    builder.append(Digest.Parser.serialize(digest));
+                }
+
+                return builder.toString();
+            }
+        }
+        private static final class AttributionReportingRegisterTriggerHeaderKey extends HeaderKey<@NotNull JsonObject> {
+            private AttributionReportingRegisterTriggerHeaderKey() {
+                super("Attribution-Reporting-Register-Trigger", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull Header<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                return create(JsonParser.parseString(value).getAsJsonObject());
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull JsonObject> header) {
+                return header.getValue().toString();
+            }
+        }
+        private static final class AttributionReportingRegisterSourceHeaderKey extends HeaderKey<@NotNull JsonObject> {
+            private AttributionReportingRegisterSourceHeaderKey() {
+                super("Attribution-Reporting-Register-Source", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull Header<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                return create(JsonParser.parseString(value).getAsJsonObject());
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull JsonObject> header) {
+                return header.getValue().toString();
+            }
+        }
+        private static final class AttributionReportingEligibleHeaderKey extends HeaderKey<@NotNull Eligible> {
+            private AttributionReportingEligibleHeaderKey() {
+                super("Attribution-Reporting-Eligible", Target.REQUEST);
+            }
+
+            @Override
+            public @NotNull Header<@NotNull Eligible> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+                return create(Eligible.getById(value));
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull Eligible> header) {
+                return header.getValue().getId();
+            }
+        }
         private static final class UpgradeHeaderKey extends HeaderKey<@NotNull Upgrade> {
             private UpgradeHeaderKey() {
                 super("Upgrade", Target.BOTH);

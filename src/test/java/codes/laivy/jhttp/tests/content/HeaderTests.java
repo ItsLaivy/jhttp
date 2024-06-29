@@ -1513,6 +1513,27 @@ public final class HeaderTests {
             );
         }
     }
+    @SuppressWarnings("deprecation")
+    @Nested
+    final class Digest extends HeaderTest<codes.laivy.jhttp.module.Digest[]> {
+        private Digest() {
+            super(
+                    HeaderKey.DIGEST,
+
+                    new String[] {
+                            "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=",
+                            "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=,unixsum=30637",
+                            "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=,id-sha-256=0KJL0PvNLH5UbYZLTT7DBFuSyxKpnjyadrWx5E90E/z=",
+                            "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=    ,    id-sha-256=0KJL0PvNLH5UbYZLTT7DBFuSyxKpnjyadrWx5E90E/z=",
+                            "md5=0cc175b9c0f1b6a831c399e269772661"
+                    }, new String[] {
+                            "",
+                            "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=",
+                            "sha-233=X48E9qOokqqrvdts8nOOWDUoyWxBf7kbu9DBPE=",
+                    }
+            );
+        }
+    }
 
     // Utilities classes
 
