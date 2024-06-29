@@ -34,18 +34,24 @@ public interface Connection {
     /**
      * Creates a new {@link Connection} instance with the specified {@link Type} and header keys.
      *
-     * @param type The type of the connection. Must not be null.
+     * @param type The type of the connection. Can be null.
      * @param keys The header keys associated with the connection. Must not be null.
      * @return A new {@link Connection} instance.
      * @throws NullPointerException If the {@code type} or {@code keys} parameter is null.
      */
-    static @NotNull Connection create(final @NotNull Type type, final @NotNull HeaderKey<?> @NotNull [] keys) {
+    static @NotNull Connection create(final @Nullable Type type, final @NotNull HeaderKey<?> @NotNull [] keys) {
+        if (!Arrays.stream(keys).allMatch(HeaderKey::isHopByHop)) {
+            throw new IllegalArgumentException("the headers of a connection must be all hop-by-hop");
+        } else if (type == null && keys.length == 0) {
+            throw new IllegalArgumentException("connection type cannot be null while the headers are empty");
+        }
+
         return new Connection() {
 
             // Object
 
             @Override
-            public @NotNull Type getType() {
+            public @Nullable Type getType() {
                 return type;
             }
             @Override
@@ -79,14 +85,14 @@ public interface Connection {
     /**
      * Returns the type of this connection.
      *
-     * @return The type of this connection. Will not be null.
+     * @return The type of this connection. Should be null
      */
-    @NotNull Type getType();
+    @Nullable Type getType();
 
     /**
      * Returns the header keys associated with this connection.
      *
-     * @return An array of {@link HeaderKey} objects associated with this connection. Will not be null.
+     * @return An array of {@link HeaderKey} objects associated with this connection. Will not be null, but may be empty
      */
     @NotNull HeaderKey<?> @NotNull [] getKeys();
 
@@ -154,8 +160,13 @@ public interface Connection {
          * @return The string representation of the {@code Connection}. Will not be null.
          */
         public static @NotNull String serialize(@NotNull Connection connection) {
-            @NotNull StringBuilder builder = new StringBuilder(connection.getType().getId());
-            for (@NotNull HeaderKey<?> key : connection.getKeys()) builder.append(", ").append(key.getName());
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            if (connection.getType() != null) {
+                builder.append(connection.getType().getId());
+            } for (@NotNull HeaderKey<?> key : connection.getKeys()) {
+                builder.append(", ").append(key.getName());
+            }
 
             return builder.toString();
         }
@@ -171,8 +182,13 @@ public interface Connection {
             @NotNull Map<String, String> keys = KeyUtilities.read(string, null, ',');
 
             // Type
-            @NotNull Type type = Type.getById(keys.keySet().stream().findFirst().orElseThrow(() -> new ParseException("cannot find connection type", 0)));
-            keys.remove(type.getId().toLowerCase());
+            @NotNull String typeStr = keys.keySet().stream().findFirst().orElseThrow(() -> new ParseException("cannot find connection type", 0));
+            @Nullable Type type = null;
+
+            if (typeStr.equalsIgnoreCase("close") || typeStr.equalsIgnoreCase("keep-alive")) {
+                type = Type.getById(typeStr);
+                keys.remove(type.getId().toLowerCase());
+            }
 
             // Headers
             @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
