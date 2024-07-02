@@ -110,6 +110,7 @@ public class Deferred<T> {
     /**
      * Gets the available value or the parameter value if not available yet
      *
+     * @param value the value in case the deferred isn't available
      * @return the available deferred value or the parameter value if not available
      */
     public @UnknownNullability T orElse(@Nullable T value) {

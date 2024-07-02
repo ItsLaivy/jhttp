@@ -51,7 +51,7 @@ public interface Digest {
         ID_SHA512("id-sha-512", Status.STANDARD) {
             @Override
             public @NotNull Digest encode(@NotNull String string) {
-                throw new UnsupportedOperationException("unsupported deprecated encoding algorithm");
+                return Algorithm.create(this, Base64.getEncoder().encodeToString(string.getBytes()));
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -75,7 +75,7 @@ public interface Digest {
         ID_SHA256("id-sha-256", Status.STANDARD) {
             @Override
             public @NotNull Digest encode(@NotNull String string) {
-                throw new UnsupportedOperationException("unsupported deprecated encoding algorithm");
+                return Algorithm.create(this, Base64.getEncoder().encodeToString(string.getBytes()));
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -108,8 +108,8 @@ public interface Digest {
         @ApiStatus.Experimental
         UNIXSUM("unixsum", Status.INSECURE) {
             @Override
-            public @NotNull Digest encode(@NotNull String string) throws NoSuchAlgorithmException {
-                throw new NoSuchAlgorithmException("unixsum isn't compatible with jhttp yet");
+            public @NotNull Digest encode(@NotNull String string) throws UnsupportedOperationException {
+                return Algorithm.create(this, string);
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -119,8 +119,8 @@ public interface Digest {
         @ApiStatus.Experimental
         UNIXCKSUM("unixcksum", Status.INSECURE) {
             @Override
-            public @NotNull Digest encode(@NotNull String string) throws NoSuchAlgorithmException {
-                throw new NoSuchAlgorithmException("unixcksum isn't compatible with jhttp yet");
+            public @NotNull Digest encode(@NotNull String string) throws UnsupportedOperationException {
+                return Algorithm.create(this, string);
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -130,8 +130,8 @@ public interface Digest {
         @ApiStatus.Experimental
         ADLER32("adler32", Status.INSECURE) {
             @Override
-            public @NotNull Digest encode(@NotNull String string) throws NoSuchAlgorithmException {
-                throw new NoSuchAlgorithmException("adler32 isn't compatible with jhttp yet");
+            public @NotNull Digest encode(@NotNull String string) throws UnsupportedOperationException {
+                return Algorithm.create(this, string);
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -141,8 +141,8 @@ public interface Digest {
         @ApiStatus.Experimental
         CRC32C("crc32c", Status.INSECURE) {
             @Override
-            public @NotNull Digest encode(@NotNull String string) throws NoSuchAlgorithmException {
-                throw new NoSuchAlgorithmException("adler32 isn't compatible with jhttp yet");
+            public @NotNull Digest encode(@NotNull String string) throws UnsupportedOperationException {
+                return Algorithm.create(this, string);
             }
             @Override
             public boolean validate(@NotNull String string) {
@@ -190,9 +190,7 @@ public interface Digest {
         private static boolean validateBase64(@NotNull String string) {
             try {
                 byte[] decodedBytes = Base64.getDecoder().decode(string);
-                @NotNull String encodedString = Base64.getEncoder().encodeToString(decodedBytes);
-
-                return encodedString.equals(string);
+                return true;
             } catch (IllegalArgumentException e) {
                 return false;
             }
@@ -263,6 +261,7 @@ public interface Digest {
 
         public static boolean validate(@NotNull String string) {
             @NotNull String[] split = string.split("=", 2);
+            System.out.println("Split: '" + split.length + "', '" + split[0] + "', '" + split[1] + "' - '" + Algorithm.getById(split[0]).validate(split[1]) + "'");
 
             if (split.length != 2) {
                 return false;

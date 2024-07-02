@@ -220,7 +220,7 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull String> TK = new Provided.StringHeaderKey("Tk", Target.RESPONSE);
     public static @NotNull HeaderKey<@NotNull HeaderKey<?> @NotNull []> TRAILER = new Provided.TrailerHeaderKey();
     public static @NotNull HeaderKey<@NotNull Deferred<Encoding> @NotNull []> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
-    public static @NotNull HeaderKey<@NotNull Upgrade> UPGRADE = new Provided.UpgradeHeaderKey();
+    public static @NotNull HeaderKey<@NotNull Upgrade @NotNull []> UPGRADE = new Provided.UpgradeHeaderKey();
     public static @NotNull HeaderKey<@NotNull String> UPGRADE_INSECURE_REQUESTS = new Provided.StringHeaderKey("Upgrade-Insecure-Requests", Target.REQUEST);
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> VARY = new Provided.VaryHeaderKey();
     public static @NotNull HeaderKey<@NotNull UserAgent> USER_AGENT = new Provided.UserAgentHeaderKey();
@@ -251,7 +251,9 @@ public abstract class HeaderKey<T> {
         this.target = target;
         this.types = Arrays.stream(Type.values()).filter(type -> type.matches(this)).toArray(Type[]::new);
 
-        if (!NAME_FORMAT_REGEX.matcher(name).matches()) {
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("header name cannot be null");
+        } else if (!NAME_FORMAT_REGEX.matcher(name).matches()) {
             throw new IllegalArgumentException("this header key name '" + name + "' have illegal characters");
         }
     }
@@ -346,10 +348,9 @@ public abstract class HeaderKey<T> {
             @Override
             public @NotNull Header<@NotNull Digest[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    @NotNull String[] split = value.split("\\s*,\\s*");
                     @NotNull Set<Digest> digests = new HashSet<>();
 
-                    for (@NotNull String string : split) {
+                    for (@NotNull String string : value.split("\\s*,\\s*")) {
                         digests.add(Digest.Parser.deserialize(string));
                     }
 
@@ -412,22 +413,35 @@ public abstract class HeaderKey<T> {
                 return header.getValue().getId();
             }
         }
-        private static final class UpgradeHeaderKey extends HeaderKey<@NotNull Upgrade> {
+        private static final class UpgradeHeaderKey extends HeaderKey<@NotNull Upgrade @NotNull []> {
             private UpgradeHeaderKey() {
                 super("Upgrade", Target.BOTH);
             }
 
             @Override
-            public @NotNull Header<@NotNull Upgrade> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull Header<@NotNull Upgrade[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Upgrade.Parser.deserialize(value));
+                    @NotNull List<Upgrade> upgrade = new LinkedList<>();
+
+                    for (@NotNull String name : value.split("\\s*,\\s*")) {
+                        upgrade.add(Upgrade.Parser.deserialize(name));
+                    }
+
+                    return create(upgrade.toArray(new Upgrade[0]));
                 } catch (ParseException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull Upgrade> header) {
-                return Upgrade.Parser.serialize(header.getValue());
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull Header<@NotNull Upgrade[]> header) {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull Upgrade upgrade : header.getValue()) {
+                    if (builder.length() > 0) builder.append(", ");
+                    builder.append(Upgrade.Parser.serialize(upgrade));
+                }
+
+                return builder.toString();
             }
         }
         private static final class AcceptControlAllowCredentials extends HeaderKey<@NotNull Boolean> {

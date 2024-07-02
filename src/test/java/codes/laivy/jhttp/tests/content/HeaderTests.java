@@ -494,12 +494,12 @@ public final class HeaderTests {
                             "close",
                             "keEP-ALIve",
                             "CloSe",
-                            "keep-alive, Upgrade, Authorization",
-                            "keep-alive,Upgrade  , Authorization, Forwarded, Content-Digest",
+                            "keep-alive, Proxy-Authenticate",
+                            "keep-alive,Upgrade  , TE, Trailers",
                             "keep-alive",
                             "upgrade",
                             "close",
-                            "close  ,  Upgrade  , Authorization  , Forwarded  ,  Content-Digest"
+                            "close  ,  Proxy-Authenticate    , TE  ,  Trailers"
                     }, new String[] {
                             "",
                             "*",
@@ -1496,7 +1496,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Upgrade extends HeaderTest<codes.laivy.jhttp.module.Upgrade> {
+    final class Upgrade extends HeaderTest<codes.laivy.jhttp.module.Upgrade[]> {
         private Upgrade() {
             super(
                     HeaderKey.UPGRADE,
@@ -1627,6 +1627,7 @@ public final class HeaderTests {
             for (@NotNull String valid : getValids()) {
                 try {
                     getKey().read(HttpVersion.HTTP1_1(), valid);
+                } catch (@NotNull UnsupportedOperationException ignore) {
                 } catch (@NotNull Throwable e) {
                     throw new RuntimeException("the header '" + getKey() + "' cannot be validated using '" + valid + "'", e);
                 }

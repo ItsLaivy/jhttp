@@ -40,7 +40,7 @@ public interface Connection {
      * @throws NullPointerException If the {@code type} or {@code keys} parameter is null.
      */
     static @NotNull Connection create(final @Nullable Type type, final @NotNull HeaderKey<?> @NotNull [] keys) {
-        if (!Arrays.stream(keys).allMatch(HeaderKey::isHopByHop)) {
+        if (keys.length > 0 && !Arrays.stream(keys).allMatch(HeaderKey::isHopByHop)) {
             throw new IllegalArgumentException("the headers of a connection must be all hop-by-hop");
         } else if (type == null && keys.length == 0) {
             throw new IllegalArgumentException("connection type cannot be null while the headers are empty");
@@ -179,6 +179,10 @@ public interface Connection {
          * @throws ParseException If the input string is not a valid {@code Connection}.
          */
         public static @NotNull Connection deserialize(@NotNull String string) throws ParseException {
+            if (string.isEmpty()) {
+                throw new ParseException("cannot parse '' into a valid connection", -1);
+            }
+
             @NotNull Map<String, String> keys = KeyUtilities.read(string, null, ',');
 
             // Type
@@ -187,14 +191,18 @@ public interface Connection {
 
             if (typeStr.equalsIgnoreCase("close") || typeStr.equalsIgnoreCase("keep-alive")) {
                 type = Type.getById(typeStr);
-                keys.remove(type.getId().toLowerCase());
+                keys.remove(typeStr);
             }
+            System.out.println("Type: '" + typeStr + "' - '" + string + "' - '" + keys.keySet() + "'");
 
             // Headers
             @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
-            for (@NotNull String name : keys.keySet()) headers.add(HeaderKey.retrieve(name));
+            for (@NotNull String name : keys.keySet()) {
+                headers.add(HeaderKey.retrieve(name));
+            }
 
             // Finish
+            System.out.println("------");
             return create(type, headers.toArray(new HeaderKey[0]));
         }
 

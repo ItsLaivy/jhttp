@@ -18,6 +18,8 @@ public final class KeyUtilities {
         @NotNull Map<String, String> map = new LinkedHashMap<>();
 
         for (@NotNull String part : parts) {
+            if (part.isEmpty()) continue;
+
             if (delimiter != null) {
                 @NotNull String[] option = part.split("\\s*" + delimiter + "\\s*");
                 @NotNull String key = option[0];
