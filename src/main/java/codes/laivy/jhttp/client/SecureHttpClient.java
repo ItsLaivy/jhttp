@@ -2,8 +2,9 @@ package codes.laivy.jhttp.client;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
 /**
  * A secure extension of the {@link HttpClient} interface that provides support for SSL/TLS.
@@ -20,6 +21,14 @@ import javax.net.ssl.SSLSession;
 public interface SecureHttpClient extends HttpClient {
 
     /**
+     * Retrieves the SSL context associated with the secure HTTP client.
+     *
+     * @return The SSL context associated with the secure HTTP client.
+     * @since 1.0
+     */
+    @NotNull SSLContext getContext();
+
+    /**
      * Retrieves the SSL engine associated with the secure HTTP client.
      *
      * @return The SSL engine associated with the secure HTTP client.
@@ -27,14 +36,8 @@ public interface SecureHttpClient extends HttpClient {
      */
     @NotNull SSLEngine getEngine();
 
-    /**
-     * Retrieves the SSL session associated with the secure HTTP client.
-     *
-     * @return The SSL session associated with the secure HTTP client.
-     * @since 1.0
-     */
-    default @NotNull SSLSession getSession() {
-        return getEngine().getSession();
+    default @NotNull HandshakeStatus getHandshakeStatus() {
+        return getEngine().getHandshakeStatus();
     }
 
 }

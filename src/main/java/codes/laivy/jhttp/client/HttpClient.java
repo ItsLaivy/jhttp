@@ -41,6 +41,7 @@ public interface HttpClient extends Closeable {
      * @throws ClosedChannelException If the channel has been closed
      * @throws IOException If an I/O error occurs while reading the request.
      * @throws IllegalHttpVersionException If the received message cannot be parsed as a valid http version
+     * @throws HttpRequestParseException If the received message cannot be parsed into a valid http request
      * @since 1.0
      */
     @Nullable HttpRequest.Future read() throws IOException, ClosedChannelException, IllegalHttpVersionException, HttpRequestParseException;

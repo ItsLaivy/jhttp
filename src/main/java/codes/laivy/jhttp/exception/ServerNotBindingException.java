@@ -2,7 +2,7 @@ package codes.laivy.jhttp.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ServerNotBindingException extends Exception {
+public class ServerNotBindingException extends RuntimeException {
     public ServerNotBindingException(@NotNull Throwable cause) {
         super(cause);
     }

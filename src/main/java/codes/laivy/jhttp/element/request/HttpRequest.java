@@ -206,10 +206,10 @@ public interface HttpRequest extends HttpElement {
     /**
      * Retrieves the path from the URI.
      *
-     * @return the path from the URI, or {@code null} if not present
+     * @return the path from the URI
      */
-    default @Nullable String getPath() {
-        return StringUtils.isBlank(getUri().getPath()) ? null : getUri().getPath();
+    default @NotNull String getPath() {
+        return getUri().getPath();
     }
 
     /**
