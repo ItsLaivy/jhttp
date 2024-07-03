@@ -6,6 +6,7 @@ import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.HttpHeader.Type;
 import codes.laivy.jhttp.media.MediaType;
@@ -30,6 +31,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.jetbrains.annotations.*;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -45,6 +47,7 @@ import static codes.laivy.jhttp.module.CrossOrigin.OpenerPolicy;
 import static codes.laivy.jhttp.module.CrossOrigin.ResourcePolicy;
 
 // todo: 26/06/2024 finish all headers mapping (already mapped ±80%)
+@SuppressWarnings({"StaticInitializerReferencesSubClass", "DeprecatedIsStillUsed"})
 public abstract class HttpHeaderKey<T> {
 
     // Static initializers
@@ -66,7 +69,7 @@ public abstract class HttpHeaderKey<T> {
 
         return new HttpHeaderKey<String>(name, Target.BOTH) {
             @Override
-            public @NotNull HttpHeader<String> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<String> read(@NotNull HttpVersion version, @NotNull String value) {
                 return HttpHeader.create(this, value);
             }
             @Override
@@ -341,7 +344,7 @@ public abstract class HttpHeaderKey<T> {
 
     // Modules
 
-    public abstract @NotNull HttpHeader<T> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException;
+    public abstract @NotNull HttpHeader<T> read(@NotNull HttpVersion version, @NotNull String value) throws Exception;
     public abstract @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<T> header);
 
     public @NotNull HttpHeader<T> create(@UnknownNullability T value) {
@@ -379,7 +382,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull String> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@NotNull String> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(value);
             }
             @Override
@@ -393,18 +396,14 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull Digest[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    @NotNull Set<Digest> digests = new HashSet<>();
+            public @NotNull HttpHeader<@NotNull Digest[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                @NotNull Set<Digest> digests = new HashSet<>();
 
-                    for (@NotNull String string : value.split("\\s*,\\s*")) {
-                        digests.add(Digest.Parser.deserialize(string));
-                    }
-
-                    return create(digests.toArray(new Digest[0]));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
+                for (@NotNull String string : value.split("\\s*,\\s*")) {
+                    digests.add(Digest.Parser.deserialize(string));
                 }
+
+                return create(digests.toArray(new Digest[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull Digest[]> header) {
@@ -424,7 +423,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(JsonParser.parseString(value).getAsJsonObject());
             }
             @Override
@@ -438,7 +437,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@NotNull JsonObject> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(JsonParser.parseString(value).getAsJsonObject());
             }
             @Override
@@ -452,7 +451,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull Eligible> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@NotNull Eligible> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Eligible.getById(value));
             }
             @Override
@@ -466,18 +465,14 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull Upgrade[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    @NotNull List<Upgrade> upgrade = new LinkedList<>();
+            public @NotNull HttpHeader<@NotNull Upgrade[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                @NotNull List<Upgrade> upgrade = new LinkedList<>();
 
-                    for (@NotNull String name : value.split("\\s*,\\s*")) {
-                        upgrade.add(Upgrade.Parser.deserialize(name));
-                    }
-
-                    return create(upgrade.toArray(new Upgrade[0]));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    upgrade.add(Upgrade.Parser.deserialize(name));
                 }
+
+                return create(upgrade.toArray(new Upgrade[0]));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull Upgrade[]> header) {
@@ -497,7 +492,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Boolean.parseBoolean(value));
             }
             @Override
@@ -511,12 +506,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<UserAgent> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(UserAgent.Parser.deserialize(value));
-                } catch (@NotNull Throwable throwable) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' as a valid user agent header", throwable);
-                }
+            public @NotNull HttpHeader<UserAgent> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(UserAgent.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<UserAgent> header) {
@@ -529,7 +520,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?>[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
@@ -576,7 +567,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Set<HttpHeaderKey<?>> keys = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -633,7 +624,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Weight<Deferred<Encoding>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Weight<Deferred<Encoding>>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Pattern pattern = Pattern.compile("(?<encoding>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
@@ -667,12 +658,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Location.Parser.deserialize(value));
-                } catch (ParseException | UnknownHostException | URISyntaxException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
+                return create(Location.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
@@ -685,7 +672,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(value.equalsIgnoreCase("on"));
             }
             @Override
@@ -699,7 +686,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Duration.ofMillis(Long.parseLong(value)));
             }
             @Override
@@ -713,12 +700,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Location.Parser.deserialize(value));
-                } catch (ParseException | UnknownHostException | URISyntaxException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
+                return create(Location.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
@@ -731,24 +714,20 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 @NotNull String[] split = value.split(" ", 2);
                 @NotNull Credentials credentials;
 
                 if (split.length != 2) {
-                    throw new HeaderFormatException("credentials missing values");
+                    throw new IllegalArgumentException("credentials missing values");
                 }
 
-                try {
-                    if (split[0].equalsIgnoreCase("Bearer")) {
-                        credentials = new Credentials.Bearer(split[1].toLowerCase());
-                    } else if (split[0].equalsIgnoreCase("Basic")) {
-                        credentials = Credentials.Basic.parse(split[1]);
-                    } else {
-                        credentials = Credentials.Unknown.create(value.toCharArray());
-                    }
-                } catch (@NotNull ParseException e) {
-                    throw new HeaderFormatException("cannot parse '" + split[0] + "' credential '" + value + "'");
+                if (split[0].equalsIgnoreCase("Bearer")) {
+                    credentials = new Credentials.Bearer(split[1].toLowerCase());
+                } else if (split[0].equalsIgnoreCase("Basic")) {
+                    credentials = Credentials.Basic.parse(split[1]);
+                } else {
+                    credentials = Credentials.Unknown.create(value.toCharArray());
                 }
 
                 return create(credentials);
@@ -764,7 +743,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Void> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Void> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create((Void) null);
             }
             @Override
@@ -778,7 +757,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.equalsIgnoreCase("?1")) {
                     return create(true);
                 } else if (value.equalsIgnoreCase("?0")) {
@@ -798,13 +777,11 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@Nullable Domain<?>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@Nullable Domain<?>> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 if (value.trim().equalsIgnoreCase("null")) {
                     return create(null);
-                } else try {
+                } else {
                     return create(Domain.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
                 }
             }
             @Override
@@ -818,12 +795,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<NetworkErrorLogging> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(NetworkErrorLogging.Parser.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<NetworkErrorLogging> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(NetworkErrorLogging.Parser.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<NetworkErrorLogging> header) {
@@ -836,12 +809,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ExpectCertificate> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(ExpectCertificate.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<ExpectCertificate> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(ExpectCertificate.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<ExpectCertificate> header) {
@@ -854,7 +823,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Set<HttpHeaderKey<?>> keys = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -904,7 +873,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(BitMeasure.create(BitMeasure.Level.BYTES, Double.parseDouble(value)));
             }
             @Override
@@ -926,7 +895,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Locale[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Locale[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull List<Locale> locales = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -961,7 +930,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Float> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Float> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Float.parseFloat(value));
             }
             @Override
@@ -983,7 +952,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
@@ -997,7 +966,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
@@ -1019,7 +988,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Duration> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Duration.ofSeconds(Integer.parseInt(value)));
             }
             @Override
@@ -1041,12 +1010,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Product> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return HttpHeader.create(this, Product.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' as a valid product", e);
-                }
+            public @NotNull HttpHeader<Product> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return HttpHeader.create(this, Product.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Product> header) {
@@ -1059,12 +1024,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Cookie.Request> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Cookie.Request.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Cookie.Request> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(Cookie.Request.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Cookie.Request> header) {
@@ -1077,7 +1038,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull codes.laivy.jhttp.headers.HttpHeader<Integer> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull codes.laivy.jhttp.headers.HttpHeader<Integer> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Integer.parseInt(value));
             }
             @Override
@@ -1091,12 +1052,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Location.Parser.deserialize(value));
-                } catch (ParseException | UnknownHostException | URISyntaxException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
+                return create(Location.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
@@ -1109,7 +1066,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
@@ -1123,14 +1080,12 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Optional<BitMeasure>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Optional<BitMeasure>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("0")) {
                     return create(Optional.empty());
-                } else try {
+                } else {
                     int megabytes = Integer.parseInt(value.replace(",", "."));
                     return create(Optional.of(BitMeasure.create(BitMeasure.Level.MEGABYTES, megabytes)));
-                } catch (@NotNull NumberFormatException ignore) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' as a valid megabytes number");
                 }
             }
             @Override
@@ -1145,12 +1100,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<KeepAlive> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(KeepAlive.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<KeepAlive> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(KeepAlive.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<KeepAlive> header) {
@@ -1163,7 +1114,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
@@ -1177,18 +1128,14 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
                     @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
 
                     for (@NotNull String name : value.split("\\s*,\\s*")) {
-                        try {
-                            tag.add(EntityTag.Parser.deserialize(name));
-                        } catch (ParseException e) {
-                            throw new HeaderFormatException(e);
-                        }
+                        tag.add(EntityTag.Parser.deserialize(name));
                     }
 
                     return create(Wildcard.create(tag.toArray(new EntityTag[0])));
@@ -1226,7 +1173,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
@@ -1240,18 +1187,14 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<EntityTag[]>> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
                     @NotNull Set<EntityTag> tag = new LinkedHashSet<>();
 
                     for (@NotNull String name : value.split("\\s*,\\s*")) {
-                        try {
-                            tag.add(EntityTag.Parser.deserialize(name));
-                        } catch (ParseException e) {
-                            throw new HeaderFormatException(e);
-                        }
+                        tag.add(EntityTag.Parser.deserialize(name));
                     }
 
                     return create(Wildcard.create(tag.toArray(new EntityTag[0])));
@@ -1289,12 +1232,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Host> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Host.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Host> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(Host.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Host> header) {
@@ -1307,12 +1246,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Email> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Email.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Email> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(Email.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Email> header) {
@@ -1325,12 +1260,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Forwarded> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Forwarded.Parser.deserialize(value));
-                } catch (@NotNull ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<Forwarded> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(Forwarded.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Forwarded> header) {
@@ -1343,7 +1274,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("0")) {
                     return create(null);
                 } else {
@@ -1371,13 +1302,9 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<HttpStatus> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    int code = Integer.parseInt(value.split("-", 2)[0]);
-                    return create(HttpStatus.getByCode(code));
-                } catch (@NotNull NumberFormatException ignore) {
-                    throw new HeaderFormatException("cannot parse '" + value.split("-", 2)[0] + "' as a valid http status code");
-                }
+            public @NotNull HttpHeader<HttpStatus> read(@NotNull HttpVersion version, @NotNull String value) {
+                int code = Integer.parseInt(value.split("-", 2)[0]);
+                return create(HttpStatus.getByCode(code));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<HttpStatus> header) {
@@ -1391,12 +1318,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<EntityTag> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(EntityTag.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException(e);
-                }
+            public @NotNull HttpHeader<EntityTag> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(EntityTag.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<EntityTag> header) {
@@ -1409,7 +1332,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<EffectiveConnectionType> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<EffectiveConnectionType> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(EffectiveConnectionType.getById(value));
             }
             @Override
@@ -1423,7 +1346,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Void> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Void> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(null);
             }
             @Override
@@ -1437,7 +1360,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Float> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Float> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(Float.parseFloat(value));
             }
             @Override
@@ -1459,7 +1382,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(BitMeasure.create((long) (Double.parseDouble(value) * 1_000_000D)));
             }
             @Override
@@ -1473,7 +1396,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Boolean> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(value.trim().equals("1"));
             }
             @Override
@@ -1487,11 +1410,11 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<BitMeasure> read(@NotNull HttpVersion version, @NotNull String value) {
                 float size = Float.parseFloat(value);
 
                 if (size != 0.25f && size != 0.5f && size != 1f && size != 2f && size != 4f && size != 8f) {
-                    throw new HeaderFormatException("the Device-Memory header only accept: 0.25, 0.5, 1, 2, 4 or 8");
+                    throw new IllegalArgumentException("the Device-Memory header only accept: 0.25, 0.5, 1, 2, 4 or 8");
                 }
 
                 return create(BitMeasure.create(BitMeasure.Level.GIGABYTES, size));
@@ -1518,7 +1441,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OffsetDateTime> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(DateUtils.RFC822.convert(value));
             }
             @Override
@@ -1532,7 +1455,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ResourcePolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<ResourcePolicy> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(ResourcePolicy.getById(value));
             }
             @Override
@@ -1546,7 +1469,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<OpenerPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<OpenerPolicy> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(OpenerPolicy.getById(value));
             }
             @Override
@@ -1560,7 +1483,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<EmbedderPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<EmbedderPolicy> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(EmbedderPolicy.getById(value));
             }
             @Override
@@ -1574,17 +1497,13 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Cookie[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Cookie[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 @NotNull Pattern pattern = Pattern.compile("\\s*;\\s*");
                 @NotNull Matcher matcher = pattern.matcher(value);
                 @NotNull List<Cookie> cookies = new LinkedList<>();
 
                 for (@NotNull String cookie : value.split("\\s*;\\s*")) {
-                    try {
-                        cookies.add(Cookie.Parser.deserialize(cookie));
-                    } catch (ParseException e) {
-                        throw new HeaderFormatException(e);
-                    }
+                    cookies.add(Cookie.Parser.deserialize(cookie));
                 }
 
                 return create(cookies.toArray(new Cookie[0]));
@@ -1615,12 +1534,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(ContentSecurityPolicy.parse(value));
-                } catch (@NotNull Throwable e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
-                }
+            public @NotNull HttpHeader<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, UnsupportedEncodingException, ParseException, URISyntaxException, FilesystemProtocolException {
+                return create(ContentSecurityPolicy.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<ContentSecurityPolicy> header) {
@@ -1633,12 +1548,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(ContentSecurityPolicy.parse(value));
-                } catch (@NotNull Throwable e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid content security policy", e);
-                }
+            public @NotNull HttpHeader<ContentSecurityPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, UnsupportedEncodingException, ParseException, URISyntaxException, FilesystemProtocolException {
+                return create(ContentSecurityPolicy.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<ContentSecurityPolicy> header) {
@@ -1651,12 +1562,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ContentRange> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(ContentRange.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid content range", e);
-                }
+            public @NotNull HttpHeader<ContentRange> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(ContentRange.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<ContentRange> header) {
@@ -1669,12 +1576,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Location.Parser.deserialize(value));
-                } catch (ParseException | UnknownHostException | URISyntaxException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
-                }
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
+                return create(Location.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
@@ -1687,7 +1590,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 //noinspection unchecked
                 @NotNull Deferred<Encoding>[] encodings = Arrays.stream(value.split("\\s*,\\s*")).map(Deferred::encoding).toArray(Deferred[]::new);
 
@@ -1726,12 +1629,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<ContentDisposition> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(ContentDisposition.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException("cannot parse content disposition '" + value + "'", e);
-                }
+            public @NotNull HttpHeader<ContentDisposition> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(ContentDisposition.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<ContentDisposition> header) {
@@ -1744,12 +1643,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Connection> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(Connection.Parser.deserialize(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid connection", e);
-                }
+            public @NotNull HttpHeader<Connection> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(Connection.Parser.deserialize(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Connection> header) {
@@ -1762,7 +1657,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<SiteData[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<SiteData[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("\"*\"") || value.trim().equals("*")) {
                     return create(Wildcard.create());
                 }
@@ -1807,12 +1702,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<CacheControl> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(CacheControl.parse(value));
-                } catch (ParseException e) {
-                    throw new HeaderFormatException("cannot parse cache control '" + value + "'", e);
-                }
+            public @NotNull HttpHeader<CacheControl> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                return create(CacheControl.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<CacheControl> header) {
@@ -1825,20 +1716,16 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Credentials> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 @NotNull String[] split = value.split(" ", 2);
                 @NotNull Credentials credentials;
 
-                try {
-                    if (split[0].equalsIgnoreCase("Bearer")) {
-                        credentials = new Credentials.Bearer(split[1].toLowerCase());
-                    } else if (split[0].equalsIgnoreCase("Basic")) {
-                        credentials = Credentials.Basic.parse(split[1]);
-                    } else {
-                        credentials = Credentials.Unknown.create(value.toCharArray());
-                    }
-                } catch (@NotNull ParseException e) {
-                    throw new HeaderFormatException("cannot parse credentials '" + value + "'", e);
+                if (split[0].equalsIgnoreCase("Bearer")) {
+                    credentials = new Credentials.Bearer(split[1].toLowerCase());
+                } else if (split[0].equalsIgnoreCase("Basic")) {
+                    credentials = Credentials.Basic.parse(split[1]);
+                } else {
+                    credentials = Credentials.Unknown.create(value.toCharArray());
                 }
 
                 return create(credentials);
@@ -1854,12 +1741,8 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<URIAuthority> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                try {
-                    return create(URIAuthority.parse(value));
-                } catch (@NotNull URISyntaxException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid uri authority in header '" + getName() + "'", e);
-                }
+            public @NotNull HttpHeader<URIAuthority> read(@NotNull HttpVersion version, @NotNull String value) throws URISyntaxException {
+                return create(URIAuthority.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<URIAuthority> header) {
@@ -1878,7 +1761,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Optional<AlternativeService[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Optional<AlternativeService[]>> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
                 if (value.trim().equalsIgnoreCase("clear")) {
                     return create(Optional.empty());
                 }
@@ -1886,11 +1769,7 @@ public abstract class HttpHeaderKey<T> {
                 @NotNull Set<AlternativeService> services = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    try {
-                        services.add(AlternativeService.parse(name));
-                    } catch (@NotNull ParseException | @NotNull UnknownHostException | @NotNull URISyntaxException e) {
-                        throw new HeaderFormatException("cannot parse alternative service '" + name + "'", e);
-                    }
+                    services.add(AlternativeService.parse(name));
                 }
 
                 return create(Optional.of(services.toArray(new AlternativeService[0])));
@@ -1925,14 +1804,14 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Method[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Method[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Set<Method> methods = new HashSet<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
                     try {
                         methods.add(Method.valueOf(name.toUpperCase()));
                     } catch (@NotNull IllegalArgumentException ignore) {
-                        throw new HeaderFormatException("cannot parse method '" + name + "' from header '" + getName() + "'");
+                        throw new IllegalArgumentException("there's no request method '" + name + "'");
                     }
                 }
 
@@ -1964,8 +1843,12 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Method> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
-                return create(Method.valueOf(value.toUpperCase()));
+            public @NotNull HttpHeader<Method> read(@NotNull HttpVersion version, @NotNull String value) {
+                try {
+                    return create(Method.valueOf(value.toUpperCase()));
+                } catch (@NotNull IllegalArgumentException ignore) {
+                    throw new IllegalArgumentException("there's no request method '" + value + "'");
+                }
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Method> header) {
@@ -1978,7 +1861,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Pattern pattern = Pattern.compile("\\s*,\\s*");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
@@ -2016,7 +1899,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?> []>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?> []>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
@@ -2060,17 +1943,15 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<@NotNull Wildcard<@Nullable URIAuthority>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@NotNull Wildcard<@Nullable URIAuthority>> read(@NotNull HttpVersion version, @NotNull String value) throws URISyntaxException {
                 value = value.trim();
 
                 if (value.equals("*")) {
                     return create(Wildcard.create());
                 } else if (value.equalsIgnoreCase("null")) {
                     return create(Wildcard.create(null));
-                } else try {
+                } else {
                     return create(Wildcard.create(URIAuthority.parse(value)));
-                } catch (@NotNull URISyntaxException e) {
-                    throw new HeaderFormatException("cannot parse '" + value + "' into a valid uri authority of '" + getName() + "' header", e);
                 }
             }
 
@@ -2085,7 +1966,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<Method[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<Method[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
@@ -2095,7 +1976,7 @@ public abstract class HttpHeaderKey<T> {
                         try {
                             methods.add(Method.valueOf(name.toUpperCase()));
                         } catch (@NotNull IllegalArgumentException ignore) {
-                            throw new HeaderFormatException("cannot parse '" + name + "' as a valid request method");
+                            throw new IllegalArgumentException("there's no request method '" + name + "'");
                         }
                     }
 
@@ -2132,7 +2013,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<HttpHeaderKey<?>[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
@@ -2180,7 +2061,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<AcceptRange> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<AcceptRange> read(@NotNull HttpVersion version, @NotNull String value) {
                 return create(AcceptRange.valueOf(value.toUpperCase()));
             }
             @Override
@@ -2194,7 +2075,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<MediaType.Type[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<MediaType.Type[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull List<MediaType.Type> types = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -2229,15 +2110,11 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 @NotNull List<MediaType<?>> types = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
-                    try {
-                        types.add(MediaType.Parser.deserialize(name));
-                    } catch (@NotNull ParseException e) {
-                        throw new HeaderFormatException("cannot parse media type '" + name + "'", e);
-                    }
+                    types.add(MediaType.Parser.deserialize(name));
                 }
 
                 return create(types.toArray(new MediaType[0]));
@@ -2269,7 +2146,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<Weight<Locale>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<Weight<Locale>[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 } else {
@@ -2319,7 +2196,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Wildcard<Weight<Deferred<Encoding>>[]>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Wildcard<Weight<Deferred<Encoding>>[]>> read(@NotNull HttpVersion version, @NotNull String value) {
                 if (value.trim().equals("*")) {
                     return create(Wildcard.create());
                 }
@@ -2370,7 +2247,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Weight<Deferred<Charset>>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Weight<Deferred<Charset>>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull Pattern pattern = Pattern.compile("(?<charset>[^,;\\s]+)(?:\\s*;\\s*q\\s*=\\s*(?<weight>\\d(?:[.,]\\d)?))?");
                 @NotNull Matcher matcher = pattern.matcher(value);
 
@@ -2413,7 +2290,7 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<HttpHeaderKey<?>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 @NotNull List<HttpHeaderKey<?>> keys = new ArrayList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
@@ -2463,16 +2340,12 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
                 @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
                 @NotNull List<MediaType<?>> types = new LinkedList<>();
 
-                try {
-                    for (@NotNull String name : value.split("\\s*,\\s*")) {
-                        types.add(MediaType.Parser.deserialize(name));
-                    }
-                } catch (@NotNull ParseException e) {
-                    throw new HeaderFormatException("cannot parse Accept header's content types", e);
+                for (@NotNull String name : value.split("\\s*,\\s*")) {
+                    types.add(MediaType.Parser.deserialize(name));
                 }
 
                 return create(types.toArray(new MediaType[0]));
@@ -2521,10 +2394,9 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Deferred<Encoding>[]> read(@NotNull HttpVersion version, @NotNull String value) {
                 //noinspection unchecked
                 @NotNull Deferred<Encoding>[] encodings = Arrays.stream(value.split("\\s*,\\s*")).map(Deferred::encoding).toArray(Deferred[]::new);
-
                 return create(encodings);
             }
             @Override

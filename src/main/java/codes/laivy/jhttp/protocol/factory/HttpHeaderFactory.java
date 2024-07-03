@@ -61,20 +61,23 @@ public interface HttpHeaderFactory {
      */
     default @NotNull HttpHeader<?> parse(@NotNull String string) throws HeaderFormatException {
         @NotNull String[] split = string.split("\\s*:\\s*", 2);
+        @NotNull String print = (string.length() > 300 ? string.substring(0, 300) : string).replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
 
         if (!string.contains(":")) {
-            throw new HeaderFormatException("header missing separator between key and value");
+            throw new HeaderFormatException("header missing separator between key and value: '" + print + "'");
         } else if (string.contains("\n") || string.contains("\r")) {
-            throw new HeaderFormatException("header contains illegal characters");
+            throw new HeaderFormatException("header contains illegal characters: '" + print + "'");
         } else if (split.length != 2) {
-            throw new HeaderFormatException("header with blank value");
+            throw new HeaderFormatException("header with blank value: '" + print + "'");
         } else if (!split[0].matches(HttpHeaderKey.NAME_FORMAT_REGEX.pattern())) {
             throw new HeaderFormatException("illegal header key '" + split[0] + "'");
-        } else {
+        } else try {
             @NotNull HttpHeaderKey<?> key = HttpHeaderKey.retrieve(split[0]);
             @NotNull String value = split[1].trim();
 
             return key.read(getVersion(), value);
+        } catch (@NotNull Throwable throwable) {
+            throw new HeaderFormatException("cannot read header: '" + print + "'", throwable);
         }
     }
 
