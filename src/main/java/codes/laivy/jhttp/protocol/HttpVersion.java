@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.protocol;
 
+import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
@@ -35,6 +36,9 @@ public abstract class HttpVersion {
         return optional.orElseThrow(() -> new NullPointerException("cannot find the HTTP version '" + string + "'"));
     }
 
+    public static @NotNull HttpVersion HTTP1_0() {
+        return Arrays.stream(getVersions()).filter(version -> version.getMajor() == 1 && version.getMinor() == 0).findFirst().orElseThrow(NullPointerException::new);
+    }
     public static @NotNull HttpVersion HTTP1_1() {
         return Arrays.stream(getVersions()).filter(version -> version.getMajor() == 1 && version.getMinor() == 1).findFirst().orElseThrow(NullPointerException::new);
     }
@@ -43,6 +47,7 @@ public abstract class HttpVersion {
 
     static {
         for (@NotNull String name : new String[] {
+                "codes.laivy.jhttp.protocol.v1_0.HttpVersion1_0",
                 "codes.laivy.jhttp.protocol.v1_1.HttpVersion1_1"
         }) {
             try {
@@ -119,6 +124,26 @@ public abstract class HttpVersion {
     public final int getMinor() {
         return minor;
     }
+
+    // Modules
+
+    /**
+     * Determines whether the connection should be closed or not based on the HTTP version and headers of the response.
+     * <p>
+     * This method addresses the differences in connection management between HTTP/1.0 and HTTP/1.1:
+     * <ul>
+     *   <li>In HTTP/1.0, connections are closed by default unless the {@code Connection: keep-alive} header is present.</li>
+     *   <li>In HTTP/1.1, connections are kept alive by default unless the {@code Connection: close} header is present.</li>
+     * </ul>
+     * Implementations of this method should analyze the given {@link HttpResponse} and determine if the connection
+     * should be closed based on the presence and value of the {@code Connection} header, as well as the HTTP version.
+     * <p>
+     *
+     * @param response the HTTP response to evaluate; must not be null
+     * @return {@code true} if the connection should be closed, {@code false} otherwise
+     * @throws NullPointerException if {@code response} is null
+     */
+    public abstract boolean shouldClose(@NotNull HttpResponse response);
 
     // Implementations
 

@@ -1,4 +1,4 @@
-package codes.laivy.jhttp.protocol.v1_1;
+package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.content.Content;
@@ -9,7 +9,6 @@ import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.encoding.Encoding;
-import codes.laivy.jhttp.exception.MissingHeaderException;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
@@ -21,7 +20,6 @@ import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
-import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.Contract;
@@ -40,7 +38,7 @@ import java.util.stream.Stream;
 import static codes.laivy.jhttp.Main.CRLF;
 import static codes.laivy.jhttp.headers.HeaderKey.*;
 
-final class HttpRequestFactory1_1 implements HttpRequestFactory {
+final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
     // Static initializers
 
@@ -67,7 +65,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
     private final @NotNull HttpVersion version;
     private final @NotNull Map<HttpClient, FutureImpl> futures;
 
-    HttpRequestFactory1_1(@NotNull HttpVersion1_1 version) {
+    HttpRequestFactory1_0(@NotNull HttpVersion1_0 version) {
         this.version = version;
         this.futures = new HashMap<>();
     }
@@ -146,15 +144,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
                 }
             }
         }
-
-        // Validate host headers
-        if (headers.get(HeaderKey.HOST).length == 0) {
-            throw new HttpRequestParseException("the http 1.1 requests must have the 'Host' header", new MissingHeaderException(HeaderKey.HOST.getName()));
-        } else if (headers.get(HeaderKey.HOST).length > 1) {
-            throw new HttpRequestParseException("the http 1.1 requests cannot have multiples 'Host' headers", new HeaderFormatException(HeaderKey.HOST.getName()));
-        }
-
-        @NotNull Host host = headers.get(HeaderKey.HOST)[0].getValue();
 
         // Request line
         @NotNull String[] requestLine = content[0].split(CRLF, 2)[0].split(" ");
@@ -280,7 +269,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
                 return false;
             }
 
-            // Method
+            // Request method
             @NotNull Method method = Method.valueOf(requestLine[0].toUpperCase());
 
             // Headers
@@ -574,7 +563,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
         public @NotNull Future orTimeout(@NotNull Duration duration) {
             // Schedule a timeout task
             if (timeout != null) timeout.cancel(true);
-            timeout = HttpVersion1_1.FUTURE_TIMEOUT_SCHEDULED.schedule(() -> {
+            timeout = HttpVersion1_0.FUTURE_TIMEOUT_SCHEDULED.schedule(() -> {
                 cancel(true);
             }, duration.toMillis(), TimeUnit.MILLISECONDS);
 

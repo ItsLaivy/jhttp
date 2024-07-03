@@ -206,6 +206,13 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
             // Check response line
             @NotNull String[] requestLine = content[0].split("\\s*" + CRLF, 2)[0].split("[\\s*]");
+
+            // Check version
+            if (!requestLine[0].equalsIgnoreCase(getVersion().toString())) {
+                return false;
+            }
+
+            // Check status code
             Integer.parseInt(requestLine[1]);
 
             // Check headers
