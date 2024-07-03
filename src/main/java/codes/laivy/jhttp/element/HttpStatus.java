@@ -52,7 +52,7 @@ public final class HttpStatus {
     public static @NotNull HttpStatus IM_USED = new HttpStatus(226, "IM Used");
 
     public static @NotNull HttpStatus MULTIPLE_CHOICES = new HttpStatus(300, "Multiple Choices");
-    public static @NotNull HttpStatus MOVED_PERMANTELY = new HttpStatus(301, "Moved Permanently", HttpHeaderKey.LOCATION);
+    public static @NotNull HttpStatus MOVED_PERMANENTLY = new HttpStatus(301, "Moved Permanently", HttpHeaderKey.LOCATION);
     public static @NotNull HttpStatus FOUND = new HttpStatus(302, "Found", HttpHeaderKey.LOCATION);
     public static @NotNull HttpStatus SEE_OTHER = new HttpStatus(303, "See Other");
     public static @NotNull HttpStatus NOT_MODIFIED = new HttpStatus(304, "Not Modified");

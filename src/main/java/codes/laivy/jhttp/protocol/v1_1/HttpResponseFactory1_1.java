@@ -14,6 +14,7 @@ import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.request.HttpResponseParseException;
 import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
@@ -254,6 +255,16 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             this.status = status;
             this.headers = headers;
             this.body = body;
+
+            if (!headers.stream().map(HttpHeader::getKey).allMatch(headers::contains)) {
+                @NotNull StringBuilder builder = new StringBuilder();
+                for (@NotNull HttpHeaderKey<?> key : status.getHeaders()) {
+                    if (builder.length() > 0) builder.append(", ");
+                    builder.append(key.getName());
+                }
+
+                throw new UnsupportedOperationException("a response with the status code '" + status + "' must include the headers: " + builder);
+            }
         }
 
         // Getters
