@@ -4,6 +4,7 @@ import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;
+import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
 import codes.laivy.jhttp.headers.Headers;
@@ -27,6 +28,13 @@ public interface HttpResponse extends HttpElement {
 
     // Static initializers
 
+    static @NotNull HttpResponse create(
+            @NotNull HttpVersion version,
+            @NotNull HttpStatus status,
+            @Nullable HttpBody body
+    ) {
+        return create(version, status, version.getHeaderFactory().createMutable(Target.RESPONSE), body);
+    }
     static @NotNull HttpResponse create(
             @NotNull HttpVersion version,
             @NotNull HttpStatus status,

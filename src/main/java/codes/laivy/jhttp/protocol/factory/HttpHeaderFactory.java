@@ -1,8 +1,10 @@
 package codes.laivy.jhttp.protocol.factory;
 
+import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.headers.Header;
 import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.Headers;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +27,9 @@ public interface HttpHeaderFactory {
     @NotNull HttpVersion getVersion();
 
     // Modules
+
+    @NotNull Headers createMutable(@NotNull Target target);
+    @NotNull Headers createImmutable(@NotNull Headers clone);
 
     /**
      * Safely serializes an HTTP header to a string representation.

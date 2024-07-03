@@ -6,6 +6,7 @@ import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.Method;
+import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.encoding.Encoding;
@@ -32,10 +33,11 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 
 import static codes.laivy.jhttp.Main.CRLF;
 import static codes.laivy.jhttp.headers.HeaderKey.*;
@@ -132,7 +134,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
         @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
 
         // Headers
-        @NotNull RequestHeaders headers = new RequestHeaders();
+        @NotNull Headers headers = getVersion().getHeaderFactory().createMutable(Target.REQUEST);
 
         if (content[0].split(CRLF, 2).length > 1) {
             for (@NotNull String line : content[0].split(CRLF, 2)[1].split("\\s*" + CRLF)) {
@@ -301,110 +303,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
     // Classes
 
-    private static class RequestHeaders implements Headers {
-
-        // Object
-
-        protected final @NotNull List<Header<?>> list = new LinkedList<>();
-
-        private RequestHeaders() {
-        }
-
-        // Natives
-
-        @Override
-        public @NotNull Header<?> @NotNull [] get(@NotNull String name) {
-            return list.stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(Header[]::new);
-        }
-        @Override
-        public boolean contains(@NotNull String name) {
-            return list.stream().anyMatch(header -> header.getName().equalsIgnoreCase(name));
-        }
-        @Override
-        public @NotNull Stream<Header<?>> stream() {
-            return list.stream();
-        }
-        @Override
-        public int size() {
-            return list.size();
-        }
-        @Override
-        public boolean put(@NotNull Header<?> header) {
-            remove(header.getKey());
-            return add(header);
-        }
-        @Override
-        public boolean add(@NotNull Header<?> header) {
-            if (!header.getKey().getTarget().isRequests()) {
-                throw new IllegalArgumentException("this header collection only accepts request headers!");
-            }
-            return list.add(header);
-        }
-        @Override
-        public boolean remove(@NotNull Header<?> header) {
-            return list.remove(header);
-        }
-        @Override
-        public boolean remove(@NotNull HeaderKey<?> key) {
-            return list.removeIf(header -> header.getName().equalsIgnoreCase(key.getName()));
-        }
-        @Override
-        public boolean remove(@NotNull String name) {
-            return list.removeIf(header -> header.getName().equalsIgnoreCase(name));
-        }
-        @Override
-        public @NotNull Iterator<Header<?>> iterator() {
-            return list.iterator();
-        }
-
-        // Implementations
-
-        @Override
-        public boolean equals(@Nullable Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            @NotNull RequestHeaders headers = (RequestHeaders) object;
-            return Objects.equals(list, headers.list);
-        }
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(list);
-        }
-        @Override
-        public @NotNull String toString() {
-            return list.toString();
-        }
-
-    }
-    private static final class ImmutableHeaders extends RequestHeaders {
-
-        private ImmutableHeaders(@NotNull Headers headers) {
-            for (@NotNull Header<?> header : headers) {
-                list.add(header);
-            }
-        }
-
-        @Override
-        public boolean add(@NotNull Header<?> header) {
-            throw new UnsupportedOperationException("you cannot change the headers of a future request");
-        }
-
-        @Override
-        public boolean remove(@NotNull Header<?> header) {
-            throw new UnsupportedOperationException("you cannot change the headers of a future request");
-        }
-
-        @Override
-        public boolean remove(@NotNull HeaderKey<?> key) {
-            throw new UnsupportedOperationException("you cannot change the headers of a future request");
-        }
-
-        @Override
-        public boolean remove(@NotNull String name) {
-            throw new UnsupportedOperationException("you cannot change the headers of a future request");
-        }
-    }
-
     private final class FutureImpl implements Future {
 
         private final @NotNull CompletableFuture<HttpRequest> future = new CompletableFuture<>();
@@ -438,7 +336,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             this.method = request.getMethod();
             this.authority = request.getAuthority();
             this.uri = request.getUri();
-            this.headers = new ImmutableHeaders(request.getHeaders());
+            this.headers = getVersion().getHeaderFactory().createImmutable(request.getHeaders());
 
             // Security
             check();

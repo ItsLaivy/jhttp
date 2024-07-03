@@ -6,7 +6,7 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Arrays;
 
-public interface Header<T> {
+public interface Header<T> extends Cloneable {
 
     @NotNull HeaderKey<T> getKey();
     @UnknownNullability T getValue();
@@ -19,6 +19,8 @@ public interface Header<T> {
     boolean equals(@Nullable Object o);
     @Override
     int hashCode();
+
+    @NotNull Header<T> clone();
 
     static <E> @NotNull Header<E> create(final @NotNull HeaderKey<E> key, final @UnknownNullability E value) {
         return key.create(value);

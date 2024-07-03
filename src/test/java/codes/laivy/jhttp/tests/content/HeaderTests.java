@@ -315,8 +315,8 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlRequestHeaders extends HeaderTest<HeaderKey<?>[]> {
-        private AcceptControlRequestHeaders() {
+    final class AcceptControlHeadersImpl extends HeaderTest<HeaderKey<?>[]> {
+        private AcceptControlHeadersImpl() {
             super(
                     HeaderKey.ACCEPT_CONTROL_REQUEST_HEADERS,
 

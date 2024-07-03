@@ -6,6 +6,7 @@ import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
+import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.headers.*;
 import codes.laivy.jhttp.module.Forwarded;
@@ -34,6 +35,15 @@ public interface HttpRequest extends HttpElement {
 
     // Static initializers
 
+    static @NotNull HttpRequest create(
+            final @NotNull HttpVersion version,
+            final @NotNull Method method,
+            final @Nullable URIAuthority authority,
+            final @NotNull URI uri,
+            final @Nullable HttpBody body
+    ) {
+        return create(version, method, authority, uri, version.getHeaderFactory().createMutable(Target.REQUEST), body);
+    }
     static @NotNull HttpRequest create(
             final @NotNull HttpVersion version,
             final @NotNull Method method,

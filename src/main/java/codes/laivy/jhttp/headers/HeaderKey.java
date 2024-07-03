@@ -2576,6 +2576,16 @@ public abstract class HeaderKey<T> {
             }
 
             @Override
+            public @NotNull HeaderImpl<T> clone() {
+                try {
+                    //noinspection unchecked
+                    return (HeaderImpl<T>) super.clone();
+                } catch (@NotNull CloneNotSupportedException e) {
+                    throw new RuntimeException("cannot clone header '" + getKey() + "'", e);
+                }
+            }
+
+            @Override
             public @NotNull String toString() {
                 return getName() + "=" + getValue();
             }

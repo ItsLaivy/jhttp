@@ -8,30 +8,43 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public interface Headers extends Iterable<Header<?>> {
-
-    // Static initializers
-
-    static @NotNull Headers create() {
-        return new HeadersImpl();
-    }
+public interface Headers extends Iterable<Header<?>>, Cloneable {
 
     // Object
 
     boolean put(@NotNull Header<?> header);
     boolean add(@NotNull Header<?> header);
 
-    boolean remove(@NotNull Header<?> header);
-    boolean remove(@NotNull HeaderKey<?> key);
+    default boolean remove(@NotNull Header<?> header) {
+        return this.remove(header.getKey().getName());
+    }
+    default boolean remove(@NotNull HeaderKey<?> key) {
+        return this.remove(key.getName());
+    }
     boolean remove(@NotNull String name);
 
-    @NotNull Header<?> @NotNull [] get(@NotNull String name);
-    boolean contains(@NotNull String name);
+    default @NotNull Header<?> @NotNull [] get(@NotNull String name) {
+        return stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(Header[]::new);
+    }
+
+    default boolean contains(@NotNull HeaderKey<?> key) {
+        return contains(key.getName());
+    }
+    default boolean contains(@NotNull String name) {
+        return stream().anyMatch(header -> header.getName().equalsIgnoreCase(name));
+    }
 
     @NotNull Stream<Header<?>> stream();
 
-    int size();
+    default int size() {
+        return (int) stream().count();
+    }
+    
+    void clear();
 
+    default int count(@NotNull HeaderKey<?> key) {
+        return count(key.getName());
+    }
     default int count(@NotNull String name) {
         return (int) stream().filter(header -> header.getName().equalsIgnoreCase(name)).count();
     }
@@ -45,13 +58,6 @@ public interface Headers extends Iterable<Header<?>> {
                 .collect(Collectors.toList())
                 .stream()
                 .reduce((first, second) -> second);
-    }
-
-    default boolean contains(@NotNull HeaderKey<?> key) {
-        return contains(key.getName());
-    }
-    default int count(@NotNull HeaderKey<?> key) {
-        return count(key.getName());
     }
 
     default <E> @NotNull Optional<Header<E>> first(@NotNull HeaderKey<E> key) throws ClassCastException {
@@ -73,5 +79,9 @@ public interface Headers extends Iterable<Header<?>> {
 
         return headers.toArray(new Header[0]);
     }
+    
+    // Implementations
+    
+    @NotNull Headers clone();
 
 }
