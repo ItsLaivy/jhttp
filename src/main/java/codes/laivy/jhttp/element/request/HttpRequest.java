@@ -49,58 +49,10 @@ public interface HttpRequest extends HttpElement {
             final @NotNull Method method,
             final @Nullable URIAuthority authority,
             final @NotNull URI uri,
-            final @NotNull Headers headers,
+            final @NotNull HttpHeaders headers,
             final @Nullable HttpBody body
     ) {
-        return new HttpRequest() {
-
-            // Object
-
-            @Override
-            public @NotNull HttpVersion getVersion() {
-                return version;
-            }
-            @Override
-            public @NotNull Method getMethod() {
-                return method;
-            }
-            @Override
-            public @Nullable URIAuthority getAuthority() {
-                return authority;
-            }
-            @Override
-            public @NotNull URI getUri() {
-                return uri;
-            }
-            @Override
-            public @NotNull Headers getHeaders() {
-                return headers;
-            }
-            @Override
-            public @Nullable HttpBody getBody() {
-                return body;
-            }
-
-            // Implementations
-
-            @Override
-            public boolean equals(@Nullable Object object) {
-                if (this == object) return true;
-                if (object == null || getClass() != object.getClass()) return false;
-                @NotNull HttpRequest that = (HttpRequest) object;
-                return Objects.equals(getVersion(), that.getVersion()) && getMethod() == that.getMethod() && Objects.equals(getAuthority(), that.getAuthority()) && Objects.equals(getUri(), that.getUri()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
-            }
-            @Override
-            public int hashCode() {
-                return Objects.hash(getVersion(), getMethod(), getAuthority(), getUri(), getHeaders(), getMethod(), getBody());
-            }
-
-            @Override
-            public @NotNull String toString() {
-                return getVersion().getRequestFactory().serialize(this);
-            }
-
-        };
+        return version.getRequestFactory().create(method, authority, uri, headers, body);
     }
 
     // Object
@@ -131,7 +83,7 @@ public interface HttpRequest extends HttpElement {
      * @return the authorization credentials, or {@code null} if not found
      */
     default @Nullable Credentials getAuthorization() {
-        return getHeaders().first(HeaderKey.AUTHORIZATION).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.AUTHORIZATION).map(HttpHeader::getValue).orElse(null);
     }
 
     /**
@@ -141,7 +93,7 @@ public interface HttpRequest extends HttpElement {
      * @throws IllegalStateException if the 'Host' header is not found in the HTTP request
      */
     default @NotNull Host getHost() {
-        if (getHeaders().contains(HeaderKey.HOST)) return getHeaders().get(HeaderKey.HOST)[0].getValue();
+        if (getHeaders().contains(HttpHeaderKey.HOST)) return getHeaders().get(HttpHeaderKey.HOST)[0].getValue();
         else throw new IllegalStateException("Cannot find 'Host' header from HTTP request");
     }
 
@@ -151,7 +103,7 @@ public interface HttpRequest extends HttpElement {
      * @return the user agent specified in the headers, or {@code null} if not found
      */
     default @Nullable UserAgent getUserAgent() {
-        return getHeaders().first(HeaderKey.USER_AGENT).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.USER_AGENT).map(HttpHeader::getValue).orElse(null);
     }
 
     /**
@@ -180,7 +132,7 @@ public interface HttpRequest extends HttpElement {
      */
     @SuppressWarnings("unchecked")
     default @NotNull Wildcard<Weight<Locale>[]> getLocales() {
-        return getHeaders().first(HeaderKey.ACCEPT_LANGUAGE).map(Header::getValue).orElse(Wildcard.create(new Weight[0]));
+        return getHeaders().first(HttpHeaderKey.ACCEPT_LANGUAGE).map(HttpHeader::getValue).orElse(Wildcard.create(new Weight[0]));
     }
 
     /**
@@ -190,7 +142,7 @@ public interface HttpRequest extends HttpElement {
      */
     @SuppressWarnings("unchecked")
     default @NotNull Wildcard<Weight<Deferred<Encoding>>[]> getEncodings() {
-        return getHeaders().first(HeaderKey.ACCEPT_ENCODING).map(Header::getValue).orElse(Wildcard.create(new Weight[0]));
+        return getHeaders().first(HttpHeaderKey.ACCEPT_ENCODING).map(HttpHeader::getValue).orElse(Wildcard.create(new Weight[0]));
     }
 
     /**
@@ -199,7 +151,7 @@ public interface HttpRequest extends HttpElement {
      * @return the forwarded information, or {@code null} if not found
      */
     default @Nullable Forwarded getForwarded() {
-        return getHeaders().first(HeaderKey.FORWARDED).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.FORWARDED).map(HttpHeader::getValue).orElse(null);
     }
 
     /**
@@ -208,7 +160,7 @@ public interface HttpRequest extends HttpElement {
      * @return the referrer, or {@code null} if not found
      */
     default @Nullable Origin getReferrer() {
-        return getHeaders().first(HeaderKey.REFERER).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.REFERER).map(HttpHeader::getValue).orElse(null);
     }
 
     // Query and Path
@@ -295,7 +247,8 @@ public interface HttpRequest extends HttpElement {
          * Gets the headers from this http request future
          * @return The header list of this http request future
          */
-        @NotNull Headers getHeaders();
+        @NotNull
+        HttpHeaders getHeaders();
 
         /**
          * Returns the raw HTTP request as a string.

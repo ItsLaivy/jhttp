@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.module.connection;
 
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.utilities.KeyUtilities;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +28,7 @@ public interface Connection {
      * @throws NullPointerException If the {@code type} parameter is null.
      */
     static @NotNull Connection create(final @NotNull Type type) {
-        return create(type, new HeaderKey[0]);
+        return create(type, new HttpHeaderKey[0]);
     }
 
     /**
@@ -39,8 +39,8 @@ public interface Connection {
      * @return A new {@link Connection} instance.
      * @throws NullPointerException If the {@code type} or {@code keys} parameter is null.
      */
-    static @NotNull Connection create(final @Nullable Type type, final @NotNull HeaderKey<?> @NotNull [] keys) {
-        if (keys.length > 0 && !Arrays.stream(keys).allMatch(HeaderKey::isHopByHop)) {
+    static @NotNull Connection create(final @Nullable Type type, final @NotNull HttpHeaderKey<?> @NotNull [] keys) {
+        if (keys.length > 0 && !Arrays.stream(keys).allMatch(HttpHeaderKey::isHopByHop)) {
             throw new IllegalArgumentException("the headers of a connection must be all hop-by-hop");
         } else if (type == null && keys.length == 0) {
             throw new IllegalArgumentException("connection type cannot be null while the headers are empty");
@@ -55,7 +55,7 @@ public interface Connection {
                 return type;
             }
             @Override
-            public @NotNull HeaderKey<?> @NotNull [] getKeys() {
+            public @NotNull HttpHeaderKey<?> @NotNull [] getKeys() {
                 return keys;
             }
 
@@ -92,9 +92,9 @@ public interface Connection {
     /**
      * Returns the header keys associated with this connection.
      *
-     * @return An array of {@link HeaderKey} objects associated with this connection. Will not be null, but may be empty
+     * @return An array of {@link HttpHeaderKey} objects associated with this connection. Will not be null, but may be empty
      */
-    @NotNull HeaderKey<?> @NotNull [] getKeys();
+    @NotNull HttpHeaderKey<?> @NotNull [] getKeys();
 
     // Classes
 
@@ -164,7 +164,7 @@ public interface Connection {
 
             if (connection.getType() != null) {
                 builder.append(connection.getType().getId());
-            } for (@NotNull HeaderKey<?> key : connection.getKeys()) {
+            } for (@NotNull HttpHeaderKey<?> key : connection.getKeys()) {
                 builder.append(", ").append(key.getName());
             }
 
@@ -195,13 +195,13 @@ public interface Connection {
             }
 
             // Headers
-            @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
+            @NotNull Set<HttpHeaderKey<?>> headers = new LinkedHashSet<>();
             for (@NotNull String name : keys.keySet()) {
-                headers.add(HeaderKey.retrieve(name));
+                headers.add(HttpHeaderKey.retrieve(name));
             }
 
             // Finish
-            return create(type, headers.toArray(new HeaderKey[0]));
+            return create(type, headers.toArray(new HttpHeaderKey[0]));
         }
 
         /**

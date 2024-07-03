@@ -1,11 +1,18 @@
 package codes.laivy.jhttp.protocol.factory;
 
 import codes.laivy.jhttp.client.HttpClient;
+import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.exception.parser.request.HttpRequestParseException;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.net.URI;
 
 /**
  * An abstract class responsible for constructing HTTP requests. This class provides methods for serializing,
@@ -24,6 +31,8 @@ public interface HttpRequestFactory {
     @NotNull HttpVersion getVersion();
 
     // Modules
+
+    @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @Nullable HttpBody body);
 
     /**
      * Transforms an HTTP request into a string representation.

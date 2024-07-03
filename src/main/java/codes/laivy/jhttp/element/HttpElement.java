@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.element;
 
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.module.content.ContentDisposition;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -33,9 +33,10 @@ public interface HttpElement {
     /**
      * Retrieves the headers of this HTTP element.
      *
-     * @return the {@link Headers} containing the headers of this element.
+     * @return the {@link HttpHeaders} containing the headers of this element.
      */
-    @NotNull Headers getHeaders();
+    @NotNull
+    HttpHeaders getHeaders();
 
     /**
      * Retrieves the body of this HTTP element. The body can be {@code null} if there is no body or if it is empty.
@@ -52,11 +53,11 @@ public interface HttpElement {
      * @return the connection specified in the headers, or {@code null} if not found
      */
     default @Nullable Connection getConnection() {
-        return getHeaders().first(HeaderKey.CONNECTION).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.CONNECTION).map(HttpHeader::getValue).orElse(null);
     }
 
     default @Nullable OffsetDateTime getDate() {
-        return getHeaders().first(HeaderKey.DATE).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.DATE).map(HttpHeader::getValue).orElse(null);
     }
 
     /**
@@ -65,7 +66,7 @@ public interface HttpElement {
      * @return the content disposition, or {@code null} if not found
      */
     default @Nullable ContentDisposition getDisposition() {
-        return getHeaders().first(HeaderKey.CONTENT_DISPOSITION).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.CONTENT_DISPOSITION).map(HttpHeader::getValue).orElse(null);
     }
 
     /**

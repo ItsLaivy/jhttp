@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.element.response.HttpResponse;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
@@ -59,7 +59,7 @@ final class HttpVersion1_0 extends HttpVersion {
 
     @Override
     public boolean shouldClose(@NotNull HttpResponse response) {
-        @Nullable Connection connection = response.getHeaders().first(HeaderKey.CONNECTION).map(Header::getValue).orElse(null);
+        @Nullable Connection connection = response.getHeaders().first(HttpHeaderKey.CONNECTION).map(HttpHeader::getValue).orElse(null);
         return connection == null || connection.getType() == Connection.Type.CLOSE;
     }
 

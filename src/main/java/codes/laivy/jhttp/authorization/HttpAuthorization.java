@@ -4,9 +4,8 @@ import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +29,7 @@ public interface HttpAuthorization {
      * @param predicate the predicate used to validate the credentials
      * @return an instance of HttpAuthorization
      */
-    static @NotNull HttpAuthorization create(final @NotNull HeaderKey<Credentials> key, @NotNull Predicate<Credentials> predicate) {
+    static @NotNull HttpAuthorization create(final @NotNull HttpHeaderKey<Credentials> key, @NotNull Predicate<Credentials> predicate) {
         return (socket, request) -> {
             // Bad Request (400)
             @NotNull HttpResponse bad = HttpResponse.create(request.getVersion(), HttpStatus.BAD_REQUEST, null);
@@ -39,7 +38,7 @@ public interface HttpAuthorization {
 
             try {
                 // Authorization
-                @Nullable Header<Credentials> header = request.getHeaders().first(key).orElse(null);
+                @Nullable HttpHeader<Credentials> header = request.getHeaders().first(key).orElse(null);
                 if (header == null) return unauthorized;
 
                 @NotNull Credentials credentials = header.getValue();

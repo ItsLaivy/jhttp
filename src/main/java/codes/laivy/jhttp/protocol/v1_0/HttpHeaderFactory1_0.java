@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.element.Target;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
 import org.jetbrains.annotations.NotNull;
@@ -34,39 +34,39 @@ public class HttpHeaderFactory1_0 implements HttpHeaderFactory {
     // Modules
 
     @Override
-    public @NotNull Headers createMutable(@NotNull Target target) {
-        return new HeadersImpl(target);
+    public @NotNull HttpHeaders createMutable(@NotNull Target target) {
+        return new HttpHeadersImpl(target);
     }
     @Override
-    public @NotNull Headers createImmutable(@NotNull Headers clone) {
-        return new ImmutableHeadersImpl(clone);
+    public @NotNull HttpHeaders createImmutable(@NotNull HttpHeaders clone) {
+        return new ImmutableHttpHeadersImpl(clone);
     }
 
     // Classes
 
-    private class HeadersImpl implements Headers {
+    private class HttpHeadersImpl implements HttpHeaders {
 
         // Object
 
-        protected final @NotNull List<Header<?>> list = new LinkedList<>();
+        protected final @NotNull List<HttpHeader<?>> list = new LinkedList<>();
         private final @NotNull Target target;
 
-        private HeadersImpl(@NotNull Target target) {
+        private HttpHeadersImpl(@NotNull Target target) {
             this.target = target;
         }
 
         // Natives
 
         @Override
-        public @NotNull Header<?> @NotNull [] get(@NotNull String name) {
-            return list.stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(Header[]::new);
+        public @NotNull HttpHeader<?> @NotNull [] get(@NotNull String name) {
+            return list.stream().filter(header -> header.getName().equalsIgnoreCase(name)).toArray(HttpHeader[]::new);
         }
         @Override
         public boolean contains(@NotNull String name) {
             return list.stream().anyMatch(header -> header.getName().equalsIgnoreCase(name));
         }
         @Override
-        public @NotNull Stream<Header<?>> stream() {
+        public @NotNull Stream<HttpHeader<?>> stream() {
             return list.stream();
         }
         @Override
@@ -79,12 +79,12 @@ public class HttpHeaderFactory1_0 implements HttpHeaderFactory {
         }
 
         @Override
-        public boolean put(@NotNull Header<?> header) {
+        public boolean put(@NotNull HttpHeader<?> header) {
             remove(header.getKey());
             return add(header);
         }
         @Override
-        public boolean add(@NotNull Header<?> header) {
+        public boolean add(@NotNull HttpHeader<?> header) {
             if ((target != Target.BOTH && header.getKey().getTarget() != Target.BOTH) && header.getKey().getTarget() != target) {
                 throw new IllegalArgumentException("this header collection only accepts " + target.name().toLowerCase() + " headers, the header '" + header.getName() + "' isn't compatible!");
             }
@@ -95,7 +95,7 @@ public class HttpHeaderFactory1_0 implements HttpHeaderFactory {
             return list.removeIf(header -> header.getName().equalsIgnoreCase(name));
         }
         @Override
-        public @NotNull Iterator<Header<?>> iterator() {
+        public @NotNull Iterator<HttpHeader<?>> iterator() {
             return list.iterator();
         }
 
@@ -105,7 +105,7 @@ public class HttpHeaderFactory1_0 implements HttpHeaderFactory {
         public boolean equals(@Nullable Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
-            @NotNull HttpHeaderFactory1_0.HeadersImpl headers = (HeadersImpl) object;
+            @NotNull HttpHeaderFactory1_0.HttpHeadersImpl headers = (HttpHeadersImpl) object;
             return Objects.equals(list, headers.list);
         }
         @Override
@@ -118,27 +118,27 @@ public class HttpHeaderFactory1_0 implements HttpHeaderFactory {
         }
 
         @Override
-        public @NotNull Headers clone() {
+        public @NotNull HttpHeaders clone() {
             try {
-                return (Headers) super.clone();
+                return (HttpHeaders) super.clone();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException("cannot clone " + getVersion() + " headers", e);
             }
         }
 
     }
-    private final class ImmutableHeadersImpl extends HeadersImpl {
+    private final class ImmutableHttpHeadersImpl extends HttpHeadersImpl {
 
-        private ImmutableHeadersImpl(@NotNull Headers headers) {
+        private ImmutableHttpHeadersImpl(@NotNull HttpHeaders headers) {
             super(Target.BOTH);
 
-            for (@NotNull Header<?> header : headers) {
+            for (@NotNull HttpHeader<?> header : headers) {
                 list.add(header);
             }
         }
 
         @Override
-        public boolean add(@NotNull Header<?> header) {
+        public boolean add(@NotNull HttpHeader<?> header) {
             throw new UnsupportedOperationException("you cannot change the headers of a future request");
         }
         @Override

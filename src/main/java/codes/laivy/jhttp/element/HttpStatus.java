@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.element;
 
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,22 +52,22 @@ public final class HttpStatus {
     public static @NotNull HttpStatus IM_USED = new HttpStatus(226, "IM Used");
 
     public static @NotNull HttpStatus MULTIPLE_CHOICES = new HttpStatus(300, "Multiple Choices");
-    public static @NotNull HttpStatus MOVED_PERMANTELY = new HttpStatus(301, "Moved Permanently", HeaderKey.LOCATION);
-    public static @NotNull HttpStatus FOUND = new HttpStatus(302, "Found", HeaderKey.LOCATION);
+    public static @NotNull HttpStatus MOVED_PERMANTELY = new HttpStatus(301, "Moved Permanently", HttpHeaderKey.LOCATION);
+    public static @NotNull HttpStatus FOUND = new HttpStatus(302, "Found", HttpHeaderKey.LOCATION);
     public static @NotNull HttpStatus SEE_OTHER = new HttpStatus(303, "See Other");
     public static @NotNull HttpStatus NOT_MODIFIED = new HttpStatus(304, "Not Modified");
-    public static @NotNull HttpStatus TEMPORARY_REDIRECT = new HttpStatus(307, "Temporary Redirect", HeaderKey.LOCATION);
-    public static @NotNull HttpStatus PERMANENT_REDIRECT = new HttpStatus(308, "Permanent Redirect", HeaderKey.LOCATION);
+    public static @NotNull HttpStatus TEMPORARY_REDIRECT = new HttpStatus(307, "Temporary Redirect", HttpHeaderKey.LOCATION);
+    public static @NotNull HttpStatus PERMANENT_REDIRECT = new HttpStatus(308, "Permanent Redirect", HttpHeaderKey.LOCATION);
 
     public static @NotNull HttpStatus BAD_REQUEST = new HttpStatus(400, "Bad Request");
     public static @NotNull HttpStatus UNAUTHORIZED = new HttpStatus(401, "Unauthorized");
     public static @NotNull HttpStatus PAYMENT_REQUIRED = new HttpStatus(402, "Payment Required");
     public static @NotNull HttpStatus FORBIDDEN = new HttpStatus(403, "Forbidden");
     public static @NotNull HttpStatus NOT_FOUND = new HttpStatus(404, "Not Found");
-    public static @NotNull HttpStatus METHOD_NOT_ALLOWED = new HttpStatus(405, "Method Not Allowed", HeaderKey.ALLOW);
-    public static @NotNull HttpStatus NOT_ACCEPTABLE = new HttpStatus(406, "Not Acceptable", HeaderKey.ALLOW);
+    public static @NotNull HttpStatus METHOD_NOT_ALLOWED = new HttpStatus(405, "Method Not Allowed", HttpHeaderKey.ALLOW);
+    public static @NotNull HttpStatus NOT_ACCEPTABLE = new HttpStatus(406, "Not Acceptable", HttpHeaderKey.ALLOW);
     public static @NotNull HttpStatus PROXY_AUTHENTICATION_REQUIRED = new HttpStatus(407, "Proxy Authentication Required");
-    public static @NotNull HttpStatus REQUEST_TIMEOUT = new HttpStatus(408, "Request Timeout", HeaderKey.CONNECTION);
+    public static @NotNull HttpStatus REQUEST_TIMEOUT = new HttpStatus(408, "Request Timeout", HttpHeaderKey.CONNECTION);
     public static @NotNull HttpStatus CONFLICT = new HttpStatus(409, "Conflict");
     public static @NotNull HttpStatus GONE = new HttpStatus(410, "Gone");
     public static @NotNull HttpStatus LENGTH_REQUIRED = new HttpStatus(411, "Length Required");
@@ -75,7 +75,7 @@ public final class HttpStatus {
     public static @NotNull HttpStatus CONTENT_TOO_LARGE = new HttpStatus(413, "Content Too Large");
     public static @NotNull HttpStatus URI_TOO_LONG = new HttpStatus(414, "URI Too Long");
     public static @NotNull HttpStatus UNSUPPORTED_MEDIA_TYPE = new HttpStatus(415, "Unsupported Media Type");
-    public static @NotNull HttpStatus RANGE_NOT_SATISFIABLE = new HttpStatus(416, "Range Not Satisfiable", HeaderKey.CONTENT_RANGE);
+    public static @NotNull HttpStatus RANGE_NOT_SATISFIABLE = new HttpStatus(416, "Range Not Satisfiable", HttpHeaderKey.CONTENT_RANGE);
     public static @NotNull HttpStatus EXPECTATION_FAILED = new HttpStatus(417, "Expectation Failed");
     public static @NotNull HttpStatus IM_A_TEAPOT = new HttpStatus(418, "I'm a teapot");
     public static @NotNull HttpStatus MISDIRECTED_REQUEST = new HttpStatus(421, "Misdirected Request");
@@ -106,12 +106,12 @@ public final class HttpStatus {
     private final int code;
     private final @NotNull String message;
 
-    private final @NotNull HeaderKey<?> @NotNull [] headers;
+    private final @NotNull HttpHeaderKey<?> @NotNull [] headers;
 
     public HttpStatus(int code, @NotNull String message) {
-        this(code, message, new HeaderKey[0]);
+        this(code, message, new HttpHeaderKey[0]);
     }
-    public HttpStatus(int code, @NotNull String message, @NotNull HeaderKey<?> @NotNull ... headers) {
+    public HttpStatus(int code, @NotNull String message, @NotNull HttpHeaderKey<?> @NotNull ... headers) {
         this.code = code;
         this.message = message;
         this.headers = Arrays.copyOf(headers, headers.length);
@@ -140,7 +140,7 @@ public final class HttpStatus {
      * @return The list of headers required for this HTTP status
      */
     @Contract(pure = true)
-    public @NotNull HeaderKey<?> @NotNull [] getHeaders() {
+    public @NotNull HttpHeaderKey<?> @NotNull [] getHeaders() {
         return headers;
     }
 

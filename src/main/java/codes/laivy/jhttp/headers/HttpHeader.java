@@ -6,9 +6,9 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Arrays;
 
-public interface Header<T> extends Cloneable {
+public interface HttpHeader<T> extends Cloneable {
 
-    @NotNull HeaderKey<T> getKey();
+    @NotNull HttpHeaderKey<T> getKey();
     @UnknownNullability T getValue();
 
     default @NotNull String getName() {
@@ -20,9 +20,10 @@ public interface Header<T> extends Cloneable {
     @Override
     int hashCode();
 
-    @NotNull Header<T> clone();
+    @NotNull
+    HttpHeader<T> clone();
 
-    static <E> @NotNull Header<E> create(final @NotNull HeaderKey<E> key, final @UnknownNullability E value) {
+    static <E> @NotNull HttpHeader<E> create(final @NotNull HttpHeaderKey<E> key, final @UnknownNullability E value) {
         return key.create(value);
     }
 
@@ -263,7 +264,7 @@ public interface Header<T> extends Cloneable {
          */
         FORBIDDEN_NAME("Accept-Charset", "Accept-Encoding", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Connection", "Content-Length", "Cookie", "Cookie2", "Date", "DNT", "Expect", "Host", "Keep-Alive", "Origin", "Referer", "TE", "Trailer", "Transfer-Encoding", "Upgrade", "Via") {
             @Override
-            public boolean matches(@NotNull HeaderKey<?> key) {
+            public boolean matches(@NotNull HttpHeaderKey<?> key) {
                 return super.matches(key) || key.getName().toLowerCase().startsWith("proxy-") || key.getName().toLowerCase().startsWith("sec-");
             }
         },
@@ -307,7 +308,7 @@ public interface Header<T> extends Cloneable {
          * @param key the HeaderKey to be checked
          * @return {@code true} if the key matches any header in the current type, {@code false} otherwise
          */
-        public boolean matches(@NotNull HeaderKey<?> key) {
+        public boolean matches(@NotNull HttpHeaderKey<?> key) {
             return Arrays.stream(headers).anyMatch(name -> key.getName().equalsIgnoreCase(name));
         }
 

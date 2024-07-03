@@ -7,8 +7,8 @@ import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.encoding.GZipEncoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-import static codes.laivy.jhttp.headers.HeaderKey.*;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.*;
 import static codes.laivy.jhttp.protocol.HttpVersion.HTTP1_1;
 
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
@@ -29,7 +29,7 @@ public final class HttpFactoryTests {
     @BeforeEach
     void setUp() throws ClassNotFoundException {
         // Load headers
-        Class.forName(HeaderKey.class.getName());
+        Class.forName(HttpHeaderKey.class.getName());
     }
 
     @Nested
@@ -92,7 +92,7 @@ public final class HttpFactoryTests {
             @NotNull String string = "GET http://localhost/index HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
 
             @NotNull HttpRequest request = HTTP1_1().getRequestFactory().parse(string);
-            @NotNull Headers headers = request.getHeaders();
+            @NotNull HttpHeaders headers = request.getHeaders();
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));
             Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);
@@ -167,7 +167,7 @@ public final class HttpFactoryTests {
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Type: application/json\r\n\r\n{\"text\":\"test\"}";
 
             @NotNull HttpResponse response = HTTP1_1().getResponseFactory().parse(string);
-            @NotNull Headers headers = response.getHeaders();
+            @NotNull HttpHeaders headers = response.getHeaders();
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));
             Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);

@@ -6,8 +6,8 @@ import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.Weight;
 import codes.laivy.jhttp.headers.Wildcard;
 import codes.laivy.jhttp.media.MediaType;
@@ -44,7 +44,7 @@ public final class HeaderTests {
     final class Accept extends HeaderTest<MediaType<?>[]> {
         private Accept() {
             super(
-                    HeaderKey.ACCEPT,
+                    HttpHeaderKey.ACCEPT,
 
                     new String[] {
                             "*/*",
@@ -61,10 +61,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptCH extends HeaderTest<HeaderKey<?>[]> {
+    final class AcceptCH extends HeaderTest<HttpHeaderKey<?>[]> {
         private AcceptCH() {
             super(
-                    HeaderKey.ACCEPT_CH,
+                    HttpHeaderKey.ACCEPT_CH,
 
                     new String[] {
                             "DPR",
@@ -84,7 +84,7 @@ public final class HeaderTests {
     final class AcceptCHLifetime extends HeaderTest<Duration> {
         private AcceptCHLifetime() {
             super(
-                    HeaderKey.ACCEPT_CH_LIFETIME,
+                    HttpHeaderKey.ACCEPT_CH_LIFETIME,
 
                     new String[] {
                             "86400",
@@ -101,7 +101,7 @@ public final class HeaderTests {
     final class AcceptCharset extends HeaderTest<Weight<Deferred<Charset>>[]> {
         private AcceptCharset() {
             super(
-                    HeaderKey.ACCEPT_CHARSET,
+                    HttpHeaderKey.ACCEPT_CHARSET,
 
                     new String[] {
                             "utf-8",
@@ -118,7 +118,7 @@ public final class HeaderTests {
     final class AcceptEncoding extends HeaderTest<Wildcard<Weight<Deferred<Encoding>>[]>> {
         private AcceptEncoding() {
             super(
-                    HeaderKey.ACCEPT_ENCODING,
+                    HttpHeaderKey.ACCEPT_ENCODING,
 
                     new String[] {
                             "*",
@@ -138,7 +138,7 @@ public final class HeaderTests {
     final class AcceptLanguage extends HeaderTest<Wildcard<Weight<Locale>[]>> {
         private AcceptLanguage() {
             super(
-                    HeaderKey.ACCEPT_LANGUAGE,
+                    HttpHeaderKey.ACCEPT_LANGUAGE,
 
                     new String[] {
                             "*",
@@ -157,7 +157,7 @@ public final class HeaderTests {
     final class AcceptPatch extends HeaderTest<MediaType<?>[]> {
         private AcceptPatch() {
             super(
-                    HeaderKey.ACCEPT_PATCH,
+                    HttpHeaderKey.ACCEPT_PATCH,
 
                     new String[] {
                             "application/example, text/example",
@@ -176,7 +176,7 @@ public final class HeaderTests {
     final class AcceptPost extends HeaderTest<MediaType.Type[]> {
         private AcceptPost() {
             super(
-                    HeaderKey.ACCEPT_POST,
+                    HttpHeaderKey.ACCEPT_POST,
 
                     new String[] {
                             "application/example, text/example",
@@ -193,7 +193,7 @@ public final class HeaderTests {
     final class AcceptRanges extends HeaderTest<AcceptRange> {
         private AcceptRanges() {
             super(
-                    HeaderKey.ACCEPT_RANGES,
+                    HttpHeaderKey.ACCEPT_RANGES,
 
                     new String[] {
                             "none",
@@ -211,7 +211,7 @@ public final class HeaderTests {
     final class AcceptControlAllowCredentials extends HeaderTest<Boolean> {
         private AcceptControlAllowCredentials() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_ALLOW_CREDENTIALS,
+                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_CREDENTIALS,
 
                     new String[] {
                             "true",
@@ -226,10 +226,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlAllowHeaders extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
+    final class AcceptControlAllowHeaders extends HeaderTest<Wildcard<HttpHeaderKey<?>[]>> {
         private AcceptControlAllowHeaders() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_ALLOW_HEADERS,
+                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_HEADERS,
 
                     new String[] {
                             "X-Custom-Header",
@@ -246,7 +246,7 @@ public final class HeaderTests {
     final class AcceptControlAllowMethods extends HeaderTest<Wildcard<Method[]>> {
         private AcceptControlAllowMethods() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_ALLOW_METHODS,
+                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_METHODS,
 
                     new String[] {
                             "GET, POST, OPTIONS",
@@ -265,7 +265,7 @@ public final class HeaderTests {
     final class AcceptControlAllowOrigin extends HeaderTest<Wildcard<@Nullable URIAuthority>> {
         private AcceptControlAllowOrigin() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_ALLOW_ORIGIN,
+                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_ORIGIN,
 
                     new String[] {
                             "https://developer.mozilla.org",
@@ -281,10 +281,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlExposeHeaders extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
+    final class AcceptControlExposeHeaders extends HeaderTest<Wildcard<HttpHeaderKey<?>[]>> {
         private AcceptControlExposeHeaders() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_EXPOSE_HEADERS,
+                    HttpHeaderKey.ACCEPT_CONTROL_EXPOSE_HEADERS,
 
                     new String[] {
                             "Content-Encoding",
@@ -301,7 +301,7 @@ public final class HeaderTests {
     final class AcceptControlMaxAge extends HeaderTest<Duration> {
         private AcceptControlMaxAge() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_MAX_AGE,
+                    HttpHeaderKey.ACCEPT_CONTROL_MAX_AGE,
 
                     new String[] {
                             "86400",
@@ -315,10 +315,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class AcceptControlHeadersImpl extends HeaderTest<HeaderKey<?>[]> {
+    final class AcceptControlHeadersImpl extends HeaderTest<HttpHeaderKey<?>[]> {
         private AcceptControlHeadersImpl() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_REQUEST_HEADERS,
+                    HttpHeaderKey.ACCEPT_CONTROL_REQUEST_HEADERS,
 
                     new String[] {
                             "content-type,x-pingother",
@@ -336,7 +336,7 @@ public final class HeaderTests {
     final class AcceptControlRequestMethod extends HeaderTest<Method> {
         private AcceptControlRequestMethod() {
             super(
-                    HeaderKey.ACCEPT_CONTROL_REQUEST_METHOD,
+                    HttpHeaderKey.ACCEPT_CONTROL_REQUEST_METHOD,
 
                     new String[] {
                             "get",
@@ -360,7 +360,7 @@ public final class HeaderTests {
     final class Age extends HeaderTest<Duration> {
         private Age() {
             super(
-                    HeaderKey.AGE,
+                    HttpHeaderKey.AGE,
 
                     new String[] {
                             "86400",
@@ -377,7 +377,7 @@ public final class HeaderTests {
     final class Allow extends HeaderTest<Method[]> {
         private Allow() {
             super(
-                    HeaderKey.ALLOW,
+                    HttpHeaderKey.ALLOW,
 
                     new String[] {
                             "GET, POST, OPTIONS",
@@ -396,7 +396,7 @@ public final class HeaderTests {
     final class AltSvc extends HeaderTest<Optional<AlternativeService[]>> {
         private AltSvc() {
             super(
-                    HeaderKey.ALT_SVC,
+                    HttpHeaderKey.ALT_SVC,
 
                     new String[] {
                             "clear",
@@ -418,7 +418,7 @@ public final class HeaderTests {
     final class AltUsed extends HeaderTest<URIAuthority> {
         private AltUsed() {
             super(
-                    HeaderKey.ALT_USED,
+                    HttpHeaderKey.ALT_USED,
 
                     new String[] {
                             "alternate.example.net",
@@ -436,7 +436,7 @@ public final class HeaderTests {
     final class Authorization extends HeaderTest<Credentials> {
         private Authorization() {
             super(
-                    HeaderKey.AUTHORIZATION,
+                    HttpHeaderKey.AUTHORIZATION,
 
                     new String[] {
                             "Basic username:password",
@@ -452,7 +452,7 @@ public final class HeaderTests {
     final class CacheControl extends HeaderTest<codes.laivy.jhttp.module.CacheControl> {
         private CacheControl() {
             super(
-                    HeaderKey.CACHE_CONTROL,
+                    HttpHeaderKey.CACHE_CONTROL,
 
                     new String[] {
                             "max-age=60,public,private",
@@ -469,7 +469,7 @@ public final class HeaderTests {
     final class ClearSiteData extends HeaderTest<Wildcard<SiteData[]>> {
         private ClearSiteData() {
             super(
-                    HeaderKey.CLEAR_SITE_DATA,
+                    HttpHeaderKey.CLEAR_SITE_DATA,
 
                     new String[] {
                             "\"cache\"",
@@ -487,7 +487,7 @@ public final class HeaderTests {
     final class Connection extends HeaderTest<codes.laivy.jhttp.module.connection.Connection> {
         private Connection() {
             super(
-                    HeaderKey.CONNECTION,
+                    HttpHeaderKey.CONNECTION,
 
                     new String[] {
                             "keep-alive",
@@ -513,7 +513,7 @@ public final class HeaderTests {
     final class ContentDisposition extends HeaderTest<codes.laivy.jhttp.module.content.ContentDisposition> {
         private ContentDisposition() {
             super(
-                    HeaderKey.CONTENT_DISPOSITION,
+                    HttpHeaderKey.CONTENT_DISPOSITION,
 
                     new String[] {
                             "inline",
@@ -537,7 +537,7 @@ public final class HeaderTests {
     final class ContentDPR extends HeaderTest<Float> {
         private ContentDPR() {
             super(
-                    HeaderKey.CONTENT_DPR,
+                    HttpHeaderKey.CONTENT_DPR,
 
                     new String[] {
                             "0.1",
@@ -554,7 +554,7 @@ public final class HeaderTests {
     final class ContentEncoding extends HeaderTest<Deferred<Encoding>[]> {
         private ContentEncoding() {
             super(
-                    HeaderKey.CONTENT_ENCODING,
+                    HttpHeaderKey.CONTENT_ENCODING,
 
                     new String[] {
                             "gzip",
@@ -576,7 +576,7 @@ public final class HeaderTests {
     final class ContentLanguage extends HeaderTest<Locale[]> {
         private ContentLanguage() {
             super(
-                    HeaderKey.CONTENT_LANGUAGE,
+                    HttpHeaderKey.CONTENT_LANGUAGE,
 
                     new String[] {
                             "de-DE",
@@ -594,7 +594,7 @@ public final class HeaderTests {
     final class ContentLength extends HeaderTest<BitMeasure> {
         private ContentLength() {
             super(
-                    HeaderKey.CONTENT_LENGTH,
+                    HttpHeaderKey.CONTENT_LENGTH,
 
                     new String[] {
                             "2412424214",
@@ -611,7 +611,7 @@ public final class HeaderTests {
     final class ContentLocation extends HeaderTest<codes.laivy.jhttp.module.Origin> {
         private ContentLocation() {
             super(
-                    HeaderKey.CONTENT_LOCATION,
+                    HttpHeaderKey.CONTENT_LOCATION,
 
                     new String[] {
                             "/my-first-blog-post",
@@ -630,7 +630,7 @@ public final class HeaderTests {
     final class ContentRange extends HeaderTest<codes.laivy.jhttp.module.content.ContentRange> {
         private ContentRange() {
             super(
-                    HeaderKey.CONTENT_RANGE,
+                    HttpHeaderKey.CONTENT_RANGE,
 
                     new String[] {
                             "bytes 200-1000/67589",
@@ -649,7 +649,7 @@ public final class HeaderTests {
     final class ContentSecurityPolicy extends HeaderTest<codes.laivy.jhttp.module.content.ContentSecurityPolicy> {
         private ContentSecurityPolicy() {
             super(
-                    HeaderKey.CONTENT_SECURITY_POLICY,
+                    HttpHeaderKey.CONTENT_SECURITY_POLICY,
 
                     new String[]{
                             "default-src https:",
@@ -665,7 +665,7 @@ public final class HeaderTests {
     final class ContentSecurityPolicyReportOnly extends HeaderTest<codes.laivy.jhttp.module.content.ContentSecurityPolicy> {
         private ContentSecurityPolicyReportOnly() {
             super(
-                    HeaderKey.CONTENT_SECURITY_POLICY_REPORT_ONLY,
+                    HttpHeaderKey.CONTENT_SECURITY_POLICY_REPORT_ONLY,
 
                     new String[]{
                             "default-src https:",
@@ -681,7 +681,7 @@ public final class HeaderTests {
     final class ContentType extends HeaderTest<MediaType<?>> {
         private ContentType() {
             super(
-                    HeaderKey.CONTENT_TYPE,
+                    HttpHeaderKey.CONTENT_TYPE,
 
                     new String[] {
                             "text/html; charset=utf-8",
@@ -699,7 +699,7 @@ public final class HeaderTests {
     final class Cookie extends HeaderTest<codes.laivy.jhttp.module.Cookie[]> {
         private Cookie() {
             super(
-                    HeaderKey.COOKIE,
+                    HttpHeaderKey.COOKIE,
 
                     new String[] {
                             "cookie_name=cookie_value",
@@ -718,10 +718,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class CriticalCH extends HeaderTest<HeaderKey<?>[]> {
+    final class CriticalCH extends HeaderTest<HttpHeaderKey<?>[]> {
         private CriticalCH() {
             super(
-                    HeaderKey.CRITICAL_CH,
+                    HttpHeaderKey.CRITICAL_CH,
 
                     new String[] {
                             "Sec-CH-Prefers-Reduced-Motion",
@@ -739,7 +739,7 @@ public final class HeaderTests {
     final class CrossOriginEmbedderPolicy extends HeaderTest<CrossOrigin.EmbedderPolicy> {
         private CrossOriginEmbedderPolicy() {
             super(
-                    HeaderKey.CROSS_ORIGIN_EMBEDDER_POLICY,
+                    HttpHeaderKey.CROSS_ORIGIN_EMBEDDER_POLICY,
 
                     new String[] {
                             "credentialless",
@@ -757,7 +757,7 @@ public final class HeaderTests {
     final class CrossOriginOpenerPolicy extends HeaderTest<CrossOrigin.OpenerPolicy> {
         private CrossOriginOpenerPolicy() {
             super(
-                    HeaderKey.CROSS_ORIGIN_OPENER_POLICY,
+                    HttpHeaderKey.CROSS_ORIGIN_OPENER_POLICY,
 
                     new String[] {
                             "unsafe-none",
@@ -775,7 +775,7 @@ public final class HeaderTests {
     final class CrossOriginResourcePolicy extends HeaderTest<CrossOrigin.ResourcePolicy> {
         private CrossOriginResourcePolicy() {
             super(
-                    HeaderKey.CROSS_ORIGIN_RESOURCE_POLICY,
+                    HttpHeaderKey.CROSS_ORIGIN_RESOURCE_POLICY,
 
                     new String[] {
                             "same-site",
@@ -793,7 +793,7 @@ public final class HeaderTests {
     final class Date extends HeaderTest<OffsetDateTime> {
         private Date() {
             super(
-                    HeaderKey.DATE,
+                    HttpHeaderKey.DATE,
 
                     new String[] {
                             "Wed, 12 Feb 1997 16:29:51 -0500"
@@ -808,7 +808,7 @@ public final class HeaderTests {
     final class DeviceMemory extends HeaderTest<BitMeasure> {
         private DeviceMemory() {
             super(
-                    HeaderKey.DEVICE_MEMORY,
+                    HttpHeaderKey.DEVICE_MEMORY,
 
                     new String[] {
                             "0.25",
@@ -830,7 +830,7 @@ public final class HeaderTests {
     final class DNT extends HeaderTest<Boolean> {
         private DNT() {
             super(
-                    HeaderKey.DNT,
+                    HttpHeaderKey.DNT,
 
                     new String[] {
                             "0",
@@ -849,7 +849,7 @@ public final class HeaderTests {
     final class Downlink extends HeaderTest<BitMeasure> {
         private Downlink() {
             super(
-                    HeaderKey.DOWNLINK,
+                    HttpHeaderKey.DOWNLINK,
 
                     new String[] {
                             "1.7",
@@ -867,7 +867,7 @@ public final class HeaderTests {
     final class DPR extends HeaderTest<Float> {
         private DPR() {
             super(
-                    HeaderKey.DPR,
+                    HttpHeaderKey.DPR,
 
                     new String[] {
                             "2.0",
@@ -883,7 +883,7 @@ public final class HeaderTests {
     final class EarlyData extends HeaderTest<Void> {
         private EarlyData() {
             super(
-                    HeaderKey.EARLY_DATA,
+                    HttpHeaderKey.EARLY_DATA,
 
                     new String[] {
                             "1",
@@ -899,7 +899,7 @@ public final class HeaderTests {
     final class ECT extends HeaderTest<EffectiveConnectionType> {
         private ECT() {
             super(
-                    HeaderKey.ECT,
+                    HttpHeaderKey.ECT,
 
                     new String[] {
                             "slow-2g",
@@ -919,7 +919,7 @@ public final class HeaderTests {
     final class ETag extends HeaderTest<EntityTag> {
         private ETag() {
             super(
-                    HeaderKey.ETAG,
+                    HttpHeaderKey.ETAG,
 
                     new String[] {
                             "W/\"cool\"",
@@ -936,7 +936,7 @@ public final class HeaderTests {
     final class Expect extends HeaderTest<HttpStatus> {
         private Expect() {
             super(
-                    HeaderKey.EXPECT,
+                    HttpHeaderKey.EXPECT,
 
                     new String[] {
                             "100-continue",
@@ -955,7 +955,7 @@ public final class HeaderTests {
     final class ExpectCT extends HeaderTest<ExpectCertificate> {
         private ExpectCT() {
             super(
-                    HeaderKey.EXPECT_CT,
+                    HttpHeaderKey.EXPECT_CT,
 
                     new String[] {
                             "max-age=86400, enforce, report-uri=\"https://foo.example.com/report\"",
@@ -973,7 +973,7 @@ public final class HeaderTests {
     final class Expires extends HeaderTest<OffsetDateTime> {
         private Expires() {
             super(
-                    HeaderKey.EXPIRES,
+                    HttpHeaderKey.EXPIRES,
 
                     new String[] {
                             "0",
@@ -990,7 +990,7 @@ public final class HeaderTests {
     final class Forwarded extends HeaderTest<codes.laivy.jhttp.module.Forwarded> {
         private Forwarded() {
             super(
-                    HeaderKey.FORWARDED,
+                    HttpHeaderKey.FORWARDED,
 
                     new String[] {
                             "by=unknown;for=unknown;host=jhttp.org;proto=http",
@@ -1009,7 +1009,7 @@ public final class HeaderTests {
     final class From extends HeaderTest<Email> {
         private From() {
             super(
-                    HeaderKey.FROM,
+                    HttpHeaderKey.FROM,
 
                     new String[] {
                             "contact@jhttp.org",
@@ -1029,7 +1029,7 @@ public final class HeaderTests {
     final class Host extends HeaderTest<codes.laivy.jhttp.url.Host> {
         private Host() {
             super(
-                    HeaderKey.HOST,
+                    HttpHeaderKey.HOST,
 
                     new String[] {
                             "example.com:80",
@@ -1050,7 +1050,7 @@ public final class HeaderTests {
     final class IfMatch extends HeaderTest<Wildcard<EntityTag[]>> {
         private IfMatch() {
             super(
-                    HeaderKey.IF_MATCH,
+                    HttpHeaderKey.IF_MATCH,
 
                     new String[] {
                             "\"bfc13a64729c4290ef5b2c2730249c88ca92d82d\"",
@@ -1067,7 +1067,7 @@ public final class HeaderTests {
     final class IfModifiedSince extends HeaderTest<OffsetDateTime> {
         private IfModifiedSince() {
             super(
-                    HeaderKey.IF_MODIFIED_SINCE,
+                    HttpHeaderKey.IF_MODIFIED_SINCE,
 
                     new String[] {
                             "Wed, 12 Feb 1997 16:29:51 -0500"
@@ -1082,7 +1082,7 @@ public final class HeaderTests {
     final class IfNoneMatch extends HeaderTest<Wildcard<EntityTag[]>> {
         private IfNoneMatch() {
             super(
-                    HeaderKey.IF_NONE_MATCH,
+                    HttpHeaderKey.IF_NONE_MATCH,
 
                     new String[] {
                             "\"bfc13a64729c4290ef5b2c2730249c88ca92d82d\"",
@@ -1099,7 +1099,7 @@ public final class HeaderTests {
     final class IfUnmodifiedSince extends HeaderTest<OffsetDateTime> {
         private IfUnmodifiedSince() {
             super(
-                    HeaderKey.IF_UNMODIFIED_SINCE,
+                    HttpHeaderKey.IF_UNMODIFIED_SINCE,
 
                     new String[] {
                             "Wed, 12 Feb 1997 16:29:51 -0500"
@@ -1114,7 +1114,7 @@ public final class HeaderTests {
     final class KeepAlive extends HeaderTest<codes.laivy.jhttp.module.KeepAlive> {
         private KeepAlive() {
             super(
-                    HeaderKey.KEEP_ALIVE,
+                    HttpHeaderKey.KEEP_ALIVE,
 
                     new String[] {
                             "timeout=5, max=1000",
@@ -1134,7 +1134,7 @@ public final class HeaderTests {
     final class LargeAllocation extends HeaderTest<Optional<BitMeasure>> {
         private LargeAllocation() {
             super(
-                    HeaderKey.LARGE_ALLOCATION,
+                    HttpHeaderKey.LARGE_ALLOCATION,
 
                     new String[] {
                             "0",
@@ -1150,7 +1150,7 @@ public final class HeaderTests {
     final class LastModified extends HeaderTest<OffsetDateTime> {
         private LastModified() {
             super(
-                    HeaderKey.LAST_MODIFIED,
+                    HttpHeaderKey.LAST_MODIFIED,
 
                     new String[] {
                             "Wed, 12 Feb 1997 16:29:51 -0500"
@@ -1165,7 +1165,7 @@ public final class HeaderTests {
     final class Location extends HeaderTest<codes.laivy.jhttp.module.Origin> {
         private Location() {
             super(
-                    HeaderKey.LOCATION,
+                    HttpHeaderKey.LOCATION,
 
                     new String[] {
                             "/index.html",
@@ -1182,7 +1182,7 @@ public final class HeaderTests {
     final class MaxForwards extends HeaderTest<Integer> {
         private MaxForwards() {
             super(
-                    HeaderKey.MAX_FORWARDS,
+                    HttpHeaderKey.MAX_FORWARDS,
 
                     new String[] {
                             "0",
@@ -1198,7 +1198,7 @@ public final class HeaderTests {
     final class NEL extends HeaderTest<NetworkErrorLogging> {
         private NEL() {
             super(
-                    HeaderKey.NEL,
+                    HttpHeaderKey.NEL,
 
                     new String[] {
                             "{ \"report_to\"  : \"name_of_reporting_group\"  , \"max_age\": 12345, \"include_subdomains\": false, \"success_fraction\": 0.0, \"failure_fraction\": 1.0 }",
@@ -1214,7 +1214,7 @@ public final class HeaderTests {
     final class Origin extends HeaderTest<codes.laivy.jhttp.url.Host> {
         private Origin() {
             super(
-                    HeaderKey.ORIGIN,
+                    HttpHeaderKey.ORIGIN,
 
                     new String[] {
                             "null",
@@ -1234,7 +1234,7 @@ public final class HeaderTests {
     final class OriginAgentCluster extends HeaderTest<Boolean> {
         private OriginAgentCluster() {
             super(
-                    HeaderKey.ORIGIN_AGENT_CLUSTER,
+                    HttpHeaderKey.ORIGIN_AGENT_CLUSTER,
 
                     new String[] {
                             "?1",
@@ -1255,7 +1255,7 @@ public final class HeaderTests {
     final class Pragma extends HeaderTest<Void> {
         private Pragma() {
             super(
-                    HeaderKey.PRAGMA,
+                    HttpHeaderKey.PRAGMA,
 
                     new String[] {
                             "no-cache",
@@ -1271,7 +1271,7 @@ public final class HeaderTests {
     final class ProxyAuthorization extends HeaderTest<Credentials> {
         private ProxyAuthorization() {
             super(
-                    HeaderKey.PROXY_AUTHORIZATION,
+                    HttpHeaderKey.PROXY_AUTHORIZATION,
 
                     new String[] {
                             "Basic username:password",
@@ -1287,7 +1287,7 @@ public final class HeaderTests {
     final class Referer extends HeaderTest<codes.laivy.jhttp.module.Origin> {
         private Referer() {
             super(
-                    HeaderKey.REFERER,
+                    HttpHeaderKey.REFERER,
 
                     new String[] {
                             "/index.html",
@@ -1304,7 +1304,7 @@ public final class HeaderTests {
     final class RTT extends HeaderTest<Duration> {
         private RTT() {
             super(
-                    HeaderKey.RTT,
+                    HttpHeaderKey.RTT,
 
                     new String[] {
                             "125",
@@ -1321,7 +1321,7 @@ public final class HeaderTests {
     final class SaveData extends HeaderTest<Boolean> {
         private SaveData() {
             super(
-                    HeaderKey.SAVE_DATA,
+                    HttpHeaderKey.SAVE_DATA,
 
                     new String[] {
                             "ON",
@@ -1343,7 +1343,7 @@ public final class HeaderTests {
     final class Server extends HeaderTest<Product> {
         private Server() {
             super(
-                    HeaderKey.SERVER,
+                    HttpHeaderKey.SERVER,
 
                     new String[] {
                             "JHTTP/1.0",
@@ -1360,7 +1360,7 @@ public final class HeaderTests {
     final class SetCookie extends HeaderTest<codes.laivy.jhttp.module.Cookie.Request> {
         private SetCookie() {
             super(
-                    HeaderKey.SET_COOKIE,
+                    HttpHeaderKey.SET_COOKIE,
 
                     new String[] {
                             "cookie_name=cookie_value; Secure; Partitioned; HttpOnly; Domain=example.com; SameSite=Strict; Path=/index; Max-Age=123456; Expires=Wed, 12 Feb 1997 16:29:51 -0500",
@@ -1378,7 +1378,7 @@ public final class HeaderTests {
     final class SourceMap extends HeaderTest<codes.laivy.jhttp.module.Origin> {
         private SourceMap() {
             super(
-                    HeaderKey.SOURCEMAP,
+                    HttpHeaderKey.SOURCEMAP,
 
                     new String[] {
                             "/index.html",
@@ -1395,7 +1395,7 @@ public final class HeaderTests {
     final class TE extends HeaderTest<Weight<Deferred<Encoding>>[]> {
         private TE() {
             super(
-                    HeaderKey.TE,
+                    HttpHeaderKey.TE,
 
                     new String[] {
                             "compress",
@@ -1411,10 +1411,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Trailer extends HeaderTest<HeaderKey<?>[]> {
+    final class Trailer extends HeaderTest<HttpHeaderKey<?>[]> {
         private Trailer() {
             super(
-                    HeaderKey.TRAILER,
+                    HttpHeaderKey.TRAILER,
 
                     new String[] {
                             "Content-Length",
@@ -1432,7 +1432,7 @@ public final class HeaderTests {
     final class TransferEncoding extends HeaderTest<Deferred<Encoding>[]> {
         private TransferEncoding() {
             super(
-                    HeaderKey.TRANSFER_ENCODING,
+                    HttpHeaderKey.TRANSFER_ENCODING,
 
                     new String[] {
                             "chunked",
@@ -1448,10 +1448,10 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Vary extends HeaderTest<Wildcard<HeaderKey<?>[]>> {
+    final class Vary extends HeaderTest<Wildcard<HttpHeaderKey<?>[]>> {
         private Vary() {
             super(
-                    HeaderKey.VARY,
+                    HttpHeaderKey.VARY,
 
                     new String[] {
                             "*",
@@ -1469,7 +1469,7 @@ public final class HeaderTests {
     final class UserAgent extends HeaderTest<codes.laivy.jhttp.module.UserAgent> {
         private UserAgent() {
             super(
-                    HeaderKey.USER_AGENT,
+                    HttpHeaderKey.USER_AGENT,
 
                     new String[] {
                             "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
@@ -1499,7 +1499,7 @@ public final class HeaderTests {
     final class Upgrade extends HeaderTest<codes.laivy.jhttp.module.Upgrade[]> {
         private Upgrade() {
             super(
-                    HeaderKey.UPGRADE,
+                    HttpHeaderKey.UPGRADE,
 
                     new String[] {
                             "example/1, foo/2",
@@ -1518,7 +1518,7 @@ public final class HeaderTests {
     final class Digest extends HeaderTest<codes.laivy.jhttp.module.Digest[]> {
         private Digest() {
             super(
-                    HeaderKey.DIGEST,
+                    HttpHeaderKey.DIGEST,
 
                     new String[] {
                             "sha-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=",
@@ -1542,7 +1542,7 @@ public final class HeaderTests {
 
         // Object
 
-        private final @NotNull HeaderKey<T> key;
+        private final @NotNull HttpHeaderKey<T> key;
 
         private final @NotNull String @NotNull [] valids;
         private final @NotNull String @NotNull [] invalids;
@@ -1552,7 +1552,7 @@ public final class HeaderTests {
         // Constructor
 
         protected HeaderTest(
-                @NotNull HeaderKey<T> key,
+                @NotNull HttpHeaderKey<T> key,
 
                 @NotNull String @NotNull [] valids,
                 @NotNull String @NotNull [] invalids
@@ -1591,7 +1591,7 @@ public final class HeaderTests {
             });
         }
         protected HeaderTest(
-                @NotNull HeaderKey<T> key,
+                @NotNull HttpHeaderKey<T> key,
 
                 @NotNull String @NotNull [] valids,
                 @NotNull String @NotNull [] invalids,
@@ -1608,7 +1608,7 @@ public final class HeaderTests {
 
         // Getters
 
-        public @NotNull HeaderKey<T> getKey() {
+        public @NotNull HttpHeaderKey<T> getKey() {
             return key;
         }
 
@@ -1650,8 +1650,8 @@ public final class HeaderTests {
         void serialization() throws HeaderFormatException {
             for (@NotNull String valid : getValids()) {
                 try {
-                    @NotNull Header<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
-                    @NotNull Header<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
+                    @NotNull HttpHeader<T> reference = getKey().read(HttpVersion.HTTP1_1(), valid);
+                    @NotNull HttpHeader<T> clone = getKey().read(HttpVersion.HTTP1_1(), getKey().write(HttpVersion.HTTP1_1(), reference));
 
                     Assertions.assertTrue(function.apply(reference.getValue(), clone.getValue()), "cannot match reference '" + reference.getValue() + "' and clone '" + clone.getValue() + "'");
                 } catch (@NotNull Throwable throwable) {

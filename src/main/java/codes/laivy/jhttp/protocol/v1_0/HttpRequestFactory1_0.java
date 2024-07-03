@@ -14,9 +14,8 @@ import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.request.HttpRequestParseException;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -34,11 +33,12 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static codes.laivy.jhttp.Main.CRLF;
-import static codes.laivy.jhttp.headers.HeaderKey.*;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.*;
 
 final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
@@ -79,16 +79,17 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         return version;
     }
 
+    @Override
+    public @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @Nullable HttpBody body) {
+        return new HttpRequestImpl(method, authority, uri, headers, body);
+    }
+
     // Modules
 
     @Override
     public @NotNull String serialize(@NotNull HttpRequest request) {
         if (!request.getVersion().equals(getVersion())) {
             throw new IllegalArgumentException("cannot serialize a '" + request.getVersion() + "' http request using a '" + getVersion() + "' http request factory");
-        } else if (!request.getHeaders().contains(HeaderKey.HOST)) {
-            throw new IllegalStateException("the http requests from version " + getVersion() + " must have the '" + HeaderKey.HOST + "' header");
-        } else if (request.getHeaders().count(HeaderKey.HOST) > 1) {
-            throw new IllegalStateException("the http requests from version " + getVersion() + " cannot have multiples '" + HeaderKey.HOST + "' headers");
         }
 
         @NotNull StringBuilder builder = new StringBuilder();
@@ -105,7 +106,7 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         builder.append(request.getMethod().name()).append(" ").append(authority).append(" ").append(getVersion());
 
         // Write headers
-        for (@NotNull Header<?> header : request.getHeaders()) {
+        for (@NotNull HttpHeader<?> header : request.getHeaders()) {
             if (!header.getKey().getTarget().isRequests()) continue;
             builder.append(CRLF).append(getVersion().getHeaderFactory().serialize(header));
         }
@@ -132,12 +133,12 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
 
         // Headers
-        @NotNull Headers headers = getVersion().getHeaderFactory().createMutable(Target.REQUEST);
+        @NotNull HttpHeaders headers = getVersion().getHeaderFactory().createMutable(Target.REQUEST);
 
         if (content[0].split(CRLF, 2).length > 1) {
             for (@NotNull String line : content[0].split(CRLF, 2)[1].split("\\s*" + CRLF)) {
                 try {
-                    @NotNull Header<?> header = getVersion().getHeaderFactory().parse(line);
+                    @NotNull HttpHeader<?> header = getVersion().getHeaderFactory().parse(line);
                     if (!header.getKey().getTarget().isRequests()) continue;
 
                     headers.add(header);
@@ -300,6 +301,76 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
     // Classes
 
+    private final class HttpRequestImpl implements HttpRequest {
+
+        // Object
+
+        private final @NotNull Method method;
+        private final @Nullable URIAuthority authority;
+        private final @NotNull URI uri;
+        private final @NotNull HttpHeaders headers;
+        private final @Nullable HttpBody body;
+
+        private HttpRequestImpl(
+                @NotNull Method method,
+                @Nullable URIAuthority authority,
+                @NotNull URI uri,
+                @NotNull HttpHeaders headers,
+                @Nullable HttpBody body
+        ) {
+            this.method = method;
+            this.authority = authority;
+            this.uri = uri;
+            this.headers = headers;
+            this.body = body;
+        }
+
+        // Getters
+
+        @Override
+        public @NotNull Method getMethod() {
+            return method;
+        }
+        @Override
+        public @Nullable URIAuthority getAuthority() {
+            return authority;
+        }
+        @Override
+        public @NotNull URI getUri() {
+            return uri;
+        }
+        @Override
+        public @NotNull HttpVersion getVersion() {
+            return version;
+        }
+        @Override
+        public @NotNull HttpHeaders getHeaders() {
+            return headers;
+        }
+        @Override
+        public @Nullable HttpBody getBody() {
+            return body;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof HttpRequest)) return false;
+            @NotNull HttpRequest that = (HttpRequest) object;
+            return getMethod() == that.getMethod() && Objects.equals(getAuthority(), that.getAuthority()) && Objects.equals(getUri(), that.getUri()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getMethod(), getAuthority(), getUri(), getHeaders(), getBody());
+        }
+        @Override
+        public @NotNull String toString() {
+            return serialize(this);
+        }
+
+    }
     private final class FutureImpl implements Future {
 
         private final @NotNull CompletableFuture<HttpRequest> future = new CompletableFuture<>();
@@ -311,7 +382,7 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         private final @NotNull Method method;
         private final @Nullable URIAuthority authority;
         private final @NotNull URI uri;
-        private final @NotNull Headers headers;
+        private final @NotNull HttpHeaders headers;
 
         private @NotNull String body;
 
@@ -362,7 +433,7 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
             return uri;
         }
         @Override
-        public @NotNull Headers getHeaders() {
+        public @NotNull HttpHeaders getHeaders() {
             return headers;
         }
 

@@ -1,6 +1,6 @@
 package codes.laivy.jhttp;
 
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import org.jetbrains.annotations.NotNull;
 
 public final class Main {
@@ -9,7 +9,7 @@ public final class Main {
 
     public static void main(String[] args) throws ClassNotFoundException {
         // Load headers
-        Class.forName(HeaderKey.class.getName());
+        Class.forName(HttpHeaderKey.class.getName());
     }
 
 }

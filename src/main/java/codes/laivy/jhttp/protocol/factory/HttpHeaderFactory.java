@@ -2,9 +2,9 @@ package codes.laivy.jhttp.protocol.factory;
 
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,8 +28,10 @@ public interface HttpHeaderFactory {
 
     // Modules
 
-    @NotNull Headers createMutable(@NotNull Target target);
-    @NotNull Headers createImmutable(@NotNull Headers clone);
+    @NotNull
+    HttpHeaders createMutable(@NotNull Target target);
+    @NotNull
+    HttpHeaders createImmutable(@NotNull HttpHeaders clone);
 
     /**
      * Safely serializes an HTTP header to a string representation.
@@ -39,9 +41,9 @@ public interface HttpHeaderFactory {
      * @throws IllegalArgumentException if the header value contains illegal characters.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    default @NotNull String serialize(@NotNull Header<?> header) {
+    default @NotNull String serialize(@NotNull HttpHeader<?> header) {
         @NotNull String name = header.getKey().getName();
-        @NotNull String value = ((HeaderKey) header.getKey()).write(getVersion(), header);
+        @NotNull String value = ((HttpHeaderKey) header.getKey()).write(getVersion(), header);
 
         if (value.contains("\n") || value.contains("\r")) {
             throw new IllegalArgumentException("header value contains illegal characters");
@@ -57,7 +59,7 @@ public interface HttpHeaderFactory {
      * @return The parsed HTTP header. Never null.
      * @throws HeaderFormatException if the string is not a valid header format.
      */
-    default @NotNull Header<?> parse(@NotNull String string) throws HeaderFormatException {
+    default @NotNull HttpHeader<?> parse(@NotNull String string) throws HeaderFormatException {
         @NotNull String[] split = string.split("\\s*:\\s*", 2);
 
         if (!string.contains(":")) {
@@ -66,10 +68,10 @@ public interface HttpHeaderFactory {
             throw new HeaderFormatException("header contains illegal characters");
         } else if (split.length != 2) {
             throw new HeaderFormatException("header with blank value");
-        } else if (!split[0].matches(HeaderKey.NAME_FORMAT_REGEX.pattern())) {
+        } else if (!split[0].matches(HttpHeaderKey.NAME_FORMAT_REGEX.pattern())) {
             throw new HeaderFormatException("illegal header key '" + split[0] + "'");
         } else {
-            @NotNull HeaderKey<?> key = HeaderKey.retrieve(split[0]);
+            @NotNull HttpHeaderKey<?> key = HttpHeaderKey.retrieve(split[0]);
             @NotNull String value = split[1].trim();
 
             return key.read(getVersion(), value);
@@ -92,7 +94,7 @@ public interface HttpHeaderFactory {
             return false;
         } else if (split.length != 2) {
             return false;
-        } else if (!split[0].matches(HeaderKey.NAME_FORMAT_REGEX.pattern())) {
+        } else if (!split[0].matches(HttpHeaderKey.NAME_FORMAT_REGEX.pattern())) {
             return false;
         }
 

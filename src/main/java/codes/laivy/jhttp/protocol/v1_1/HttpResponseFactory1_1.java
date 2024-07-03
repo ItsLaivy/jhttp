@@ -13,8 +13,8 @@ import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.request.HttpResponseParseException;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -31,11 +31,12 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static codes.laivy.jhttp.Main.CRLF;
-import static codes.laivy.jhttp.headers.HeaderKey.*;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.*;
 
 final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
@@ -56,6 +57,11 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         return version;
     }
 
+    @Override
+    public @NotNull HttpResponse create(@NotNull HttpStatus status, @NotNull HttpHeaders headers, @NotNull HttpBody body) {
+        return new HttpResponseImpl(status, headers, body);
+    }
+
     // Modules
 
     @Override
@@ -67,7 +73,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         @NotNull StringBuilder builder = new StringBuilder(getVersion() + " " + response.getStatus().getCode() + " " + response.getStatus().getMessage() + CRLF);
 
         // Write headers
-        for (@NotNull Header<?> header : response.getHeaders()) {
+        for (@NotNull HttpHeader<?> header : response.getHeaders()) {
             if (!header.getKey().getTarget().isResponses()) continue;
             builder.append(getVersion().getHeaderFactory().serialize(header)).append(CRLF);
         }
@@ -97,12 +103,12 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         @NotNull HttpStatus status = HttpStatus.getByCode(code);
 
         // Retrieve headers
-        @NotNull Headers headers = getVersion().getHeaderFactory().createMutable(Target.RESPONSE);
+        @NotNull HttpHeaders headers = getVersion().getHeaderFactory().createMutable(Target.RESPONSE);
 
         if (content[0].split(CRLF, 2).length > 1) {
             for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split("\\s*" + CRLF)) {
                 try {
-                    @NotNull Header<?> header = getVersion().getHeaderFactory().parse(headerString);
+                    @NotNull HttpHeader<?> header = getVersion().getHeaderFactory().parse(headerString);
                     if (!header.getKey().getTarget().isResponses()) continue;
 
                     headers.add(header);
@@ -234,6 +240,60 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
     // Classes
 
+    private final class HttpResponseImpl implements HttpResponse {
+
+        private final @NotNull HttpStatus status;
+        private final @NotNull HttpHeaders headers;
+        private final @Nullable HttpBody body;
+
+        private HttpResponseImpl(
+                @NotNull HttpStatus status,
+                @NotNull HttpHeaders headers,
+                @Nullable HttpBody body
+        ) {
+            this.status = status;
+            this.headers = headers;
+            this.body = body;
+        }
+
+        // Getters
+
+        @Override
+        public @NotNull HttpStatus getStatus() {
+            return status;
+        }
+        @Override
+        public @NotNull HttpVersion getVersion() {
+            return version;
+        }
+        @Override
+        public @NotNull HttpHeaders getHeaders() {
+            return headers;
+        }
+        @Override
+        public @Nullable HttpBody getBody() {
+            return body;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof HttpResponse)) return false;
+            @NotNull HttpResponse that = (HttpResponse) object;
+            return Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getStatus(), getHeaders(), getBody());
+        }
+        @Override
+        public @NotNull String toString() {
+            return serialize(this);
+        }
+
+    }
     private final class FutureImpl implements Future {
 
         private final @NotNull CompletableFuture<HttpResponse> future = new CompletableFuture<>();
@@ -243,7 +303,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
         private final @NotNull HttpVersion1_1 version;
         private final @NotNull HttpStatus status;
-        private final @NotNull Headers headers;
+        private final @NotNull HttpHeaders headers;
 
         private @NotNull String body;
 
@@ -285,7 +345,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             return status;
         }
         @Override
-        public @NotNull Headers getHeaders() {
+        public @NotNull HttpHeaders getHeaders() {
             return headers;
         }
 

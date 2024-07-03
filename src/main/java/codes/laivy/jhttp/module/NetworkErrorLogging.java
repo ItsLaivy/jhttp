@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.module;
 
-import codes.laivy.jhttp.headers.HeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +20,8 @@ public interface NetworkErrorLogging {
             @NotNull String group,
             @NotNull Duration age,
 
-            @NotNull HeaderKey<?>[] requests,
-            @NotNull HeaderKey<?>[] responses,
+            @NotNull HttpHeaderKey<?>[] requests,
+            @NotNull HttpHeaderKey<?>[] responses,
 
             boolean hasSubdomains,
 
@@ -38,11 +38,11 @@ public interface NetworkErrorLogging {
                 return age;
             }
             @Override
-            public @NotNull HeaderKey<?> @NotNull [] getRequests() {
+            public @NotNull HttpHeaderKey<?> @NotNull [] getRequests() {
                 return requests;
             }
             @Override
-            public @NotNull HeaderKey<?> @NotNull [] getResponses() {
+            public @NotNull HttpHeaderKey<?> @NotNull [] getResponses() {
                 return responses;
             }
             @Override
@@ -81,8 +81,8 @@ public interface NetworkErrorLogging {
     @NotNull String getGroup();
     @NotNull Duration getAge();
 
-    @NotNull HeaderKey<?> @NotNull [] getRequests();
-    @NotNull HeaderKey<?> @NotNull [] getResponses();
+    @NotNull HttpHeaderKey<?> @NotNull [] getRequests();
+    @NotNull HttpHeaderKey<?> @NotNull [] getResponses();
 
     boolean hasSubdomains();
 
@@ -115,7 +115,7 @@ public interface NetworkErrorLogging {
             {
                 @NotNull JsonArray array = new JsonArray();
 
-                for (@NotNull HeaderKey<?> header : nel.getRequests()) {
+                for (@NotNull HttpHeaderKey<?> header : nel.getRequests()) {
                     if (!header.getTarget().isRequests()) continue;
                     array.add(header.getName());
                 }
@@ -126,7 +126,7 @@ public interface NetworkErrorLogging {
             {
                 @NotNull JsonArray array = new JsonArray();
 
-                for (@NotNull HeaderKey<?> header : nel.getResponses()) {
+                for (@NotNull HttpHeaderKey<?> header : nel.getResponses()) {
                     if (!header.getTarget().isResponses()) continue;
                     array.add(header.getName());
                 }
@@ -146,21 +146,21 @@ public interface NetworkErrorLogging {
                 @Nullable Double successFraction = object.has("success_fraction") ? object.get("success_fraction").getAsDouble() : null;
                 @Nullable Double failureFraction = object.has("failure_fraction") ? object.get("failure_fraction").getAsDouble() : null;
 
-                @NotNull List<HeaderKey<?>> requests = new LinkedList<>();
-                @NotNull List<HeaderKey<?>> responses = new LinkedList<>();
+                @NotNull List<HttpHeaderKey<?>> requests = new LinkedList<>();
+                @NotNull List<HttpHeaderKey<?>> responses = new LinkedList<>();
 
                 if (object.has("request_headers")) {
                     for (@NotNull JsonElement element : object.getAsJsonArray("request_headers")) {
-                        requests.add(HeaderKey.retrieve(element.getAsString()));
+                        requests.add(HttpHeaderKey.retrieve(element.getAsString()));
                     }
                 }
                 if (object.has("response_headers")) {
                     for (@NotNull JsonElement element : object.getAsJsonArray("response_headers")) {
-                        responses.add(HeaderKey.retrieve(element.getAsString()));
+                        responses.add(HttpHeaderKey.retrieve(element.getAsString()));
                     }
                 }
 
-                return create(group, age, requests.toArray(new HeaderKey[0]), responses.toArray(new HeaderKey[0]), subdomains, successFraction, failureFraction);
+                return create(group, age, requests.toArray(new HttpHeaderKey[0]), responses.toArray(new HttpHeaderKey[0]), subdomains, successFraction, failureFraction);
             } else {
                 throw new ParseException("cannot parse '" + string + "' as a valid network error logging object", 0);
             }

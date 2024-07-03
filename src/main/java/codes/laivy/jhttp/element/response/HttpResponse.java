@@ -5,16 +5,15 @@ import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Target;
-import codes.laivy.jhttp.headers.Header;
-import codes.laivy.jhttp.headers.HeaderKey;
-import codes.laivy.jhttp.headers.Headers;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaderKey;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.module.UserAgent.Product;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
@@ -38,50 +37,10 @@ public interface HttpResponse extends HttpElement {
     static @NotNull HttpResponse create(
             @NotNull HttpVersion version,
             @NotNull HttpStatus status,
-            @NotNull Headers headers,
+            @NotNull HttpHeaders headers,
             @Nullable HttpBody body
     ) {
-        return new HttpResponse() {
-
-            // Object
-
-            @Override
-            public @NotNull HttpVersion getVersion() {
-                return version;
-            }
-            @Override
-            public @NotNull HttpStatus getStatus() {
-                return status;
-            }
-            @Override
-            public @NotNull Headers getHeaders() {
-                return headers;
-            }
-            @Override
-            public @Nullable HttpBody getBody() {
-                return body;
-            }
-
-            // Implementations
-
-            @Override
-            public boolean equals(@Nullable Object object) {
-                if (this == object) return true;
-                if (object == null || getClass() != object.getClass()) return false;
-                @NotNull HttpResponse that = (HttpResponse) object;
-                return Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getBody(), that.getBody());
-            }
-            @Override
-            public int hashCode() {
-                return Objects.hash(getStatus(), getVersion(), getHeaders(), getBody());
-            }
-
-            @Override
-            public @NotNull String toString() {
-                return getVersion().getResponseFactory().serialize(this);
-            }
-
-        };
+        return version.getResponseFactory().create(status, headers, body);
     }
 
     // Object
@@ -93,7 +52,7 @@ public interface HttpResponse extends HttpElement {
     @NotNull HttpStatus getStatus();
 
     default @Nullable Product getServer() {
-        return getHeaders().first(HeaderKey.SERVER).map(Header::getValue).orElse(null);
+        return getHeaders().first(HttpHeaderKey.SERVER).map(HttpHeader::getValue).orElse(null);
     }
 
     // Classes
@@ -135,7 +94,8 @@ public interface HttpResponse extends HttpElement {
          *
          * @return The headers of this HTTP response future. Never null.
          */
-        @NotNull Headers getHeaders();
+        @NotNull
+        HttpHeaders getHeaders();
 
         /**
          * Returns the raw HTTP response as a string. The difference between this method and {@link #toString()}
