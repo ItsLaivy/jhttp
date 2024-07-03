@@ -10,7 +10,7 @@ import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.headers.*;
 import codes.laivy.jhttp.module.Forwarded;
-import codes.laivy.jhttp.module.Origin;
+import codes.laivy.jhttp.module.Location;
 import codes.laivy.jhttp.module.UserAgent;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.Host;
@@ -159,7 +159,7 @@ public interface HttpRequest extends HttpElement {
      *
      * @return the referrer, or {@code null} if not found
      */
-    default @Nullable Origin getReferrer() {
+    default @Nullable Location getReferrer() {
         return getHeaders().first(HttpHeaderKey.REFERER).map(HttpHeader::getValue).orElse(null);
     }
 

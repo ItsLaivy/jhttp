@@ -33,22 +33,37 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
             }
 
             // Host
-            @NotNull String[] parts = matcher.group("host").split("\\.");
-            @NotNull String name = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : matcher.group("host");
-            @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
-            @NotNull Host host = Host.parse(name + (port != null ? ":" + port : ""));
-
-            // Subdomains
+            @NotNull Host host;
             @NotNull Subdomain[] subdomains = new Subdomain[0];
-            if (parts.length > 1) {
-                subdomains = Arrays.stream(Arrays.copyOf(parts, parts.length - 2)).map(subdomain -> {
-                    if (!subdomain.trim().equals("*")) return Subdomain.create(subdomain);
-                    else return Subdomain.wildcard();
-                }).toArray(Subdomain[]::new);
+            @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
+            @NotNull String hostname = matcher.group("host");
+
+            if (Host.IPv4.validate(hostname)) {
+                host = Host.IPv4.parse(hostname + (port != null ? ":" + port : ""));
+            } else if (Host.IPv6.validate(hostname)) {
+                if (!(hostname.startsWith("[") && hostname.endsWith("]"))) {
+                    throw new ParseException("cannot parse '" + hostname + "' as a valid domain ipv6 address", matcher.start("host"));
+                }
+
+                host = Host.IPv6.parse(hostname + (port != null ? ":" + port : ""));
+            } else if (Host.Name.validate(hostname)) {
+                @NotNull String[] parts = hostname.split("\\.");
+                hostname = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : hostname;
+                host = Host.Name.parse(hostname + (port != null ? ":" + port : ""));
+
+                // Subdomains
+                if (parts.length > 1) {
+                    subdomains = Arrays.stream(Arrays.copyOf(parts, parts.length - 2)).map(subdomain -> {
+                        if (!subdomain.trim().equals("*")) return Subdomain.create(subdomain);
+                        else return Subdomain.wildcard();
+                    }).toArray(Subdomain[]::new);
+                }
+            } else {
+                throw new ParseException("cannot parse '" + hostname + "' as a valid domain host", matcher.start("host"));
             }
 
             // Finish
-            return new Domain<>(protocol, subdomains, name.split(":")[0], host);
+            return new Domain<>(protocol, subdomains, hostname, host);
         } else {
             throw new ParseException("cannot parse '" + string + "' as a valid domain url", 0);
         }
@@ -98,7 +113,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         @NotNull Domain<?> domain = (Domain<?>) object;
-        return protocol == domain.protocol && Objects.deepEquals(subdomains, domain.subdomains) && Objects.equals(host, domain.host) && Objects.equals(name, domain.name);
+        return protocol == domain.protocol && Arrays.equals(subdomains, domain.subdomains) && Objects.equals(host, domain.host) && Objects.equals(name, domain.name);
     }
     @Override
     public int hashCode() {
@@ -112,15 +127,11 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
 
         if (getProtocol() != null) {
             builder.append(getProtocol().getName());
-
-            if (Objects.equals(port, getProtocol().getPort())) {
-                port = null;
-            }
         } for (@NotNull Subdomain subdomain : getSubdomains()) {
             builder.append(subdomain).append(".");
         }
 
-        builder.append(getName());
+        builder.append(getHost().getName());
 
         if (port != null) {
             builder.append(":").append(port);

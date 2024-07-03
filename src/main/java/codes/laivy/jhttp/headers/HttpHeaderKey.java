@@ -23,6 +23,7 @@ import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.url.email.Email;
 import codes.laivy.jhttp.utilities.DateUtils;
 import com.google.gson.JsonObject;
@@ -117,7 +118,7 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull Deferred<Encoding> @NotNull []> CONTENT_ENCODING = new Provided.ContentEncodingHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Locale @NotNull []> CONTENT_LANGUAGE = new Provided.ContentLanguageHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull BitMeasure> CONTENT_LENGTH = new Provided.ContentLengthHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Origin> CONTENT_LOCATION = new Provided.ContentLocationHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Location> CONTENT_LOCATION = new Provided.ContentLocationHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull ContentRange> CONTENT_RANGE = new Provided.ContentRangeHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull ContentSecurityPolicy> CONTENT_SECURITY_POLICY = new Provided.ContentSecurityPolicyHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull ContentSecurityPolicy> CONTENT_SECURITY_POLICY_REPORT_ONLY = new Provided.ContentSecurityPolicyReportOnlyeHeaderKey();
@@ -157,7 +158,7 @@ public abstract class HttpHeaderKey<T> {
     @Deprecated
     public static @NotNull HttpHeaderKey<@NotNull Optional<@NotNull BitMeasure>> LARGE_ALLOCATION = new Provided.LargeAllocationHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull OffsetDateTime> LAST_MODIFIED = new Provided.LastModifiedHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Origin> LOCATION = new Provided.LocationHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Location> LOCATION = new Provided.LocationHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Integer> MAX_FORWARDS = new Provided.MaxForwardsHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull NetworkErrorLogging> NEL = new Provided.NetworkErrorLoggingHeaderKey();
@@ -165,7 +166,7 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull String> NO_VARY_SEARCH = new Provided.StringHeaderKey("No-Vary-Search", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> OBSERVE_BROWSING_TOPICS = new Provided.StringHeaderKey("Observe-Browsing-Topics", Target.RESPONSE);
-    public static @NotNull HttpHeaderKey<@Nullable Host> ORIGIN = new Provided.OriginHeaderKey();
+    public static @NotNull HttpHeaderKey<@Nullable Domain<?>> ORIGIN = new Provided.OriginHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull Boolean> ORIGIN_AGENT_CLUSTER = new Provided.OriginAgentClusterHeaderKey();
     @ApiStatus.Experimental
@@ -175,7 +176,7 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull Credentials> PROXY_AUTHORIZATION = new Provided.ProxyAuthorizationHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> RANGE = new Provided.StringHeaderKey("Range", Target.REQUEST);
-    public static @NotNull HttpHeaderKey<@NotNull Origin> REFERER = new Provided.RefererHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Location> REFERER = new Provided.RefererHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> REFERER_POLICY = new Provided.StringHeaderKey("Referrer-Policy", Target.RESPONSE);
     @ApiStatus.Experimental
@@ -235,7 +236,7 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<Cookie. @NotNull Request> SET_COOKIE = new Provided.SetCookieHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> SET_LOGIN = new Provided.StringHeaderKey("Set-Login", Target.RESPONSE);
-    public static @NotNull HttpHeaderKey<@NotNull Origin> SOURCEMAP = new Provided.SourceMapHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Location> SOURCEMAP = new Provided.SourceMapHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> SPECULATION_RULES = new Provided.StringHeaderKey("Speculation-Rules", Target.RESPONSE);
     @ApiStatus.Experimental
@@ -660,22 +661,22 @@ public abstract class HttpHeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class SourceMapHeaderKey extends HttpHeaderKey<@NotNull Origin> {
+        private static final class SourceMapHeaderKey extends HttpHeaderKey<@NotNull Location> {
             private SourceMapHeaderKey() {
                 super("SourceMap", Target.RESPONSE);
             }
 
             @Override
-            public @NotNull HttpHeader<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.deserialize(value));
+                    return create(Location.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Origin> header) {
-                return Origin.Parser.serialize(header.getValue());
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
+                return Location.Parser.serialize(header.getValue());
             }
         }
         private static final class SaveDataHeaderKey extends HttpHeaderKey<@NotNull Boolean> {
@@ -706,22 +707,22 @@ public abstract class HttpHeaderKey<T> {
                 return String.valueOf(header.getValue().toMillis());
             }
         }
-        private static final class RefererHeaderKey extends HttpHeaderKey<@NotNull Origin> {
+        private static final class RefererHeaderKey extends HttpHeaderKey<@NotNull Location> {
             private RefererHeaderKey() {
                 super("Referer", Target.REQUEST);
             }
 
             @Override
-            public @NotNull HttpHeader<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.deserialize(value));
+                    return create(Location.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Origin> header) {
-                return Origin.Parser.serialize(header.getValue());
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
+                return Location.Parser.serialize(header.getValue());
             }
         }
         private static final class ProxyAuthorizationHeaderKey extends HttpHeaderKey<@NotNull Credentials> {
@@ -791,23 +792,23 @@ public abstract class HttpHeaderKey<T> {
                 return header.getValue().toString();
             }
         }
-        private static final class OriginHeaderKey extends HttpHeaderKey<@Nullable Host> {
+        private static final class OriginHeaderKey extends HttpHeaderKey<@Nullable Domain<?>> {
             private OriginHeaderKey() {
                 super("Origin", Target.REQUEST);
             }
 
             @Override
-            public @NotNull HttpHeader<@Nullable Host> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<@Nullable Domain<?>> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 if (value.trim().equalsIgnoreCase("null")) {
                     return create(null);
                 } else try {
-                    return create(Host.parse(value));
+                    return create(Domain.parse(value));
                 } catch (ParseException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@Nullable Host> header) {
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@Nullable Domain<?>> header) {
                 return header.getValue() != null ? header.getValue().toString() : "null";
             }
         }
@@ -1084,22 +1085,22 @@ public abstract class HttpHeaderKey<T> {
                 return String.valueOf(header.getValue());
             }
         }
-        private static final class LocationHeaderKey extends HttpHeaderKey<@NotNull Origin> {
+        private static final class LocationHeaderKey extends HttpHeaderKey<@NotNull Location> {
             private LocationHeaderKey() {
                 super("Location", Target.RESPONSE);
             }
 
             @Override
-            public @NotNull HttpHeader<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.deserialize(value));
+                    return create(Location.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException(e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Origin> header) {
-                return Origin.Parser.serialize(header.getValue());
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
+                return Location.Parser.serialize(header.getValue());
             }
         }
         private static final class LastModifiedHeaderKey extends HttpHeaderKey<@NotNull OffsetDateTime> {
@@ -1662,22 +1663,22 @@ public abstract class HttpHeaderKey<T> {
                 return ContentRange.Parser.serialize(header.getValue());
             }
         }
-        private static final class ContentLocationHeaderKey extends HttpHeaderKey<@NotNull Origin> {
+        private static final class ContentLocationHeaderKey extends HttpHeaderKey<@NotNull Location> {
             private ContentLocationHeaderKey() {
                 super("Content-Location", Target.RESPONSE);
             }
 
             @Override
-            public @NotNull HttpHeader<Origin> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
+            public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws HeaderFormatException {
                 try {
-                    return create(Origin.Parser.deserialize(value));
+                    return create(Location.Parser.deserialize(value));
                 } catch (ParseException | UnknownHostException | URISyntaxException e) {
                     throw new HeaderFormatException("cannot parse '" + value + "' into a location", e);
                 }
             }
             @Override
-            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Origin> header) {
-                return Origin.Parser.serialize(header.getValue());
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
+                return Location.Parser.serialize(header.getValue());
             }
         }
         private static final class ContentEncodingHeaderKey extends HttpHeaderKey<@NotNull Deferred<Encoding> @NotNull []> {

@@ -13,12 +13,12 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public interface Origin extends ContentSecurityPolicy.Source {
+public interface Location extends ContentSecurityPolicy.Source {
 
     // Static initializers
 
-    static @NotNull Origin create(@Nullable Domain<?> domain, @NotNull URI uri) {
-        return new Origin() {
+    static @NotNull Location create(@Nullable Domain<?> domain, @NotNull URI uri) {
+        return new Location() {
             @Override
             public @Nullable Domain<?> getDomain() {
                 return domain;
@@ -32,7 +32,7 @@ public interface Origin extends ContentSecurityPolicy.Source {
             public boolean equals(@Nullable Object o) {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
-                @NotNull Origin that = (Origin) o;
+                @NotNull Location that = (Location) o;
                 return Objects.equals(domain, that.getDomain()) && Objects.equals(uri, that.getURI());
             }
             @Override
@@ -62,21 +62,21 @@ public interface Origin extends ContentSecurityPolicy.Source {
 
         public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?)(/.*)??(?<path>/\\S*)?$");
 
-        public static @NotNull String serialize(@NotNull Origin origin) {
-            if (origin.getDomain() != null) {
-                @NotNull StringBuilder builder = new StringBuilder(origin.getDomain().toString());
+        public static @NotNull String serialize(@NotNull Location location) {
+            if (location.getDomain() != null) {
+                @NotNull StringBuilder builder = new StringBuilder(location.getDomain().toString());
 
-                if (!origin.getURI().toString().isEmpty() && !origin.getURI().toString().startsWith("/")) {
+                if (!location.getURI().toString().isEmpty() && !location.getURI().toString().startsWith("/")) {
                     builder.append("/");
                 }
 
-                builder.append(origin.getURI());
+                builder.append(location.getURI());
                 return builder.toString();
             } else {
-                return origin.getURI().toString();
+                return location.getURI().toString();
             }
         }
-        public static @NotNull Origin deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
+        public static @NotNull Location deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
             @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
 
             if (matcher.matches()) {

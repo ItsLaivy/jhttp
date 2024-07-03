@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.module.content;
 
 import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
-import codes.laivy.jhttp.module.Origin;
+import codes.laivy.jhttp.module.Location;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Keyword;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Name;
 import codes.laivy.jhttp.url.Blob;
@@ -369,8 +369,8 @@ public final class ContentSecurityPolicy implements Iterable<Directive> {
                 return FileSystem.parse(string);
             } else if (MediaStream.validate(string)) {
                 return MediaStream.parse(string);
-            }else if (Origin.Parser.validate(string)) {
-                return Origin.Parser.deserialize(string);
+            }else if (Location.Parser.validate(string)) {
+                return Location.Parser.deserialize(string);
             } else if (Domain.validate(string)) {
                 return Domain.parse(string);
             } else {

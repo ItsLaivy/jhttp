@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.tests.content;
 
-import codes.laivy.jhttp.module.Origin;
+import codes.laivy.jhttp.module.Location;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -26,29 +26,29 @@ public final class OriginTests {
     @Order(value = 0)
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Origin.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
+            Assertions.assertTrue(Location.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Origin origin = Origin.Parser.deserialize("localhost:80/test/excellent");
+        @NotNull Location location = Location.Parser.deserialize("localhost:80/test/excellent");
 
         // Path
-        Assertions.assertEquals(origin.getURI().getPath(), URI.create("/test/excellent").getPath());
+        Assertions.assertEquals(location.getURI().getPath(), URI.create("/test/excellent").getPath());
 
         // Authority
-        Assertions.assertNotNull(origin.getDomain());
-        Assertions.assertNotNull(origin.getDomain().getHost().getPort());
+        Assertions.assertNotNull(location.getDomain());
+        Assertions.assertNotNull(location.getDomain().getHost().getPort());
 
-        Assertions.assertEquals(origin.getDomain().getHost().getPort(), 80);
-        Assertions.assertEquals(origin.getDomain().getHost().getName(), "localhost");
+        Assertions.assertEquals(location.getDomain().getHost().getPort(), 80);
+        Assertions.assertEquals(location.getDomain().getHost().getName(), "localhost");
     }
     @Test
     @Order(value = 2)
     void serialization() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Origin reference = Origin.Parser.deserialize("localhost:80/test/excellent");
-        @NotNull Origin clone = Origin.Parser.deserialize(Origin.Parser.serialize(reference));
+        @NotNull Location reference = Location.Parser.deserialize("localhost:80/test/excellent");
+        @NotNull Location clone = Location.Parser.deserialize(Location.Parser.serialize(reference));
 
         Assertions.assertEquals(reference, clone);
     }

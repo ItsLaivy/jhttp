@@ -59,7 +59,7 @@ final class HttpResponseFactory1_0 implements HttpResponseFactory {
     }
 
     @Override
-    public @NotNull HttpResponse create(@NotNull HttpStatus status, @NotNull HttpHeaders headers, @NotNull HttpBody body) {
+    public @NotNull HttpResponse create(@NotNull HttpStatus status, @NotNull HttpHeaders headers, @Nullable HttpBody body) {
         return new HttpResponseImpl(status, headers, body);
     }
 

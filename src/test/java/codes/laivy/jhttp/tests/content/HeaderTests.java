@@ -18,6 +18,7 @@ import codes.laivy.jhttp.module.content.AcceptRange;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.url.email.Email;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -608,7 +609,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class ContentLocation extends HeaderTest<codes.laivy.jhttp.module.Origin> {
+    final class ContentLocation extends HeaderTest<codes.laivy.jhttp.module.Location> {
         private ContentLocation() {
             super(
                     HttpHeaderKey.CONTENT_LOCATION,
@@ -1162,7 +1163,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Location extends HeaderTest<codes.laivy.jhttp.module.Origin> {
+    final class Location extends HeaderTest<codes.laivy.jhttp.module.Location> {
         private Location() {
             super(
                     HttpHeaderKey.LOCATION,
@@ -1211,7 +1212,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Origin extends HeaderTest<codes.laivy.jhttp.url.Host> {
+    final class Origin extends HeaderTest<Domain<?>> {
         private Origin() {
             super(
                     HttpHeaderKey.ORIGIN,
@@ -1222,6 +1223,8 @@ public final class HeaderTests {
                             "https://localhost",
                             "https://localhost:80",
                             "https://example.com:80",
+                            "http://51.254.98.213:80",
+                            "http://51.254.98.213",
                     }, new String[] {
                             "https://",
                             "",
@@ -1284,7 +1287,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class Referer extends HeaderTest<codes.laivy.jhttp.module.Origin> {
+    final class Referer extends HeaderTest<codes.laivy.jhttp.module.Location> {
         private Referer() {
             super(
                     HttpHeaderKey.REFERER,
@@ -1375,7 +1378,7 @@ public final class HeaderTests {
         }
     }
     @Nested
-    final class SourceMap extends HeaderTest<codes.laivy.jhttp.module.Origin> {
+    final class SourceMap extends HeaderTest<codes.laivy.jhttp.module.Location> {
         private SourceMap() {
             super(
                     HttpHeaderKey.SOURCEMAP,
