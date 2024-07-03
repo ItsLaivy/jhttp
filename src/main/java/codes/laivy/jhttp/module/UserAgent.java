@@ -60,12 +60,12 @@ public interface UserAgent {
         // Static initializers
 
         public static @NotNull Product parse(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = Pattern.compile("^(?<name>[^/]+)/?(?<version>[^ ]*)? *(?<comments>\\(.*?\\))*").matcher(string);
+            @NotNull Matcher matcher = Pattern.compile("^(?<name>[^/()]+)(?:/(?<version>[^ ()]+))? *(?<comments>\\(.*?\\))*").matcher(string);
 
             if (matcher.find()) {
-                @NotNull String name = matcher.group("name");
+                @NotNull String name = matcher.group("name").trim();
                 @Nullable String version = matcher.group("version") != null && !matcher.group("version").isEmpty() ? matcher.group("version") : null;
-                @NotNull String @NotNull [] comments = matcher.group("comments") != null ? Arrays.stream(matcher.group("comments").split("\\s+(?![^(]*\\))")).map(str -> str.substring(1, str.length() - 1)).toArray(String[]::new) : new String[0];
+                @NotNull String @NotNull [] comments = matcher.group("comments") != null ? Arrays.stream(matcher.group("comments").split("\\s+(?![^(]*\\))")).map(str -> str.substring(1, str.length() - 1).trim()).toArray(String[]::new) : new String[0];
 
                 // Finish
                 return new Product(name, version, comments);

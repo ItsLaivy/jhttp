@@ -1490,7 +1490,8 @@ public final class HeaderTests {
                             "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\n",
                             "Mozilla/5.0 (compatible; YandexAccessibilityBot/3.0; +http://yandex.com/bots)\n",
                             "curl/7.64.1",
-                            "PostmanRuntime/7.26.5"
+                            "PostmanRuntime/7.26.5",
+                            "Example Invalid Syntax Product (https://example.com/)"
                     }, new String[] {
                             "",
                             "(platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion",
