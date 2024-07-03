@@ -19,15 +19,17 @@ public interface Email extends CharSequence {
             final @NotNull String username,
             final @NotNull Domain<Name> domain
     ) throws IllegalArgumentException {
-        if (!username.matches("[a-zA-Z0-9._%+-]{1,64}")) {
-            throw new IllegalArgumentException("invalid email username format '" + username + "'");
+        @NotNull String string = username.replace("(dot)", ".").replace("(at)", "@");
+
+        if (!string.matches("[a-zA-Z0-9._%+-]{1,64}")) {
+            throw new IllegalArgumentException("invalid email username format '" + string + "'");
         }
 
         return new Email() {
 
             @Override
             public @NotNull String getUsername() {
-                return username;
+                return string;
             }
             @Override
             public @NotNull Domain<Name> getDomain() {
@@ -45,7 +47,7 @@ public interface Email extends CharSequence {
             }
             @Override
             public int hashCode() {
-                return Objects.hash(username, domain);
+                return Objects.hash(string, domain);
             }
 
             @Override
@@ -99,6 +101,7 @@ public interface Email extends CharSequence {
             return builder.toString();
         }
         public static @NotNull Email deserialize(@NotNull String string) throws ParseException {
+            string = string.replace("(dot)", ".").replace("(at)", "@");
             @NotNull Matcher matcher = EMAIL_REGEX.matcher(string);
 
             if (matcher.matches()) {
@@ -118,6 +121,7 @@ public interface Email extends CharSequence {
             }
         }
         public static boolean validate(@NotNull String string) {
+            string = string.replace("(dot)", ".").replace("(at)", "@");
             return EMAIL_REGEX.matcher(string).matches();
         }
     }
