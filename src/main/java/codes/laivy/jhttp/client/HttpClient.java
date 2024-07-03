@@ -27,6 +27,16 @@ import java.nio.channels.ClosedChannelException;
 public interface HttpClient extends Closeable {
 
     /**
+     * Checks if this client is secure
+     *
+     * @return True if the client is secure; false otherwise
+     * @since 1.0
+     */
+    default boolean isSecure() {
+        return this instanceof SecureHttpClient;
+    }
+
+    /**
      * Retrieves the underlying socket of the HTTP client.
      *
      * @return The socket associated with this HTTP client.

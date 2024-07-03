@@ -193,7 +193,6 @@ public interface Connection {
                 type = Type.getById(typeStr);
                 keys.remove(typeStr);
             }
-            System.out.println("Type: '" + typeStr + "' - '" + string + "' - '" + keys.keySet() + "'");
 
             // Headers
             @NotNull Set<HeaderKey<?>> headers = new LinkedHashSet<>();
@@ -202,7 +201,6 @@ public interface Connection {
             }
 
             // Finish
-            System.out.println("------");
             return create(type, headers.toArray(new HeaderKey[0]));
         }
 

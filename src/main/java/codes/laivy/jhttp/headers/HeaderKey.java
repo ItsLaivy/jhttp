@@ -162,47 +162,75 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull Integer> MAX_FORWARDS = new Provided.MaxForwardsHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull NetworkErrorLogging> NEL = new Provided.NetworkErrorLoggingHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> NO_VARY_SEARCH = new Provided.StringHeaderKey("No-Vary-Search", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> OBSERVE_BROWSING_TOPICS = new Provided.StringHeaderKey("Observe-Browsing-Topics", Target.RESPONSE);
     public static @NotNull HeaderKey<@Nullable Host> ORIGIN = new Provided.OriginHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Boolean> ORIGIN_AGENT_CLUSTER = new Provided.OriginAgentClusterHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> PERMISSIONS_POLICY = new Provided.StringHeaderKey("Permissions-Policy", Target.RESPONSE);
     @Deprecated
     public static @NotNull HeaderKey<@UnknownNullability Void> PRAGMA = new Provided.PragmaHeaderKey();
     public static @NotNull HeaderKey<@NotNull Credentials> PROXY_AUTHORIZATION = new Provided.ProxyAuthorizationHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> RANGE = new Provided.StringHeaderKey("Range", Target.REQUEST);
     public static @NotNull HeaderKey<@NotNull Origin> REFERER = new Provided.RefererHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> REFERER_POLICY = new Provided.StringHeaderKey("Referrer-Policy", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> REPORTING_ENDPOINTS = new Provided.StringHeaderKey("Reporting-Endpoints", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> REPR_DIGEST = new Provided.StringHeaderKey("Repr-Digest", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> RETRY_AFTER = new Provided.StringHeaderKey("Retry-After", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Duration> RTT = new Provided.RTTHeaderKey();
     public static @NotNull HeaderKey<@NotNull Boolean> SAVE_DATA = new Provided.SaveDataHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_BROWSING_TOPICS = new Provided.StringHeaderKey("Sec-Browsing-Topics", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_PREFERS_COLOR_SCHEME = new Provided.StringHeaderKey("Sec-CH-Prefers-Color-Scheme", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_PREFERS_REDUCED_MOTION = new Provided.StringHeaderKey("Sec-CH-Prefers-Reduced-Motion", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_PREFERS_REDUCED_TRANSPARENCY = new Provided.StringHeaderKey("Sec-CH-Prefers-Reduced-Transparency", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA = new Provided.StringHeaderKey("Sec-CH-UA", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_ARCH = new Provided.StringHeaderKey("Sec-CH-UA-Arch", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_BITNESS = new Provided.StringHeaderKey("Sec-CH-UA-Bitness", Target.REQUEST);
     @Deprecated
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_FULL_VERSION = new Provided.StringHeaderKey("Sec-CH-UA-Full-Version", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_FULL_VERSION_LIST = new Provided.StringHeaderKey("Sec-CH-UA-Full-Version-List", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_MOBILE = new Provided.StringHeaderKey("Sec-CH-UA-Mobile", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_MODEL = new Provided.StringHeaderKey("Sec-CH-UA-Model", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_PLATFORM = new Provided.StringHeaderKey("Sec-CH-UA-Platform", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_CH_UA_PLATFORM_VERSION = new Provided.StringHeaderKey("Sec-CH-UA-Platform-Version", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_FETCH_DEST = new Provided.StringHeaderKey("Sec-Fetch-Dest", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_FETCH_MODE = new Provided.StringHeaderKey("Sec-Fetch-Mode", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_FETCH_SITE = new Provided.StringHeaderKey("Sec-Fetch-Site", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_FETCH_USER = new Provided.StringHeaderKey("Sec-Fetch-User", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_GPC = new Provided.StringHeaderKey("Sec-GPC", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_PURPOSE = new Provided.StringHeaderKey("Sec-Purpose", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SEC_WEBSOCKET_ACCEPT = new Provided.StringHeaderKey("Sec-WebSocket-Accept", Target.RESPONSE);
     public static @NotNull HeaderKey<@NotNull Product> SERVER = new Provided.ServerHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SERVER_TIMING = new Provided.StringHeaderKey("Server-Timing", Target.RESPONSE);
     public static @NotNull HeaderKey<@NotNull String> SERVICE_WORKER_NAVIGATION_PRELOAD = new Provided.StringHeaderKey("Service-Worker-Navigation-Preload", Target.REQUEST);
     public static @NotNull HeaderKey<Cookie. @NotNull Request> SET_COOKIE = new Provided.SetCookieHeaderKey();
@@ -211,33 +239,52 @@ public abstract class HeaderKey<T> {
     public static @NotNull HeaderKey<@NotNull Origin> SOURCEMAP = new Provided.SourceMapHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SPECULATION_RULES = new Provided.StringHeaderKey("Speculation-Rules", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> STRICT_TRANSPORT_SECURITY = new Provided.StringHeaderKey("Strict-Transport-Security", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> SUPPORTS_LOADING_MODE = new Provided.StringHeaderKey("Supports-Loading-Mode", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull Weight<@NotNull Deferred<Encoding>> @NotNull []> TE = new Provided.TEHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> TIMING_ALLOW_ORIGIN = new Provided.StringHeaderKey("Timing-Allow-Origin", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> TK = new Provided.StringHeaderKey("Tk", Target.RESPONSE);
     public static @NotNull HeaderKey<@NotNull HeaderKey<?> @NotNull []> TRAILER = new Provided.TrailerHeaderKey();
     public static @NotNull HeaderKey<@NotNull Deferred<Encoding> @NotNull []> TRANSFER_ENCODING = new Provided.TransferEncodingHeaderKey();
     public static @NotNull HeaderKey<@NotNull Upgrade @NotNull []> UPGRADE = new Provided.UpgradeHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> UPGRADE_INSECURE_REQUESTS = new Provided.StringHeaderKey("Upgrade-Insecure-Requests", Target.REQUEST);
     public static @NotNull HeaderKey<@NotNull Wildcard<@NotNull HeaderKey<?> @NotNull []>> VARY = new Provided.VaryHeaderKey();
     public static @NotNull HeaderKey<@NotNull UserAgent> USER_AGENT = new Provided.UserAgentHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> VIA = new Provided.StringHeaderKey("Via", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> VIEWPORT_WIDTH = new Provided.StringHeaderKey("Viewport-Width", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WANT_CONTENT_DIGEST = new Provided.StringHeaderKey("Want-Content-Digest", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WANT_DIGEST = new Provided.StringHeaderKey("Want-Digest", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WANT_REPR_DIGEST = new Provided.StringHeaderKey("Want-Repr-Digest", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WARNING = new Provided.StringHeaderKey("Warning", Target.BOTH);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WIDTH = new Provided.StringHeaderKey("Width", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> WWW_AUTHENTICATE = new Provided.StringHeaderKey("WWW-Authenticate", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_CONTENT_TYPE_OPTIONS = new Provided.StringHeaderKey("X-Content-Type-Options", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_DNS_PREFETCH_CONTROL = new Provided.StringHeaderKey("X-DNS-Prefetch-Control", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_FORWARDED_FOR = new Provided.StringHeaderKey("X-Forwarded-For", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_FORWARDED_HOST = new Provided.StringHeaderKey("X-Forwarded-Host", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_FORWARDED_PROTO = new Provided.StringHeaderKey("X-Forwarded-Proto", Target.REQUEST);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_FRAME_OPTIONS = new Provided.StringHeaderKey("X-Frame-Options", Target.RESPONSE);
+    @ApiStatus.Experimental
     public static @NotNull HeaderKey<@NotNull String> X_XSS_PROTECTION = new Provided.StringHeaderKey("X-XSS-Protection", Target.RESPONSE);
 
     // Object

@@ -261,7 +261,6 @@ public interface Digest {
 
         public static boolean validate(@NotNull String string) {
             @NotNull String[] split = string.split("=", 2);
-            System.out.println("Split: '" + split.length + "', '" + split[0] + "', '" + split[1] + "' - '" + Algorithm.getById(split[0]).validate(split[1]) + "'");
 
             if (split.length != 2) {
                 return false;

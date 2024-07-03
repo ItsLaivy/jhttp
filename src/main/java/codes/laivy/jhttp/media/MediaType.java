@@ -60,6 +60,19 @@ public final class MediaType<T> {
     public static @NotNull MediaType<?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
         return new MediaType<>(type, TextMediaParser.create(), parameters);
     }
+
+    /**
+     * Creates a new media type with the specified media type and parameters, using its parser.
+     *
+     * @param media       the media type
+     * @param parameters the parameters associated with this media type
+     * @param <T>        the type of the content that this media type handles
+
+     * @return the newly created media type
+     */
+    public static <T> @NotNull MediaType<T> create(@NotNull MediaType<T> media, @NotNull Parameter @NotNull ... parameters) {
+        return new MediaType<>(media.getType(), media.getParser(), parameters);
+    }
     
     // Media type content
 
