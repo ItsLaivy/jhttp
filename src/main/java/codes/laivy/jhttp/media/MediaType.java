@@ -148,10 +148,10 @@ public class MediaType<T> {
     // Object
 
     private final @NotNull Type type;
-    private final @Nullable MediaParser<T> parser;
+    private final @NotNull MediaParser<T> parser;
     private final @NotNull Parameter @NotNull [] parameters;
 
-    protected MediaType(@NotNull Type type, @Nullable MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
+    protected MediaType(@NotNull Type type, @NotNull MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
         this.type = type;
         this.parser = parser;
         this.parameters = parameters;
@@ -170,11 +170,10 @@ public class MediaType<T> {
 
     /**
      * Returns the parser associated with this media type.
-     * If a media type doesn't have a parser, it will not be able to generate contents.
      *
-     * @return the parser associated with this media type or null if there's no parser
+     * @return the parser associated with this media type
      */
-    public @Nullable MediaParser<T> getParser() {
+    public @NotNull MediaParser<T> getParser() {
         return parser;
     }
 
@@ -335,7 +334,7 @@ public class MediaType<T> {
             if (parser != null) {
                 return new MediaType(type, parser, parameters.toArray(new Parameter[0])) {};
             } else {
-                return new MediaType(type, null, parameters.toArray(new Parameter[0])) {};
+                return new MediaType(type, MediaParser.getDefault(), parameters.toArray(new Parameter[0])) {};
             }
         }
 

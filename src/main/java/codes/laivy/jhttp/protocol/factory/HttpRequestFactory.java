@@ -42,6 +42,8 @@ public interface HttpRequestFactory {
      *
      * @param request The HTTP request to be serialized. Must not be null.
      * @return The string representation of the HTTP request. Never null.
+     * @throws EncodingException if any exception occurs, trying to encode body
+     * @throws IOException if any exception occurs, trying to read body
      */
     @NotNull String serialize(@NotNull HttpRequest request) throws EncodingException, IOException;
 
@@ -49,8 +51,10 @@ public interface HttpRequestFactory {
      * Transforms a string into a valid HTTP request object.
      *
      * @param string The string to be parsed. Must not be null.
-     * @throws HttpRequestParseException If a parse exception occurs.
      * @return The parsed HTTP request. Never null.
+     *
+     * @throws HttpRequestParseException If a parse exception occurs.
+     * @throws HttpBodyParseException If a parse exception occurs, trying to read the body.
      */
     @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException, HttpBodyParseException;
 
@@ -63,8 +67,9 @@ public interface HttpRequestFactory {
      *
      * @param client The HttpClient for which to create the Future. Must not be null.
      * @param string The string data to be parsed into the Future. Must not be null.
-     * @throws HttpRequestParseException If a parse exception occurs.
      * @return The Future representing the client's HTTP request. Never null.
+     *
+     * @throws HttpRequestParseException If a parse exception occurs.
      */
     @NotNull Future parse(@NotNull HttpClient client, @NotNull String string) throws HttpRequestParseException;
 

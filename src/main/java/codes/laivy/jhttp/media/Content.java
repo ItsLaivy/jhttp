@@ -27,16 +27,16 @@ public interface Content<T> extends Flushable {
      *
      * @return the media type of this content, never null
      */
-    default @NotNull MediaType<T> getMediaType() {
-        return getMediaParser().getMediaType();
-    }
+    @NotNull MediaType<T> getMediaType();
 
     /**
      * Gets the media parser of this content
      *
      * @return the media parser of this content, never null
      */
-    @NotNull MediaParser<T> getMediaParser();
+    default @NotNull MediaParser<T> getMediaParser() {
+        return getMediaType().getParser();
+    }
 
     /**
      * Gets the {@link HttpBody} associated with this content.

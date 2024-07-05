@@ -9,7 +9,6 @@ import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
 import codes.laivy.jhttp.headers.HttpHeader;
 import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.Content;
-import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -83,7 +82,7 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
 
         // Interpret Message
         try {
-            return create(media != null ? media.getParser() : null, new ByteArrayInputStream(content.getBytes()));
+            return create(media, new ByteArrayInputStream(content.getBytes()));
         } catch (@NotNull MediaParserException | @NotNull IOException e) {
             throw new HttpBodyParseException("cannot create http body", e);
         }
@@ -130,8 +129,8 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
     // Modules
 
     @Override
-    public @NotNull HttpBody create(@Nullable MediaParser<?> parser, @NotNull InputStream stream) throws MediaParserException, IOException {
-        return new HttpBodyImpl(parser, stream);
+    public @NotNull HttpBody create(@Nullable MediaType<?> type, @NotNull InputStream stream) throws MediaParserException, IOException {
+        return new HttpBodyImpl(type, stream);
     }
 
     // Classes
@@ -143,12 +142,12 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
 
         private volatile @UnknownNullability InputStream stream;
 
-        private HttpBodyImpl(@Nullable MediaParser<?> parser, @NotNull InputStream stream) throws MediaParserException, IOException {
+        private HttpBodyImpl(@Nullable MediaType<?> type, @NotNull InputStream stream) throws MediaParserException, IOException {
             this.stream = stream;
 
-            if (parser != null) {
-                @NotNull Content<?> content = content(parser, stream);
-                contentMap.put(parser.getMediaType(), content);
+            if (type != null) {
+                @NotNull Content<?> content = content(type, stream);
+                contentMap.put(type, content);
             }
         }
 
@@ -165,8 +164,7 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
                 @NotNull InputStream stream = getInputStream();
                 stream.reset();
 
-                @NotNull MediaParser<T> parser = Objects.requireNonNull(mediaType.getParser(), "this media type doesn't have a media parser");
-                @NotNull Content<T> content = content(parser, stream);
+                @NotNull Content<T> content = content(mediaType, stream);
 
                 synchronized (lock) {
                     contentMap.put(mediaType, content);
@@ -203,15 +201,15 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
 
         // Modules
 
-        private <T> @NotNull Content<T> content(@NotNull MediaParser<T> parser, @NotNull InputStream inputStream) throws MediaParserException, IOException {
+        private <T> @NotNull Content<T> content(@NotNull MediaType<T> type, @NotNull InputStream inputStream) throws MediaParserException, IOException {
             @NotNull HttpBody body = this;
-            @NotNull AtomicReference<T> reference = new AtomicReference<>(parser.deserialize(inputStream));
+            @NotNull AtomicReference<T> reference = new AtomicReference<>(type.getParser().deserialize(inputStream));
 
             return new Content<T>() {
 
                 @Override
-                public @NotNull MediaParser<T> getMediaParser() {
-                    return parser;
+                public @NotNull MediaType<T> getMediaType() {
+                    return type;
                 }
 
                 @Override

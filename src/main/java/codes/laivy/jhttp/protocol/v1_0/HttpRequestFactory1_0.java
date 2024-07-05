@@ -1,14 +1,12 @@
 package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.client.HttpClient;
-import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
-import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
@@ -36,7 +34,6 @@ import java.util.function.BiConsumer;
 
 import static codes.laivy.jhttp.Main.CRLF;
 import static codes.laivy.jhttp.headers.HttpHeaderKey.CONTENT_LENGTH;
-import static codes.laivy.jhttp.headers.HttpHeaderKey.TRANSFER_ENCODING;
 
 final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
@@ -382,27 +379,6 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
         private void check() {
             try {
-                // Chunked Encoding
-                if (getHeaders().contains(TRANSFER_ENCODING)) {
-                    @NotNull Deferred<Encoding>[] encodings = getHeaders().get(TRANSFER_ENCODING)[0].getValue();
-                    @NotNull Deferred<Encoding> deferred = encodings[encodings.length - 1];
-
-                    if (deferred.available() && deferred.toString().equalsIgnoreCase("chunked")) {
-                        @NotNull Encoding encoding = deferred.retrieve();
-
-                        if (body.endsWith("0\r\n\r\n")) {
-                            body = encoding.decompress(body);
-
-
-                            // Completes the message with the new body
-                            @NotNull HttpRequest request = parse(getAsString());
-                            future.complete(request);
-
-                            return;
-                        }
-                    }
-                }
-
                 // Content Length
                 if (getHeaders().contains(CONTENT_LENGTH)) {
                     // Check if the content length matches with the current body length and finish it true

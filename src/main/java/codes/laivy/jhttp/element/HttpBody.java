@@ -25,13 +25,19 @@ import java.io.InputStream;
  */
 public interface HttpBody extends Closeable {
 
+    // Static initializers
+
+    // Object
+
     /**
      * Retrieves or create the content of the HTTP body, decoded and transformed to the specified media type.
      *
      * @param mediaType the media type to which the content should be transformed must not be null
      * @param <T> the type of the content after transformation
      * @return the content of the HTTP body transformed to the specified media type
-     * @throws NullPointerException if the media type is null
+     *
+     * @throws MediaParserException if an exception occurs, trying to parse the content
+     * @throws IOException if an exception occurs, trying to read content
      */
     <T> @NotNull Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
 
