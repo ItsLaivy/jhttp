@@ -30,7 +30,7 @@ public interface HttpResponse extends HttpElement {
     static @NotNull HttpResponse create(
             @NotNull HttpVersion version,
             @NotNull HttpStatus status,
-            @Nullable HttpBody body
+            @NotNull HttpBody body
     ) {
         return create(version, status, version.getHeaderFactory().createMutable(Target.RESPONSE), body);
     }
@@ -38,7 +38,7 @@ public interface HttpResponse extends HttpElement {
             @NotNull HttpVersion version,
             @NotNull HttpStatus status,
             @NotNull HttpHeaders headers,
-            @Nullable HttpBody body
+            @NotNull HttpBody body
     ) {
         return version.getResponseFactory().create(status, headers, body);
     }

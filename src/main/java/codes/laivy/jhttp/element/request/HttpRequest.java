@@ -40,7 +40,7 @@ public interface HttpRequest extends HttpElement {
             final @NotNull Method method,
             final @Nullable URIAuthority authority,
             final @NotNull URI uri,
-            final @Nullable HttpBody body
+            final @NotNull HttpBody body
     ) {
         return create(version, method, authority, uri, version.getHeaderFactory().createMutable(Target.REQUEST), body);
     }
@@ -50,7 +50,7 @@ public interface HttpRequest extends HttpElement {
             final @Nullable URIAuthority authority,
             final @NotNull URI uri,
             final @NotNull HttpHeaders headers,
-            final @Nullable HttpBody body
+            final @NotNull HttpBody body
     ) {
         return version.getRequestFactory().create(method, authority, uri, headers, body);
     }

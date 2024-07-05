@@ -39,11 +39,11 @@ public interface HttpElement {
     HttpHeaders getHeaders();
 
     /**
-     * Retrieves the body of this HTTP element. The body can be {@code null} if there is no body or if it is empty.
+     * Retrieves the body of this HTTP element.
      *
-     * @return the {@link HttpBody} representing the message body of this element, or {@code null} if none.
+     * @return the {@link HttpBody} representing the message body of this element.
      */
-    @Nullable HttpBody getBody();
+    @NotNull HttpBody getBody();
 
     // Getters
 
