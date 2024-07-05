@@ -28,10 +28,8 @@ public interface HttpHeaderFactory {
 
     // Modules
 
-    @NotNull
-    HttpHeaders createMutable(@NotNull Target target);
-    @NotNull
-    HttpHeaders createImmutable(@NotNull HttpHeaders clone);
+    @NotNull HttpHeaders createMutable(@NotNull Target target);
+    @NotNull HttpHeaders createImmutable(@NotNull HttpHeaders clone);
 
     /**
      * Safely serializes an HTTP header to a string representation.

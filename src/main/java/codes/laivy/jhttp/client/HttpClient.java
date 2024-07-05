@@ -3,7 +3,7 @@ package codes.laivy.jhttp.client;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.exception.parser.IllegalHttpVersionException;
-import codes.laivy.jhttp.exception.parser.request.HttpRequestParseException;
+import codes.laivy.jhttp.exception.parser.element.HttpRequestParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

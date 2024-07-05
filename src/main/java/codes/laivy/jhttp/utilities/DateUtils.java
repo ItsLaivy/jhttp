@@ -35,7 +35,7 @@ public final class DateUtils {
          * Example output: {@code Wed, 12 Feb 1997 16:29:51 +0000}
          * </p>
          *
-         * @param dateTime the {@link OffsetDateTime} to be converted, representing a specific moment on the time line
+         * @param dateTime the {@link OffsetDateTime} to be converted, representing a specific moment on the timeline
          *                 (typically a timestamp from the system clock)
          * @return a {@link String} representing the date and time of the provided {@link OffsetDateTime}, formatted according to RFC 822
          * @throws NullPointerException if the {@code dateTime} is {@code null}

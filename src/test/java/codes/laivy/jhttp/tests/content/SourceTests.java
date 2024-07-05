@@ -4,6 +4,7 @@ import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.Data;
 import codes.laivy.jhttp.url.domain.Domain;
+import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -88,9 +89,7 @@ public final class SourceTests {
         @Test
         @Order(value = 1)
         void assertions() throws Throwable {
-            @NotNull MediaType<?> expected = MediaType.create(new MediaType.Type("application", "json"));
-
-            // Source
+            @NotNull MediaType<JsonElement> expected = MediaType.APPLICATION_JSON();
             @NotNull ContentSecurityPolicy.Source source = ContentSecurityPolicy.Source.parse("data:application/json;base64,eyJrZXkiOiAiVmFsdWUifQ==");
             Assertions.assertInstanceOf(Data.class, source);
 

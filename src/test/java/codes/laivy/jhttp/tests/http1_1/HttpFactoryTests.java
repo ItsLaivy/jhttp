@@ -58,7 +58,7 @@ public final class HttpFactoryTests {
         @Test
         @Order(value = 1)
         void assertions() throws Throwable {
-            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
+            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)\n";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
             @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
@@ -67,15 +67,17 @@ public final class HttpFactoryTests {
 
             Assertions.assertNotNull(request.getBody());
             Assertions.assertEquals(URIAuthority.create(new Basic("username", "password"), InetSocketAddress.createUnresolved("example.com", 8080)), request.getAuthority());
-            Assertions.assertEquals(expected, request.getBody().getDecoded());
             Assertions.assertEquals(Method.GET, request.getMethod());
             Assertions.assertEquals(URI.create("/index"), request.getUri());
             Assertions.assertEquals(Host.IPv6.parse("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080"), request.getHeaders().get(HOST)[0].getValue());
+
+            // Validate content
+            Assertions.assertEquals(expected, request.getBody().toString());
         }
         @Test
         @Order(value = 2)
         void serialization() throws Throwable {
-            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
+            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)\n";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
             @NotNull String string = "GET https://username:password@example.com:8080/index HTTP/1.1\r\nHost: [2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
@@ -96,16 +98,16 @@ public final class HttpFactoryTests {
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));
             Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);
-            Assertions.assertEquals(MediaType.APPLICATION_JSON, headers.get(CONTENT_TYPE)[0].getValue());
+            Assertions.assertEquals(MediaType.APPLICATION_JSON(), headers.get(CONTENT_TYPE)[0].getValue());
 
             Assertions.assertNotNull(request.getBody());
-            Assertions.assertNotNull(request.getBody().getContent());
+            Assertions.assertNotNull(request.getBody().getContent(MediaType.APPLICATION_JSON()));
 
             // Match
             @NotNull JsonObject object = new JsonObject();
             object.addProperty("text", "test");
 
-            Assertions.assertEquals(object, request.getBody().getContent().getData());
+            Assertions.assertEquals(object, request.getBody().getContent(MediaType.APPLICATION_JSON()).getData());
         }
 
     }
@@ -132,7 +134,7 @@ public final class HttpFactoryTests {
         @Test
         @Order(value = 1)
         void assertions() throws Throwable {
-            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
+            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)\n";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
@@ -141,16 +143,18 @@ public final class HttpFactoryTests {
 
             Assertions.assertNotNull(response.getBody());
             Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-            Assertions.assertEquals(expected, response.getBody().getDecoded());
 
             // Headers
             Assertions.assertEquals("JHTTP Environment", response.getHeaders().get(SERVER)[0].getValue().toString());
             Assertions.assertEquals(DateUtils.RFC822.convert("Mon, 27 Jul 2009 12:28:53 GMT"), response.getHeaders().get(DATE)[0].getValue());
+
+            // Validate content
+            Assertions.assertEquals(expected, response.getBody().toString());
         }
         @Test
         @Order(value = 2)
         void serialization() throws Throwable {
-            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)";
+            @NotNull String expected = "Hello, this is a jhttp gzip text just for tests :)\n";
             @NotNull String encoded = GZipEncoding.builder().build().compress(expected);
 
             @NotNull String string = "HTTP/1.1 200 OK\r\nDate: Mon, 27 Jul 2009 12:28:53 GMT\r\nServer: JHTTP Environment\r\nContent-Encoding: gzip\r\n\r\n" + encoded;
@@ -171,16 +175,16 @@ public final class HttpFactoryTests {
 
             Assertions.assertTrue(headers.contains(CONTENT_TYPE));
             Assertions.assertEquals(1, headers.get(CONTENT_TYPE).length);
-            Assertions.assertEquals(MediaType.APPLICATION_JSON, headers.get(CONTENT_TYPE)[0].getValue());
+            Assertions.assertEquals(MediaType.APPLICATION_JSON(), headers.get(CONTENT_TYPE)[0].getValue());
 
             Assertions.assertNotNull(response.getBody());
-            Assertions.assertNotNull(response.getBody().getContent());
+            Assertions.assertNotNull(response.getBody().getContent(MediaType.APPLICATION_JSON()));
 
             // Match
             @NotNull JsonObject object = new JsonObject();
             object.addProperty("text", "test");
 
-            Assertions.assertEquals(object, response.getBody().getContent().getData());
+            Assertions.assertEquals(object, response.getBody().getContent(MediaType.APPLICATION_JSON()).getData());
         }
 
     }
