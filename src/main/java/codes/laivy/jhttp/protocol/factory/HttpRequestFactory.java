@@ -5,13 +5,16 @@ import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
-import codes.laivy.jhttp.exception.parser.request.HttpRequestParseException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
+import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
+import codes.laivy.jhttp.exception.parser.element.HttpRequestParseException;
 import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.URIAuthority;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -32,7 +35,7 @@ public interface HttpRequestFactory {
 
     // Modules
 
-    @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @Nullable HttpBody body);
+    @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @NotNull HttpBody body);
 
     /**
      * Transforms an HTTP request into a string representation.
@@ -40,7 +43,7 @@ public interface HttpRequestFactory {
      * @param request The HTTP request to be serialized. Must not be null.
      * @return The string representation of the HTTP request. Never null.
      */
-    @NotNull String serialize(@NotNull HttpRequest request);
+    @NotNull String serialize(@NotNull HttpRequest request) throws EncodingException, IOException;
 
     /**
      * Transforms a string into a valid HTTP request object.
@@ -49,7 +52,7 @@ public interface HttpRequestFactory {
      * @throws HttpRequestParseException If a parse exception occurs.
      * @return The parsed HTTP request. Never null.
      */
-    @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException;
+    @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException, HttpBodyParseException;
 
     /**
      * Creates a Future for the client's HTTP request. Whenever the client sends new data, it should be sent to this method.

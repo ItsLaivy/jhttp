@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.protocol;
 
 import codes.laivy.jhttp.element.response.HttpResponse;
+import codes.laivy.jhttp.protocol.factory.HttpBodyFactory;
 import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
@@ -115,6 +116,7 @@ public abstract class HttpVersion {
     public abstract @NotNull HttpRequestFactory getRequestFactory();
     public abstract @NotNull HttpResponseFactory getResponseFactory();
     public abstract @NotNull HttpHeaderFactory getHeaderFactory();
+    public abstract @NotNull HttpBodyFactory getBodyFactory();
 
     @Contract(pure = true)
     public final int getMajor() {

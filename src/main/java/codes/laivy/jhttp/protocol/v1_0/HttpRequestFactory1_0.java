@@ -1,7 +1,6 @@
 package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.client.HttpClient;
-import codes.laivy.jhttp.content.Content;
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpProtocol;
@@ -11,13 +10,11 @@ import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
-import codes.laivy.jhttp.exception.parser.request.HttpRequestParseException;
+import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
+import codes.laivy.jhttp.exception.parser.element.HttpRequestParseException;
 import codes.laivy.jhttp.headers.HttpHeader;
 import codes.laivy.jhttp.headers.HttpHeaders;
-import codes.laivy.jhttp.media.MediaParser;
-import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -27,10 +24,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -38,7 +35,8 @@ import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static codes.laivy.jhttp.Main.CRLF;
-import static codes.laivy.jhttp.headers.HttpHeaderKey.*;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.CONTENT_LENGTH;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.TRANSFER_ENCODING;
 
 final class HttpRequestFactory1_0 implements HttpRequestFactory {
 
@@ -80,14 +78,14 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
     }
 
     @Override
-    public @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @Nullable HttpBody body) {
+    public @NotNull HttpRequest create(@NotNull Method method, @Nullable URIAuthority authority, @NotNull URI uri, @NotNull HttpHeaders headers, @NotNull HttpBody body) {
         return new HttpRequestImpl(method, authority, uri, headers, body);
     }
 
     // Modules
 
     @Override
-    public @NotNull String serialize(@NotNull HttpRequest request) {
+    public @NotNull String serialize(@NotNull HttpRequest request) throws EncodingException, IOException {
         if (!request.getVersion().equals(getVersion())) {
             throw new IllegalArgumentException("cannot serialize a '" + request.getVersion() + "' http request using a '" + getVersion() + "' http request factory");
         }
@@ -115,16 +113,14 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         builder.append(CRLF).append(CRLF);
 
         // Write a message if exists
-        if (request.getBody() != null) {
-            builder.append(request.getBody());
-        }
+        builder.append(getVersion().getBodyFactory().serialize(request.getHeaders(), request.getBody()));
 
         // Finish
         return builder.toString();
     }
 
-    @SuppressWarnings("rawtypes")
-    public @NotNull HttpRequest parse(@NotNull String string, boolean parseMedia) throws HttpRequestParseException {
+    @Override
+    public @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException, HttpBodyParseException {
         if (!string.contains(CRLF + CRLF)) {
             throw new HttpRequestParseException("http request missing conclusion (headers to body transition CRLFs)");
         }
@@ -175,73 +171,10 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         }
 
         // Message
-        @Nullable MediaType<?> media = null;
-        @Nullable HttpBody body;
-
-        {
-            // Content Type
-            if (headers.contains(CONTENT_TYPE)) {
-                media = headers.get(CONTENT_TYPE)[0].getValue();
-            }
-
-            // Message Length
-            @NotNull String pure = content[1];
-
-            if (headers.contains(CONTENT_LENGTH)) {
-                int contentLength = (int) headers.get(CONTENT_LENGTH)[0].getValue().getBytes();
-                pure = pure.substring(0, contentLength);
-            }
-
-            // Message Encoding
-            @NotNull Encoding[] encodings = new Encoding[0];
-            boolean decoded = !headers.contains(CONTENT_ENCODING);
-
-            if (parseMedia) {
-                if (!decoded) {
-                    @NotNull Deferred<Encoding>[] array = headers.get(CONTENT_ENCODING)[0].getValue();
-                    decoded = array.length == 0;
-
-                    // Only apply encoding if all the encodings are available (not pseudo)
-                    if (Arrays.stream(array).allMatch(Deferred::available)) {
-                        encodings = Arrays.stream(array).map(Deferred::retrieve).toArray(Encoding[]::new);
-                    }
-                }
-
-                for (@NotNull Encoding encoding : encodings) {
-                    try {
-                        pure = encoding.decompress(pure);
-                    } catch (@NotNull EncodingException e) {
-                        throw new HttpRequestParseException("cannot decompress http request body using '" + encoding.getName() + "'", e);
-                    }
-
-                    decoded = true;
-                }
-            }
-
-            // Interpret Message
-            if (StringUtils.isBlank(pure)) {
-                body = null;
-            } else try {
-                @Nullable Content<?> contentBody = null;
-
-                if (parseMedia && decoded && media != null) {
-                    // noinspection unchecked
-                    contentBody = ((MediaParser) media.getParser()).deserialize(media, pure);
-                }
-
-                body = HttpBody.create(contentBody, pure, content[1]);
-            } catch (@NotNull MediaParserException e) {
-                throw new HttpRequestParseException("cannot parse content body from http request", e);
-            }
-        }
+        @Nullable HttpBody body = getVersion().getBodyFactory().parse(headers, content[1]);
 
         // Finish
         return HttpRequest.create(getVersion(), method, authority, uri, headers, body);
-    }
-
-    @Override
-    public @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException {
-        return parse(string, true);
     }
 
     @Override
@@ -309,14 +242,14 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         private final @Nullable URIAuthority authority;
         private final @NotNull URI uri;
         private final @NotNull HttpHeaders headers;
-        private final @Nullable HttpBody body;
+        private final @NotNull HttpBody body;
 
         private HttpRequestImpl(
                 @NotNull Method method,
                 @Nullable URIAuthority authority,
                 @NotNull URI uri,
                 @NotNull HttpHeaders headers,
-                @Nullable HttpBody body
+                @NotNull HttpBody body
         ) {
             this.method = method;
             this.authority = authority;
@@ -348,7 +281,7 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
             return headers;
         }
         @Override
-        public @Nullable HttpBody getBody() {
+        public @NotNull HttpBody getBody() {
             return body;
         }
 
@@ -367,7 +300,11 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         }
         @Override
         public @NotNull String toString() {
-            return serialize(this);
+            try {
+                return serialize(this);
+            } catch (@NotNull EncodingException | @NotNull IOException e) {
+                throw new RuntimeException("cannot serialize '" + getVersion() + "' request", e);
+            }
         }
 
     }
@@ -399,12 +336,16 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
             });
 
             // Request
-            @NotNull HttpRequest request = parse(body, false);
-            this.version = request.getVersion();
-            this.method = request.getMethod();
-            this.authority = request.getAuthority();
-            this.uri = request.getUri();
-            this.headers = getVersion().getHeaderFactory().createImmutable(request.getHeaders());
+            try {
+                @NotNull HttpRequest request = parse(body.split(CRLF + CRLF)[0]);
+                this.version = request.getVersion();
+                this.method = request.getMethod();
+                this.authority = request.getAuthority();
+                this.uri = request.getUri();
+                this.headers = getVersion().getHeaderFactory().createImmutable(request.getHeaders());
+            } catch (@NotNull HttpBodyParseException e) {
+                throw new RuntimeException("illegal factory parser");
+            }
 
             // Security
             check();

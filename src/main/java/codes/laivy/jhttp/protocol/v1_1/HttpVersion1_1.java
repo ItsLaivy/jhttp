@@ -5,6 +5,7 @@ import codes.laivy.jhttp.headers.HttpHeader;
 import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.module.connection.Connection;
 import codes.laivy.jhttp.protocol.HttpVersion;
+import codes.laivy.jhttp.protocol.factory.HttpBodyFactory;
 import codes.laivy.jhttp.protocol.factory.HttpHeaderFactory;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.protocol.factory.HttpResponseFactory;
@@ -23,6 +24,7 @@ final class HttpVersion1_1 extends HttpVersion {
     private final @NotNull HttpRequestFactory requestFactory;
     private final @NotNull HttpResponseFactory responseFactory;
     private final @NotNull HttpHeaderFactory headerFactory;
+    private final @NotNull HttpBodyFactory bodyFactory;
 
     public HttpVersion1_1() {
         super(
@@ -35,6 +37,7 @@ final class HttpVersion1_1 extends HttpVersion {
         this.requestFactory = new HttpRequestFactory1_1(this);
         this.responseFactory = new HttpResponseFactory1_1(this);
         this.headerFactory = new HttpHeaderFactory1_1(this);
+        this.bodyFactory = new HttpBodyFactory1_1(this);
     }
 
     // Getters
@@ -50,6 +53,10 @@ final class HttpVersion1_1 extends HttpVersion {
     @Override
     public @NotNull HttpHeaderFactory getHeaderFactory() {
         return headerFactory;
+    }
+    @Override
+    public @NotNull HttpBodyFactory getBodyFactory() {
+        return bodyFactory;
     }
 
     // Modules
