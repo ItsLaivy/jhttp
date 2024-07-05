@@ -1,14 +1,13 @@
 package codes.laivy.jhttp.media;
 
 import codes.laivy.jhttp.deferred.Deferred;
-import codes.laivy.jhttp.media.json.JsonMediaParser;
-import codes.laivy.jhttp.media.text.TextMediaParser;
+import codes.laivy.jhttp.media.json.JsonMediaType;
+import codes.laivy.jhttp.media.text.TextMediaType;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
@@ -26,71 +25,15 @@ import java.util.stream.Stream;
  * @author Daniel Richard (Laivy)
  * @since 1.0-SNAPSHOT
  */
-public final class MediaType<T> {
+@SuppressWarnings("unchecked")
+public class MediaType<T> {
 
     // Static initializers
 
-    public static @NotNull MediaType<JsonElement> APPLICATION_JSON = create(new Type("application", "json"), JsonMediaParser.create());
-    public static @NotNull MediaType<String> TEXT_PLAIN = create(new Type("text", "plain"), TextMediaParser.create());
+    public static @NotNull MediaType<JsonElement> APPLICATION_JSON() { return JsonMediaType.getInstance(); }
+    public static @NotNull MediaType<String> TEXT_PLAIN() { return TextMediaType.getInstance(); }
 
-    /**
-     * Creates a new media type with the specified type, parser, and parameters.
-     *
-     * @param type       the type of the media
-     * @param parser     the parser to handle this media type
-     * @param parameters the parameters associated with this media type
-     * @param <T>        the type of the content that this media type handles
-     * @return           the newly created media type
-     */
-    public static <T> @NotNull MediaType<T> create(
-            @NotNull Type type,
-            @NotNull MediaParser<T> parser,
-            @NotNull Parameter @NotNull ... parameters
-    ) {
-        return new MediaType<>(type, parser, parameters);
-    }
-
-    /**
-     * Creates a new media type with the specified type and parameters, using a default text parser.
-     *
-     * @param type       the type of the media
-     * @param parameters the parameters associated with this media type
-     * @return the newly created media type
-     */
-    public static @NotNull MediaType<?> create(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
-        return new MediaType<>(type, TextMediaParser.create(), parameters);
-    }
-
-    /**
-     * Creates a new media type with the specified media type and parameters, using its parser.
-     *
-     * @param media       the media type
-     * @param parameters the parameters associated with this media type
-     * @param <T>        the type of the content that this media type handles
-
-     * @return the newly created media type
-     */
-    public static <T> @NotNull MediaType<T> create(@NotNull MediaType<T> media, @NotNull Parameter @NotNull ... parameters) {
-        return new MediaType<>(media.getType(), media.getParser(), parameters);
-    }
-    
     // Media type content
-
-    // todo: multi threading
-    private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
-
-    static {
-        for (@NotNull Field field : MediaType.class.getDeclaredFields()) {
-            if (field.getType() == MediaType.class) {
-                try {
-                    field.setAccessible(true);
-                    add((MediaType<?>) field.get(null));
-                } catch (@NotNull IllegalAccessException e) {
-                    throw new RuntimeException("cannot store default media type '" + field.getName() + "'", e);
-                }
-            }
-        }
-    }
 
     /**
      * Retrieves all the available media types.
@@ -99,7 +42,7 @@ public final class MediaType<T> {
      * @author Daniel Richard (Laivy)
      */
     public static @NotNull Collection<MediaType<?>> retrieve() {
-        return Collections.unmodifiableSet(collection);
+        return Collections.unmodifiableSet(Provided.collection);
     }
 
     /**
@@ -122,11 +65,11 @@ public final class MediaType<T> {
      */
     public static boolean add(@NotNull MediaType<?> type) {
         // Check if there's an media type with that name already defined
-        if (collection.stream().anyMatch(media -> media.getType().equals(type.getType()))) {
+        if (Provided.collection.stream().anyMatch(media -> media.getType().equals(type.getType()))) {
             return false;
         }
 
-        return collection.add(type);
+        return Provided.collection.add(type);
     }
 
     /**
@@ -137,7 +80,7 @@ public final class MediaType<T> {
      * @author Daniel Richard (Laivy)
      */
     public static boolean remove(@NotNull MediaType<?> media) {
-        return collection.remove(media);
+        return Provided.collection.remove(media);
     }
 
     /**
@@ -205,17 +148,12 @@ public final class MediaType<T> {
     // Object
 
     private final @NotNull Type type;
+    private final @Nullable MediaParser<T> parser;
     private final @NotNull Parameter @NotNull [] parameters;
-    private final @NotNull MediaParser<T> parser;
 
-    private MediaType(
-            @NotNull Type type,
-            @NotNull MediaParser<T> parser,
-            @NotNull Parameter @NotNull [] parameters
-    ) {
+    protected MediaType(@NotNull Type type, @Nullable MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
         this.type = type;
         this.parser = parser;
-
         this.parameters = parameters;
     }
 
@@ -226,23 +164,26 @@ public final class MediaType<T> {
      *
      * @return the type of this media type
      */
-    public @NotNull Type getType() {
+    public final @NotNull Type getType() {
         return type;
     }
 
     /**
      * Returns the parser associated with this media type.
+     * If a media type doesn't have a parser, it will not be able to generate contents.
      *
-     * @return the parser associated with this media type
+     * @return the parser associated with this media type or null if there's no parser
      */
-    public @NotNull MediaParser<T> getParser() {
+    public @Nullable MediaParser<T> getParser() {
         return parser;
     }
 
     /**
-     * Returns the parameters associated with this media type.
+     * The parameters of a media type.
+     * <p>
+     * As an example, the media type "text/plain" can have the parameter "charset" with the value "utf-8"
      *
-     * @return an array of parameters associated with this media type
+     * @return the parameter array of this media type
      */
     public @NotNull Parameter @NotNull [] getParameters() {
         return parameters;
@@ -254,8 +195,8 @@ public final class MediaType<T> {
      * @param key the key of the parameter to retrieve
      * @return an optional containing the parameter if present, or an empty optional if not
      */
-    public @NotNull Optional<Parameter> getParameter(@NotNull String key) {
-        return Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase(key)).findFirst();
+    public final @NotNull Optional<Parameter> getParameter(@NotNull String key) {
+        return Arrays.stream(getParameters()).filter(p -> p.getKey().equalsIgnoreCase(key)).findFirst();
     }
 
     /**
@@ -283,31 +224,41 @@ public final class MediaType<T> {
         }
     }
 
-    // Modules
-
-    public boolean register() {
-        return add(this);
-    }
-
     // Implementations
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        @NotNull MediaType<?> that = (MediaType<?>) o;
-        return Objects.equals(getType(), that.getType()) && Arrays.equals(getParameters(), that.getParameters());
+    public final boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MediaType)) return false;
+        @NotNull MediaType<?> mediaType = (MediaType<?>) object;
+        return Objects.equals(getType(), mediaType.getType()) && Objects.deepEquals(getParameters(), mediaType.getParameters());
     }
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(getType(), Arrays.hashCode(getParameters()));
     }
+
     @Override
-    public @NotNull String toString() {
+    public final @NotNull String toString() {
         return Parser.serialize(this);
     }
 
     // Classes
+
+    /**
+     * Class to register the provided media types
+     *
+     * @author Daniel Richard (Laivy)
+     * @since 1.0-SNAPSHOT
+     */
+    public static final class Provided {
+        private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
+
+        static {
+            add(new TextMediaType());
+            add(new JsonMediaType());
+        }
+    }
 
     /**
      * Utility class for parsing and serializing media types.
@@ -349,6 +300,7 @@ public final class MediaType<T> {
          * @return the deserialized media type
          * @throws ParseException if an error occurs during deserialization
          */
+        @SuppressWarnings({"rawtypes", "unchecked"})
         public static @NotNull MediaType<?> deserialize(@NotNull String string) throws ParseException {
             @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
             @NotNull Matcher matcher = pattern.matcher(string);
@@ -377,15 +329,13 @@ public final class MediaType<T> {
 
             // Get parser
             @NotNull Optional<MediaType<?>> optional = MediaType.retrieve(type);
-            if (optional.isPresent()) {
-                parser = optional.get().getParser();
-            }
+            if (optional.isPresent()) parser = optional.get().getParser();
 
             // Finish
             if (parser != null) {
-                return create(type, parser, parameters.toArray(new Parameter[0]));
+                return new MediaType(type, parser, parameters.toArray(new Parameter[0])) {};
             } else {
-                return create(type, parameters.toArray(new Parameter[0]));
+                return new MediaType(type, null, parameters.toArray(new Parameter[0])) {};
             }
         }
 
@@ -425,10 +375,12 @@ public final class MediaType<T> {
         public static @NotNull Type parse(@NotNull String string) {
             @NotNull String[] split = string.split("/", 2);
 
-            if (split.length > 1) {
+            if (split.length == 2) {
                 return new Type(split[0], split[1]);
-            } else {
+            } else if (split.length == 1) {
                 return new Type(split[0], null);
+            } else {
+                throw new IllegalArgumentException("cannot parse '" + string + "' as a valid media type");
             }
         }
 
@@ -576,6 +528,7 @@ public final class MediaType<T> {
      * @author Daniel Richard (Laivy)
      * @since 1.0-SNAPSHOT
      */
+    @ApiStatus.Experimental
     public static final class Boundary implements CharSequence {
 
         private final @NotNull String name;
