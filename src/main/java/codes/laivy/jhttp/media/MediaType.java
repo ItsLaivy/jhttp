@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.media;
 
 import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.media.jar.JarMediaType;
 import codes.laivy.jhttp.media.json.JsonMediaType;
 import codes.laivy.jhttp.media.text.TextMediaType;
 import com.google.gson.JsonElement;
@@ -12,6 +13,7 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -31,6 +33,7 @@ public class MediaType<T> {
     // Static initializers
 
     public static @NotNull MediaType<JsonElement> APPLICATION_JSON() { return JsonMediaType.getInstance(); }
+    public static @NotNull MediaType<JarFile> APPLICATION_JAR() { return JarMediaType.getInstance(); }
     public static @NotNull MediaType<String> TEXT_PLAIN() { return TextMediaType.getInstance(); }
 
     // Media type content
@@ -256,6 +259,7 @@ public class MediaType<T> {
         static {
             add(new TextMediaType());
             add(new JsonMediaType());
+            add(new JarMediaType());
         }
     }
 

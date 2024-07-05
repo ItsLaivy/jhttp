@@ -13,7 +13,7 @@ import java.io.InputStream;
  * <p>
  * When this class undergoes a {@link Flushable#flush()}, the new data of this class is written to the
  * {@link HttpBody#getInputStream()}. When a content is created, the data from {@link #getData()} is deserialized by
- * {@link MediaParser#deserialize(InputStream)} and is already loaded into memory.
+ * {@link MediaParser#deserialize(InputStream, MediaType.Parameter...)} and is already loaded into memory.
  * </p>
  *
  * @param <T> the type of the content data

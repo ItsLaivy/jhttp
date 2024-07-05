@@ -43,9 +43,10 @@ public interface MediaParser<T> {
      *
      * @param content the content object to be serialized
      * @param parameters the MIME type parameters of this stream
-     *
      * @return the string representation of the serialized content
+     *
+     * @throws IOException if an I/O exception occurs, trying to serialize
      */
-    @NotNull InputStream serialize(@NotNull T content, @NotNull Parameter @NotNull ... parameters);
+    @NotNull InputStream serialize(@NotNull T content, @NotNull Parameter @NotNull ... parameters) throws IOException;
 
 }

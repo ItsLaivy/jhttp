@@ -81,6 +81,8 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         // Write a message if exists
         builder.append(getVersion().getBodyFactory().serialize(response.getHeaders(), response.getBody()));
 
+        // Finish
+        System.out.println(builder.toString().replace("\r", "").replace("\n", " "));
         return builder.toString();
     }
 

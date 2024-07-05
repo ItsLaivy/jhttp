@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.authorization;
 
 import codes.laivy.jhttp.client.HttpClient;
+import codes.laivy.jhttp.element.HttpBody;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.response.HttpResponse;
@@ -32,9 +33,9 @@ public interface HttpAuthorization {
     static @NotNull HttpAuthorization create(final @NotNull HttpHeaderKey<Credentials> key, @NotNull Predicate<Credentials> predicate) {
         return (socket, request) -> {
             // Bad Request (400)
-            @NotNull HttpResponse bad = HttpResponse.create(request.getVersion(), HttpStatus.BAD_REQUEST, null);
+            @NotNull HttpResponse bad = HttpResponse.create(request.getVersion(), HttpStatus.BAD_REQUEST, HttpBody.empty());
             // Unauthorized (401)
-            @NotNull HttpResponse unauthorized = HttpResponse.create(request.getVersion(), HttpStatus.UNAUTHORIZED, null);
+            @NotNull HttpResponse unauthorized = HttpResponse.create(request.getVersion(), HttpStatus.UNAUTHORIZED, HttpBody.empty());
 
             try {
                 // Authorization

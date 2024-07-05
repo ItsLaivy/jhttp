@@ -119,7 +119,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
         // End request configurations
         builder.append(CRLF).append(CRLF);
 
-        // Write a message if exists
+        // Write a message
         builder.append(getVersion().getBodyFactory().serialize(request.getHeaders(), request.getBody()));
 
         // Finish

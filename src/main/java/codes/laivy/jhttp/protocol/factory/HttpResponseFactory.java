@@ -11,7 +11,6 @@ import codes.laivy.jhttp.exception.parser.element.HttpResponseParseException;
 import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
