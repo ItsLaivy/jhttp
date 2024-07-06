@@ -82,7 +82,6 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         builder.append(getVersion().getBodyFactory().serialize(response.getHeaders(), response.getBody()));
 
         // Finish
-        System.out.println(builder.toString().replace("\r", "").replace("\n", " "));
         return builder.toString();
     }
 
@@ -130,7 +129,6 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             future.feed(string);
         } else {
             future = new FutureImpl(client, string);
-            futures.put(client, future);
         }
 
         return future;
@@ -263,6 +261,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             this.body = body;
 
             // Future checkers
+            futures.put(client, this);
             future.whenComplete((done, exception) -> {
                 futures.remove(client);
             });
@@ -352,6 +351,10 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             }
         }
         public void feed(@NotNull String body) {
+            if (future.isDone()) {
+                throw new IllegalStateException("future already completed");
+            }
+
             this.body += body;
             check();
         }

@@ -78,13 +78,6 @@ public interface HttpRequestFactory {
      *
      * @param string The string to be validated. Must not be null.
      * @return True if the string is a valid HTTP request, false otherwise.
-     *
-     * <p>Example usage:</p>
-     * <pre>{@code
-     * String requestString = "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n";
-     * boolean isValid = factory.validate(requestString);
-     * System.out.println("Is valid HTTP request: " + isValid);
-     * }</pre>
      */
     boolean validate(@NotNull String string);
 

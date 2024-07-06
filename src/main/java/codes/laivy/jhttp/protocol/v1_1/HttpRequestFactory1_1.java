@@ -1,8 +1,8 @@
 package codes.laivy.jhttp.protocol.v1_1;
 
+import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
-import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
@@ -197,7 +197,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             future.feed(string);
         } else {
             future = new FutureImpl(client, string);
-            futures.put(client, future);
         }
 
         return future;
@@ -338,6 +337,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             this.body = body;
 
             // Future checkers
+            futures.put(client, this);
             future.whenComplete((done, exception) -> {
                 futures.remove(client);
             });
@@ -436,6 +436,10 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             }
         }
         public void feed(@NotNull String body) {
+            if (future.isDone()) {
+                throw new IllegalStateException("future already completed");
+            }
+
             this.body += body;
             check();
         }
