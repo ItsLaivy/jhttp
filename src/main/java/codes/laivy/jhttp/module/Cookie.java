@@ -119,7 +119,7 @@ public class Cookie {
          */
         public static @NotNull String serialize(@NotNull Cookie cookie) {
             if (!cookie.getName().matches(Parser.COOKIE_NAME_PATTERN.pattern())) {
-                throw new IllegalArgumentException("invalid cookie name name '" + cookie.getName() + "'");
+                throw new IllegalArgumentException("invalid cookie name '" + cookie.getName() + "'");
             } else if (!cookie.getValue().matches(Parser.COOKIE_VALUE_PATTERN.pattern())) {
                 throw new IllegalArgumentException("invalid cookie value name '" + cookie.getValue() +  "'");
             }
@@ -389,7 +389,7 @@ public class Cookie {
                 this.value = value;
 
                 if (!name.matches(Cookie.Parser.COOKIE_NAME_PATTERN.pattern())) {
-                    throw new IllegalArgumentException("invalid cookie name name '" + name + "'");
+                    throw new IllegalArgumentException("invalid cookie name '" + name + "'");
                 } else if (!value.matches(Cookie.Parser.COOKIE_VALUE_PATTERN.pattern())) {
                     throw new IllegalArgumentException("invalid cookie value name '" + value +  "'");
                 }

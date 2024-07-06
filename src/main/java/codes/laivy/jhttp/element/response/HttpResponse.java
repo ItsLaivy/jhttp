@@ -14,6 +14,7 @@ import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.headers.Wildcard;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.media.MediaType.Type;
 import codes.laivy.jhttp.module.*;
 import codes.laivy.jhttp.module.CrossOrigin.EmbedderPolicy;
 import codes.laivy.jhttp.module.CrossOrigin.OpenerPolicy;
@@ -27,6 +28,7 @@ import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.network.BitMeasure;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.url.URIAuthority;
+import codes.laivy.jhttp.utilities.ResponseAccessControl;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -78,15 +80,6 @@ public interface HttpResponse extends HttpElement {
     HttpStatus getStatus();
 
     // Modules
-
-    default @Nullable Wildcard<@Nullable URIAuthority> getAccessControlAllowOrigin() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAccessControlAllowOrigin(@Nullable Wildcard<@Nullable URIAuthority> value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN);
-    }
 
     default @Nullable AcceptRange getAcceptRanges() {
         return getHeaders().first(HttpHeaderKey.ACCEPT_RANGES).map(HttpHeader::getValue).orElse(null);
@@ -253,12 +246,12 @@ public interface HttpResponse extends HttpElement {
     }
 
     @ApiStatus.Experimental
-    default @Nullable String getRetryAfter() {
+    default @Nullable Duration getRetryAfter() {
         return getHeaders().first(HttpHeaderKey.RETRY_AFTER).map(HttpHeader::getValue).orElse(null);
     }
 
     @ApiStatus.Experimental
-    default void setRetryAfter(@Nullable String value) {
+    default void setRetryAfter(@Nullable Duration value) {
         if (value != null) getHeaders().put(HttpHeaderKey.RETRY_AFTER.create(value));
         else getHeaders().remove(HttpHeaderKey.RETRY_AFTER);
     }
@@ -266,7 +259,6 @@ public interface HttpResponse extends HttpElement {
     default @Nullable Product getServer() {
         return getHeaders().first(HttpHeaderKey.SERVER).map(HttpHeader::getValue).orElse(null);
     }
-
     default void setServer(@Nullable Product value) {
         if (value != null) getHeaders().put(HttpHeaderKey.SERVER.create(value));
         else getHeaders().remove(HttpHeaderKey.SERVER);
@@ -390,59 +382,48 @@ public interface HttpResponse extends HttpElement {
         else getHeaders().remove(HttpHeaderKey.ACCEPT_PATCH);
     }
 
-    default MediaType.@NotNull Type @Nullable [] getAcceptPost() {
+    default @NotNull Type @Nullable [] getAcceptPost() {
         return getHeaders().first(HttpHeaderKey.ACCEPT_POST).map(HttpHeader::getValue).orElse(null);
     }
-
-    default void setAcceptPost(MediaType.@NotNull Type @Nullable ... value) {
+    default void setAcceptPost(@NotNull Type @Nullable ... value) {
         if (value != null) getHeaders().put(HttpHeaderKey.ACCEPT_POST.create(value));
         else getHeaders().remove(HttpHeaderKey.ACCEPT_POST);
     }
 
-    default @Nullable Boolean getAccessControlAllowCredentials() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS).map(HttpHeader::getValue).orElse(null);
+    default @NotNull ResponseAccessControl getAccessControl() {
+        @NotNull ResponseAccessControl.Builder builder = ResponseAccessControl.builder();
+
+        if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS)) {
+            builder.credentials(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS)[0].getValue());
+        } if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS)) {
+            builder.headers(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS)[0].getValue());
+        } if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS)) {
+            builder.methods(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS)[0].getValue());
+        } if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN)) {
+            builder.origin(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN)[0].getValue());
+        } if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS)) {
+            builder.exposeHeaders(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS)[0].getValue());
+        } if (getHeaders().contains(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE)) {
+            builder.age(getHeaders().get(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE)[0].getValue());
+        }
+
+        return builder.build();
     }
 
-    default void setAccessControlAllowCredentials(@Nullable Boolean value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS);
-    }
-
-    default @Nullable Wildcard<@NotNull HttpHeaderKey<?> @NotNull []> getAccessControlAllowHeaders() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAccessControlAllowHeaders(@Nullable Wildcard<@NotNull HttpHeaderKey<?> @NotNull []> value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS);
-    }
-
-    default @Nullable Wildcard<@NotNull Method @NotNull []> getAccessControlAllowMethods() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAccessControlAllowMethods(@Nullable Wildcard<@NotNull Method @NotNull []> value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS);
-    }
-
-    default @Nullable Wildcard<@NotNull HttpHeaderKey<?> @NotNull []> getAccessControlExposeHeaders() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAccessControlExposeHeaders(@Nullable Wildcard<@NotNull HttpHeaderKey<?> @NotNull []> value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS);
-    }
-
-    // todo: create an object (builder) that represents the Access Control things
-    default @Nullable Duration getAccessControlMaxAge() {
-        return getHeaders().first(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAccessControlMaxAge(@Nullable Duration value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE.create(value));
-        else getHeaders().remove(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE);
+    default void setAccessControl(@NotNull ResponseAccessControl value) {
+        if (value.hasCredentials()) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS.create(true));
+        } if (value.getHeaders() != null) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS.create(value.getHeaders()));
+        } if (value.getMethods() != null) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS.create(value.getMethods()));
+        } if (value.getOrigin() != null) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN.create(value.getOrigin()));
+        } if (value.getExposeHeaders() != null) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS.create(value.getExposeHeaders()));
+        } if (value.getAge() != null) {
+            getHeaders().put(HttpHeaderKey.ACCESS_CONTROL_MAX_AGE.create(value.getAge()));
+        }
     }
 
     default @NotNull AlternativeService @Nullable [] getAlternativeService() {
@@ -652,34 +633,34 @@ public interface HttpResponse extends HttpElement {
     }
 
     @ApiStatus.Experimental
-    default @Nullable String getReferrerPolicy() {
-        return getHeaders().first(HttpHeaderKey.REFERER_POLICY).map(HttpHeader::getValue).orElse(null);
+    default @Nullable ReferrerPolicy getReferrerPolicy() {
+        return getHeaders().first(HttpHeaderKey.REFERRER_POLICY).map(HttpHeader::getValue).orElse(null);
     }
 
     @ApiStatus.Experimental
-    default void setReferrerPolicy(@Nullable String value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.REFERER_POLICY.create(value));
-        else getHeaders().remove(HttpHeaderKey.REFERER_POLICY);
+    default void setReferrerPolicy(@Nullable ReferrerPolicy value) {
+        if (value != null) getHeaders().put(HttpHeaderKey.REFERRER_POLICY.create(value));
+        else getHeaders().remove(HttpHeaderKey.REFERRER_POLICY);
     }
 
     @ApiStatus.Experimental
-    default @Nullable String getReportingEndpoints() {
+    default @NotNull ReportingEndpoint @Nullable [] getReportingEndpoints() {
         return getHeaders().first(HttpHeaderKey.REPORTING_ENDPOINTS).map(HttpHeader::getValue).orElse(null);
     }
 
     @ApiStatus.Experimental
-    default void setReportingEndpoints(@Nullable String value) {
+    default void setReportingEndpoints(@NotNull ReportingEndpoint @Nullable ... value) {
         if (value != null) getHeaders().put(HttpHeaderKey.REPORTING_ENDPOINTS.create(value));
         else getHeaders().remove(HttpHeaderKey.REPORTING_ENDPOINTS);
     }
 
     @ApiStatus.Experimental
-    default @Nullable String getReprDigest() {
+    default @NotNull Digest @Nullable [] getReprDigest() {
         return getHeaders().first(HttpHeaderKey.REPR_DIGEST).map(HttpHeader::getValue).orElse(null);
     }
 
     @ApiStatus.Experimental
-    default void setReprDigest(@Nullable String value) {
+    default void setReprDigest(@NotNull Digest @Nullable ... value) {
         if (value != null) getHeaders().put(HttpHeaderKey.REPR_DIGEST.create(value));
         else getHeaders().remove(HttpHeaderKey.REPR_DIGEST);
     }

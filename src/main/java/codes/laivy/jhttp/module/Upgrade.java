@@ -9,8 +9,10 @@ import java.util.Objects;
 public interface Upgrade {
 
     static @NotNull Upgrade create(@NotNull String name, @Nullable String version) {
-        if (!name.matches("^[a-zA-Z0-9.]+$")) {
-            throw new IllegalArgumentException("illegal name name (contains illegal characters)");
+        if (name.length() > 256) {
+            throw new IllegalArgumentException("illegal name size");
+        } else if (!name.matches("^[a-zA-Z0-9.]+$")) {
+            throw new IllegalArgumentException("illegal name (contains illegal characters): \"" + name + "\"");
         } else if (version != null && !version.matches("^[a-zA-Z0-9.]+$")) {
             throw new IllegalArgumentException("illegal version name (contains illegal characters)");
         }
@@ -65,6 +67,12 @@ public interface Upgrade {
         // Serializers
 
         public static @NotNull String serialize(@NotNull Upgrade upgrade) {
+            if (upgrade.getName().length() > 256) {
+                throw new IllegalArgumentException("cannot serialize this upgrade because it's name is more than 256 characters");
+            } else if (!upgrade.getName().matches("^[a-zA-Z0-9.]+$")) {
+                throw new IllegalArgumentException("cannot serialize this upgrade because the name has illegal characters '" + upgrade.getName() + "'");
+            }
+
             @NotNull StringBuilder builder = new StringBuilder(upgrade.getName());
             if (upgrade.getVersion() != null) builder.append("/").append(upgrade.getVersion());
 
@@ -87,7 +95,7 @@ public interface Upgrade {
             @NotNull String name = parts[0];
             @Nullable String version = parts.length > 1 ? parts[1] : null;
 
-            return !name.matches("^[a-zA-Z0-9.]+$") || (version == null || version.matches("^[a-zA-Z0-9.]+$"));
+            return name.matches("^[a-zA-Z0-9.]+$") && name.length() <= 256 && (version == null || version.matches("^[a-zA-Z0-9.]+$"));
         }
 
     }

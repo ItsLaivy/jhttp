@@ -178,19 +178,19 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull String> PERMISSIONS_POLICY = new Provided.StringHeaderKey("Permissions-Policy", Target.RESPONSE);
     @Deprecated
     public static @NotNull HttpHeaderKey<@UnknownNullability Void> PRAGMA = new Provided.PragmaHeaderKey();
+    @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> PROXY_AUTHENTICATE = new Provided.StringHeaderKey("Proxy-Authenticate", Target.RESPONSE);
     public static @NotNull HttpHeaderKey<@NotNull Credentials> PROXY_AUTHORIZATION = new Provided.ProxyAuthorizationHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> RANGE = new Provided.StringHeaderKey("Range", Target.REQUEST);
     public static @NotNull HttpHeaderKey<@NotNull Location> REFERER = new Provided.RefererHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HttpHeaderKey<@NotNull String> REFERER_POLICY = new Provided.StringHeaderKey("Referrer-Policy", Target.RESPONSE);
+    public static @NotNull HttpHeaderKey<@NotNull ReferrerPolicy> REFERRER_POLICY = new Provided.ReferrerPolicyHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HttpHeaderKey<@NotNull String> REPORTING_ENDPOINTS = new Provided.StringHeaderKey("Reporting-Endpoints", Target.RESPONSE);
+    public static @NotNull HttpHeaderKey<@NotNull ReportingEndpoint @NotNull []> REPORTING_ENDPOINTS = new Provided.ReportingEndpointsHeaderKey();
     @ApiStatus.Experimental
-    public static @NotNull HttpHeaderKey<@NotNull String> REPR_DIGEST = new Provided.StringHeaderKey("Repr-Digest", Target.BOTH);
-    @ApiStatus.Experimental
-    public static @NotNull HttpHeaderKey<@NotNull String> RETRY_AFTER = new Provided.StringHeaderKey("Retry-After", Target.RESPONSE);
+    public static @NotNull HttpHeaderKey<@NotNull Digest @NotNull []> REPR_DIGEST = new Provided.ReprDigestHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Duration> RETRY_AFTER = new Provided.RetryAfterHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull Duration> RTT = new Provided.RTTHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Boolean> SAVE_DATA = new Provided.SaveDataHeaderKey();
@@ -395,9 +395,101 @@ public abstract class HttpHeaderKey<T> {
                 return header.getValue();
             }
         }
+        private static final class ReportingEndpointsHeaderKey extends HttpHeaderKey<@NotNull ReportingEndpoint @NotNull []> {
+            private ReportingEndpointsHeaderKey() {
+                super("Reporting-Endpoints", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull HttpHeader<@NotNull ReportingEndpoint @NotNull []> read(@NotNull HttpVersion version, @NotNull String value) throws Exception {
+                @NotNull Set<ReportingEndpoint> reportings = new HashSet<>();
+
+                for (@NotNull String string : value.split("\\s*,\\s*")) {
+                    reportings.add(ReportingEndpoint.Parser.deserialize(string));
+                }
+
+                return create(reportings.toArray(new ReportingEndpoint[0]));
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull ReportingEndpoint @NotNull []> header) {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull ReportingEndpoint reporting : header.getValue()) {
+                    if (builder.length() > 0) builder.append(",");
+                    builder.append(ReportingEndpoint.Parser.serialize(reporting));
+                }
+
+                return builder.toString();
+            }
+        }
+        private static final class RetryAfterHeaderKey extends HttpHeaderKey<@NotNull Duration> {
+            private RetryAfterHeaderKey() {
+                super("Retry-After", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull HttpHeader<@NotNull Duration> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                @NotNull Duration duration;
+
+                try {
+                    long seconds = Long.parseLong(value);
+                    duration = Duration.ofSeconds(seconds);
+                } catch (@NotNull NumberFormatException ignore) {
+                    @NotNull OffsetDateTime future = DateUtils.RFC822.convert(value);
+                    @NotNull OffsetDateTime now = OffsetDateTime.now();
+
+                    if (future.isBefore(now)) {
+                        duration = Duration.ofSeconds(0);
+                    } else {
+                        duration = Duration.between(now, future);
+                    }
+                }
+
+                return create(duration);
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull Duration> header) {
+                @NotNull Duration duration = header.getValue();
+
+                if (duration.getSeconds() < 0) {
+                    return "0";
+                } else if (duration.toDays() > 7) {
+                    return DateUtils.RFC822.convert(OffsetDateTime.now().plus(duration));
+                } else {
+                    return String.valueOf(duration.getSeconds());
+                }
+            }
+        }
         private static final class DigestHeaderKey extends HttpHeaderKey<@NotNull Digest @NotNull []> {
             private DigestHeaderKey() {
                 super("Digest", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull HttpHeader<@NotNull Digest[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
+                @NotNull Set<Digest> digests = new HashSet<>();
+
+                for (@NotNull String string : value.split("\\s*,\\s*")) {
+                    digests.add(Digest.Parser.deserialize(string));
+                }
+
+                return create(digests.toArray(new Digest[0]));
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull Digest[]> header) {
+                @NotNull StringBuilder builder = new StringBuilder();
+
+                for (@NotNull Digest digest : header.getValue()) {
+                    if (builder.length() > 0) builder.append(",");
+                    builder.append(Digest.Parser.serialize(digest));
+                }
+
+                return builder.toString();
+            }
+        }
+        private static final class ReprDigestHeaderKey extends HttpHeaderKey<@NotNull Digest @NotNull []> {
+            private ReprDigestHeaderKey() {
+                super("Repr-Digest", Target.RESPONSE);
             }
 
             @Override
@@ -697,6 +789,20 @@ public abstract class HttpHeaderKey<T> {
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Duration> header) {
                 return String.valueOf(header.getValue().toMillis());
+            }
+        }
+        private static final class ReferrerPolicyHeaderKey extends HttpHeaderKey<@NotNull ReferrerPolicy> {
+            private ReferrerPolicyHeaderKey() {
+                super("Referrer-Policy", Target.RESPONSE);
+            }
+
+            @Override
+            public @NotNull HttpHeader<@NotNull ReferrerPolicy> read(@NotNull HttpVersion version, @NotNull String value) throws Exception {
+                return create(ReferrerPolicy.getById(value));
+            }
+            @Override
+            public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<@NotNull ReferrerPolicy> header) {
+                return header.getValue().getId();
             }
         }
         private static final class RefererHeaderKey extends HttpHeaderKey<@NotNull Location> {
