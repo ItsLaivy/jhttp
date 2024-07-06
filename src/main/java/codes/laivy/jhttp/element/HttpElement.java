@@ -1,16 +1,9 @@
 package codes.laivy.jhttp.element;
 
 import codes.laivy.jhttp.body.HttpBody;
-import codes.laivy.jhttp.headers.HttpHeader;
-import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;
-import codes.laivy.jhttp.module.connection.Connection;
-import codes.laivy.jhttp.module.content.ContentDisposition;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.time.OffsetDateTime;
 
 /**
  * The {@code HttpElement} interface represents a basic HTTP element that comprises
@@ -45,39 +38,5 @@ public interface HttpElement {
      * @return the {@link HttpBody} representing the message body of this element.
      */
     @NotNull HttpBody getBody();
-
-    // Getters
-
-    /**
-     * Retrieves the connection specified in the headers, if present.
-     *
-     * @return the connection specified in the headers, or {@code null} if not found
-     */
-    default @Nullable Connection getConnection() {
-        return getHeaders().first(HttpHeaderKey.CONNECTION).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default @Nullable OffsetDateTime getDate() {
-        return getHeaders().first(HttpHeaderKey.DATE).map(HttpHeader::getValue).orElse(null);
-    }
-
-    /**
-     * Retrieves the content disposition specified in the headers, if present.
-     *
-     * @return the content disposition, or {@code null} if not found
-     */
-    default @Nullable ContentDisposition getDisposition() {
-        return getHeaders().first(HttpHeaderKey.CONTENT_DISPOSITION).map(HttpHeader::getValue).orElse(null);
-    }
-
-    /**
-     * Checks if the request involves uploading a file.
-     *
-     * @return {@code true} if the request is an upload, {@code false} otherwise
-     */
-    default boolean isUpload() {
-        @Nullable ContentDisposition disposition = getDisposition();
-        return disposition != null && disposition.getType() == ContentDisposition.Type.ATTACHMENT;
-    }
 
 }

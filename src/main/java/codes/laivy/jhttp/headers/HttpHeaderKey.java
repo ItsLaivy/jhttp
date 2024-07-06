@@ -91,14 +91,14 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull MediaType<?> @NotNull []> ACCEPT_PATCH = new Provided.AcceptPatchHeaderKey();
     public static @NotNull HttpHeaderKey<MediaType. @NotNull Type @NotNull []> ACCEPT_POST = new Provided.AcceptPostHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull AcceptRange> ACCEPT_RANGES = new Provided.AcceptRangesHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Boolean> ACCEPT_CONTROL_ALLOW_CREDENTIALS = new Provided.AcceptControlAllowCredentials();
-    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> ACCEPT_CONTROL_ALLOW_HEADERS = new Provided.AcceptControlAllowHeadersHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull Method @NotNull []>> ACCEPT_CONTROL_ALLOW_METHODS = new Provided.AccessControlAllowMethodsHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@Nullable URIAuthority>> ACCEPT_CONTROL_ALLOW_ORIGIN = new Provided.AccessControlAllowOriginHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> ACCEPT_CONTROL_EXPOSE_HEADERS = new Provided.AcceptControlExposeHeadersHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Duration> ACCEPT_CONTROL_MAX_AGE = new Provided.AcceptControlMaxAgeHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Boolean> ACCESS_CONTROL_ALLOW_CREDENTIALS = new Provided.AccessControlAllowCredentials();
+    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> ACCESS_CONTROL_ALLOW_HEADERS = new Provided.AccessControlAllowHeadersHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull Method @NotNull []>> ACCESS_CONTROL_ALLOW_METHODS = new Provided.AccessControlAllowMethodsHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@Nullable URIAuthority>> ACCESS_CONTROL_ALLOW_ORIGIN = new Provided.AccessControlAllowOriginHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> ACCESS_CONTROL_EXPOSE_HEADERS = new Provided.AccessControlExposeHeadersHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Duration> ACCESS_CONTROL_MAX_AGE = new Provided.AccessControlMaxAgeHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull HttpHeaderKey<?> @NotNull []> ACCEPT_CONTROL_REQUEST_HEADERS = new Provided.AcceptControlRequestHeadersHeaderKey();
-    public static @NotNull HttpHeaderKey<@NotNull Method> ACCEPT_CONTROL_REQUEST_METHOD = new Provided.AccessControlRequestMethodHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull Method> ACCESS_CONTROL_REQUEST_METHOD = new Provided.AccessControlRequestMethodHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Duration> AGE = new Provided.AgeHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Method @NotNull []> ALLOW = new Provided.AllowHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Optional<@NotNull AlternativeService @NotNull []>> ALT_SVC = new Provided.AltSvcHeaderKey();
@@ -161,6 +161,8 @@ public abstract class HttpHeaderKey<T> {
     @Deprecated
     public static @NotNull HttpHeaderKey<@NotNull Optional<@NotNull BitMeasure>> LARGE_ALLOCATION = new Provided.LargeAllocationHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull OffsetDateTime> LAST_MODIFIED = new Provided.LastModifiedHeaderKey();
+    @ApiStatus.Experimental
+    public static @NotNull HttpHeaderKey<@NotNull String> LINK = new Provided.StringHeaderKey("Link", Target.BOTH);
     public static @NotNull HttpHeaderKey<@NotNull Location> LOCATION = new Provided.LocationHeaderKey();
     public static @NotNull HttpHeaderKey<@NotNull Integer> MAX_FORWARDS = new Provided.MaxForwardsHeaderKey();
     @ApiStatus.Experimental
@@ -176,6 +178,7 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull String> PERMISSIONS_POLICY = new Provided.StringHeaderKey("Permissions-Policy", Target.RESPONSE);
     @Deprecated
     public static @NotNull HttpHeaderKey<@UnknownNullability Void> PRAGMA = new Provided.PragmaHeaderKey();
+    public static @NotNull HttpHeaderKey<@NotNull String> PROXY_AUTHENTICATE = new Provided.StringHeaderKey("Proxy-Authenticate", Target.RESPONSE);
     public static @NotNull HttpHeaderKey<@NotNull Credentials> PROXY_AUTHORIZATION = new Provided.ProxyAuthorizationHeaderKey();
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> RANGE = new Provided.StringHeaderKey("Range", Target.REQUEST);
@@ -263,6 +266,8 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull String> VIA = new Provided.StringHeaderKey("Via", Target.BOTH);
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> VIEWPORT_WIDTH = new Provided.StringHeaderKey("Viewport-Width", Target.REQUEST);
+    @ApiStatus.Experimental
+    public static @NotNull HttpHeaderKey<@NotNull String> CONTENT_DIGEST = new Provided.StringHeaderKey("Content-Digest", Target.BOTH);
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> WANT_CONTENT_DIGEST = new Provided.StringHeaderKey("Want-Content-Digest", Target.BOTH);
     @ApiStatus.Experimental
@@ -486,8 +491,8 @@ public abstract class HttpHeaderKey<T> {
                 return builder.toString();
             }
         }
-        private static final class AcceptControlAllowCredentials extends HttpHeaderKey<@NotNull Boolean> {
-            private AcceptControlAllowCredentials() {
+        private static final class AccessControlAllowCredentials extends HttpHeaderKey<@NotNull Boolean> {
+            private AccessControlAllowCredentials() {
                 super("Access-Control-Allow-Credentials", Target.RESPONSE);
             }
 
@@ -960,8 +965,8 @@ public abstract class HttpHeaderKey<T> {
                 return String.valueOf(header.getValue().getSeconds());
             }
         }
-        private static final class AcceptControlMaxAgeHeaderKey extends HttpHeaderKey<@NotNull Duration> {
-            private AcceptControlMaxAgeHeaderKey() {
+        private static final class AccessControlMaxAgeHeaderKey extends HttpHeaderKey<@NotNull Duration> {
+            private AccessControlMaxAgeHeaderKey() {
                 super("Access-Control-Max-Age", Target.RESPONSE);
             }
 
@@ -1893,8 +1898,8 @@ public abstract class HttpHeaderKey<T> {
                 return super.create(value);
             }
         }
-        private static final class AcceptControlExposeHeadersHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> {
-            private AcceptControlExposeHeadersHeaderKey() {
+        private static final class AccessControlExposeHeadersHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> {
+            private AccessControlExposeHeadersHeaderKey() {
                 super("Access-Control-Expose-Headers", Target.RESPONSE);
             }
 
@@ -2007,8 +2012,8 @@ public abstract class HttpHeaderKey<T> {
                 return super.create(value);
             }
         }
-        private static final class AcceptControlAllowHeadersHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> {
-            private AcceptControlAllowHeadersHeaderKey() {
+        private static final class AccessControlAllowHeadersHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> {
+            private AccessControlAllowHeadersHeaderKey() {
                 super("Access-Control-Allow-Headers", Target.RESPONSE);
             }
 

@@ -212,7 +212,7 @@ public final class HeaderTests {
     final class AcceptControlAllowCredentials extends HeaderTest<Boolean> {
         private AcceptControlAllowCredentials() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_CREDENTIALS,
+                    HttpHeaderKey.ACCESS_CONTROL_ALLOW_CREDENTIALS,
 
                     new String[] {
                             "true",
@@ -230,7 +230,7 @@ public final class HeaderTests {
     final class AcceptControlAllowHeaders extends HeaderTest<Wildcard<HttpHeaderKey<?>[]>> {
         private AcceptControlAllowHeaders() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_HEADERS,
+                    HttpHeaderKey.ACCESS_CONTROL_ALLOW_HEADERS,
 
                     new String[] {
                             "X-Custom-Header",
@@ -247,7 +247,7 @@ public final class HeaderTests {
     final class AcceptControlAllowMethods extends HeaderTest<Wildcard<Method[]>> {
         private AcceptControlAllowMethods() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_METHODS,
+                    HttpHeaderKey.ACCESS_CONTROL_ALLOW_METHODS,
 
                     new String[] {
                             "GET, POST, OPTIONS",
@@ -266,7 +266,7 @@ public final class HeaderTests {
     final class AcceptControlAllowOrigin extends HeaderTest<Wildcard<@Nullable URIAuthority>> {
         private AcceptControlAllowOrigin() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_ALLOW_ORIGIN,
+                    HttpHeaderKey.ACCESS_CONTROL_ALLOW_ORIGIN,
 
                     new String[] {
                             "https://developer.mozilla.org",
@@ -285,7 +285,7 @@ public final class HeaderTests {
     final class AcceptControlExposeHeaders extends HeaderTest<Wildcard<HttpHeaderKey<?>[]>> {
         private AcceptControlExposeHeaders() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_EXPOSE_HEADERS,
+                    HttpHeaderKey.ACCESS_CONTROL_EXPOSE_HEADERS,
 
                     new String[] {
                             "Content-Encoding",
@@ -302,7 +302,7 @@ public final class HeaderTests {
     final class AcceptControlMaxAge extends HeaderTest<Duration> {
         private AcceptControlMaxAge() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_MAX_AGE,
+                    HttpHeaderKey.ACCESS_CONTROL_MAX_AGE,
 
                     new String[] {
                             "86400",
@@ -337,7 +337,7 @@ public final class HeaderTests {
     final class AcceptControlRequestMethod extends HeaderTest<Method> {
         private AcceptControlRequestMethod() {
             super(
-                    HttpHeaderKey.ACCEPT_CONTROL_REQUEST_METHOD,
+                    HttpHeaderKey.ACCESS_CONTROL_REQUEST_METHOD,
 
                     new String[] {
                             "get",
