@@ -28,10 +28,31 @@ public class HttpSimpleBody implements HttpBody {
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided byte array.
      *
-     * @param bytes the byte array containing the HTTP body data
+     * @param bytes the byte array containing the HTTP body data.
      */
     public HttpSimpleBody(byte @NotNull [] bytes) {
         this.bytes = bytes;
+    }
+
+    /**
+     * Constructs an instance of {@code HttpSimpleBody} with the provided input stream.
+     *
+     * @param stream the input stream containing the HTTP body data.
+     * @throws IOException if an I/O exception occurs.
+     */
+    public HttpSimpleBody(@NotNull InputStream stream) throws IOException {
+        try (@NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            @NotNull BitMeasure size = BitMeasure.create(BitMeasure.Level.KILOBYTES, 2D);
+            byte[] bytes = new byte[(int) size.getBytes()];
+
+            int read;
+            while ((read = stream.read(bytes)) != -1) {
+                output.write(bytes, 0, read);
+                output.flush();
+            }
+
+            this.bytes = output.toByteArray();
+        }
     }
 
     // Getters
