@@ -41,15 +41,20 @@ public interface HttpBody {
             return new HttpSimpleBody(bytes);
         }
     }
-    static <T> @NotNull HttpBody create(@NotNull MediaType<T> mediaType, @NotNull T data) throws IOException {
+    static <T> @NotNull Content<T> create(@NotNull MediaType<T> mediaType, @NotNull T data) {
         try (@NotNull InputStream stream = mediaType.getParser().serialize(data, mediaType.getParameters())) {
             int available = stream.available();
 
+            @NotNull HttpBody body;
             if (available >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-                return new HttpBigBody(stream);
+                body = new HttpBigBody(stream);
             } else {
-                return new HttpSimpleBody(stream);
+                body = new HttpSimpleBody(stream);
             }
+
+            return body.getContent(mediaType);
+        } catch (@NotNull IOException | @NotNull MediaParserException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -1,9 +1,9 @@
 package codes.laivy.jhttp.element.request;
 
 import codes.laivy.jhttp.authorization.Credentials;
+import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
-import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;

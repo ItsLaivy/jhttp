@@ -1,7 +1,7 @@
 package codes.laivy.jhttp.protocol.factory;
 
-import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.body.HttpBody;
+import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.response.HttpResponse;
 import codes.laivy.jhttp.element.response.HttpResponse.Future;

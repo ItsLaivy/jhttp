@@ -60,7 +60,7 @@ public interface Location extends ContentSecurityPolicy.Source {
             throw new UnsupportedOperationException("this class cannot be instantiated");
         }
 
-        public static final @NotNull Pattern ORIGIN_PATTERN = Pattern.compile("^((?:(https?)://)?(?<domain>(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?)(/.*)??(?<path>/\\S*)?$");
+        private static final @NotNull Pattern LOCATION_PATTERN = Pattern.compile("^(?<domain>(https?://)?(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?(/.*)??(?<path>/?\\S*)?$");
 
         public static @NotNull String serialize(@NotNull Location location) {
             if (location.getDomain() != null) {
@@ -77,7 +77,7 @@ public interface Location extends ContentSecurityPolicy.Source {
             }
         }
         public static @NotNull Location deserialize(@NotNull String string) throws ParseException, UnknownHostException, URISyntaxException {
-            @NotNull Matcher matcher = ORIGIN_PATTERN.matcher(string);
+            @NotNull Matcher matcher = LOCATION_PATTERN.matcher(string);
 
             if (matcher.matches()) {
                 @Nullable Domain<?> domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
@@ -90,7 +90,7 @@ public interface Location extends ContentSecurityPolicy.Source {
         }
 
         public static boolean validate(@NotNull String string) {
-            return ORIGIN_PATTERN.matcher(string).matches();
+            return LOCATION_PATTERN.matcher(string).matches();
         }
 
     }

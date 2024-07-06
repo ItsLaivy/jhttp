@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.media;
 
+import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.media.jar.JarMediaType;
 import codes.laivy.jhttp.media.json.JsonMediaType;
@@ -224,6 +225,10 @@ public class MediaType<T> {
         } else {
             return null;
         }
+    }
+
+    public @NotNull Content<T> create(@NotNull T object) {
+        return HttpBody.create(this, object);
     }
 
     // Implementations
