@@ -1,16 +1,12 @@
-package codes.laivy.jhttp.element;
+package codes.laivy.jhttp.body;
 
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 /**
  * Represents the body of an HTTP request or response. The raw content is represented as a {@link CharSequence},
@@ -26,45 +22,23 @@ import java.nio.charset.Charset;
  * @see Content
  * @since 1.0-SNAPSHOT
  */
-public interface HttpBody extends Closeable {
+public interface HttpBody {
 
     // Static initializers
 
     static @NotNull HttpBody empty() {
         try {
-            return create(new InputStream() {
-                @Override
-                public int read() {
-                    return -1;
-                }
-            });
+            return create(new byte[0]);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    static @NotNull HttpBody create(@NotNull String string) throws MediaParserException, IOException {
-        return create(MediaType.TEXT_PLAIN(), new ByteArrayInputStream(string.getBytes()));
-    }
-    static @NotNull HttpBody create(@NotNull String string, @NotNull Charset charset) throws MediaParserException, IOException {
-        return create(MediaType.TEXT_PLAIN(), new ByteArrayInputStream(string.getBytes(charset)));
-    }
-
-    static <T> @NotNull HttpBody create(@NotNull InputStream stream) throws IOException {
-        try {
-            return HttpVersion.HTTP1_1().getBodyFactory().create(null, stream);
-        } catch (@NotNull MediaParserException e) {
-            throw new RuntimeException("cannot parse input stream", e);
-        }
-    }
-    static @NotNull HttpBody create(@NotNull MediaType<?> mediaType, @NotNull InputStream stream) throws MediaParserException, IOException {
-        return HttpVersion.HTTP1_1().getBodyFactory().create(mediaType, stream);
-    }
-    static <T> @NotNull HttpBody create(@NotNull MediaType<T> mediaType, @NotNull T type) {
-        try {
-            return HttpVersion.HTTP1_1().getBodyFactory().create(mediaType, mediaType.getParser().serialize(type, mediaType.getParameters()));
-        } catch (@NotNull MediaParserException | @NotNull IOException e) {
-            throw new RuntimeException("cannot create http body with the given parameters", e);
+    static @NotNull HttpBody create(byte @NotNull [] bytes) throws IOException {
+        if (bytes.length >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
+            return new HttpBigBody(bytes);
+        } else {
+            return new HttpSimpleBody(bytes);
         }
     }
 
@@ -87,6 +61,6 @@ public interface HttpBody extends Closeable {
      *
      * @return an input stream for reading the raw HTTP body content, never null
      */
-    @NotNull InputStream getInputStream();
+    @NotNull InputStream getInputStream() throws IOException;
 
 }

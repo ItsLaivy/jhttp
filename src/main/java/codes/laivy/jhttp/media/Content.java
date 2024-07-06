@@ -1,6 +1,6 @@
 package codes.laivy.jhttp.media;
 
-import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.body.HttpBody;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Flushable;

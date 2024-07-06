@@ -1,5 +1,6 @@
 package codes.laivy.jhttp.element;
 
+import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.headers.HttpHeader;
 import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;

@@ -2,7 +2,7 @@ package codes.laivy.jhttp.protocol.v1_1;
 
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
-import codes.laivy.jhttp.element.HttpBody;
+import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.element.HttpStatus;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.element.response.HttpResponse;
