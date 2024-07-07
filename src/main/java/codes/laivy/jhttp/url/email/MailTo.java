@@ -95,7 +95,7 @@ public interface MailTo {
             // Emails
             for (@NotNull Email email : to.getEmails()) {
                 if (builder.length() > 7) builder.append(",");
-                builder.append(Email.Parser.serialize(email));
+                builder.append(email);
             }
 
             builder.append("?");
@@ -117,9 +117,9 @@ public interface MailTo {
 
             // Copies
             if (to.getCopy() != null) {
-                builder.append("?cc=").append(Email.Parser.serialize(to.getCopy()));
+                builder.append("?cc=").append(to.getCopy());
             } if (to.getHiddenCopy() != null) {
-                builder.append("?bcc=").append(Email.Parser.serialize(to.getHiddenCopy()));
+                builder.append("?bcc=").append(to.getHiddenCopy());
             }
 
             // Finish

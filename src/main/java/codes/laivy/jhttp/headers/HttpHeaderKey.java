@@ -1357,12 +1357,12 @@ public abstract class HttpHeaderKey<T> {
             }
 
             @Override
-            public @NotNull HttpHeader<Email> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
-                return create(Email.Parser.deserialize(value));
+            public @NotNull HttpHeader<Email> read(@NotNull HttpVersion version, @NotNull String value) {
+                return create(Email.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Email> header) {
-                return Email.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class ForwardedHeaderKey extends HttpHeaderKey<@NotNull Forwarded> {
