@@ -41,6 +41,13 @@ public interface HttpBody {
             return new HttpSimpleBody(bytes);
         }
     }
+    static @NotNull HttpBody create(@NotNull InputStream stream) throws IOException {
+        if (stream.available() >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
+            return new HttpBigBody(stream);
+        } else {
+            return new HttpSimpleBody(stream);
+        }
+    }
     static <T> @NotNull Content<T> create(@NotNull MediaType<T> mediaType, @NotNull T data) {
         try (@NotNull InputStream stream = mediaType.getParser().serialize(data, mediaType.getParameters())) {
             int available = stream.available();

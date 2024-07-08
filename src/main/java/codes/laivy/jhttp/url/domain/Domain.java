@@ -21,7 +21,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
     public static boolean validate(@NotNull String string) {
         return DOMAIN_URL_PATTERN.matcher(string).matches();
     }
-    public static @NotNull Domain<?> parse(@NotNull String string) throws ParseException {
+    public static @NotNull Domain<?> parse(@NotNull String string) throws IllegalArgumentException {
         @NotNull Matcher matcher = DOMAIN_URL_PATTERN.matcher(string);
 
         if (matcher.matches()) {
@@ -42,7 +42,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
                 host = Host.IPv4.parse(hostname + (port != null ? ":" + port : ""));
             } else if (Host.IPv6.validate(hostname)) {
                 if (!(hostname.startsWith("[") && hostname.endsWith("]"))) {
-                    throw new ParseException("cannot parse '" + hostname + "' as a valid domain ipv6 address", matcher.start("host"));
+                    throw new IllegalArgumentException("cannot parse '" + hostname + "' as a valid domain ipv6 address");
                 }
 
                 host = Host.IPv6.parse(hostname + (port != null ? ":" + port : ""));
@@ -59,13 +59,13 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
                     }).toArray(Subdomain[]::new);
                 }
             } else {
-                throw new ParseException("cannot parse '" + hostname + "' as a valid domain host", matcher.start("host"));
+                throw new IllegalArgumentException("cannot parse '" + hostname + "' as a valid domain host");
             }
 
             // Finish
             return new Domain<>(protocol, subdomains, hostname, host);
         } else {
-            throw new ParseException("cannot parse '" + string + "' as a valid domain url", 0);
+            throw new IllegalArgumentException("cannot parse '" + string + "' as a valid domain url");
         }
     }
 

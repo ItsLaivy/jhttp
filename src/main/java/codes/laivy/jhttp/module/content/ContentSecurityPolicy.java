@@ -369,8 +369,8 @@ public final class ContentSecurityPolicy implements Iterable<Directive> {
                 return FileSystem.parse(string);
             } else if (MediaStream.validate(string)) {
                 return MediaStream.parse(string);
-            }else if (Location.Parser.validate(string)) {
-                return Location.Parser.deserialize(string);
+            }else if (Location.validate(string)) {
+                return Location.parse(string);
             } else if (Domain.validate(string)) {
                 return Domain.parse(string);
             } else {

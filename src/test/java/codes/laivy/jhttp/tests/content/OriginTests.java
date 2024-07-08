@@ -26,13 +26,13 @@ public final class OriginTests {
     @Order(value = 0)
     void validate() throws UnknownHostException, ParseException, URISyntaxException {
         for (@NotNull String valid : VALIDS) {
-            Assertions.assertTrue(Location.Parser.validate(valid), "cannot validate '" + valid + "' as an origin");
+            Assertions.assertTrue(Location.validate(valid), "cannot validate '" + valid + "' as an origin");
         }
     }
     @Test
     @Order(value = 1)
     void assertions() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Location location = Location.Parser.deserialize("localhost:80/test/excellent");
+        @NotNull Location location = Location.parse("localhost:80/test/excellent");
 
         // Path
         Assertions.assertEquals(location.getURI().getPath(), URI.create("/test/excellent").getPath());
@@ -47,8 +47,8 @@ public final class OriginTests {
     @Test
     @Order(value = 2)
     void serialization() throws ParseException, UnknownHostException, URISyntaxException {
-        @NotNull Location reference = Location.Parser.deserialize("localhost:80/test/excellent");
-        @NotNull Location clone = Location.Parser.deserialize(Location.Parser.serialize(reference));
+        @NotNull Location reference = Location.parse("localhost:80/test/excellent");
+        @NotNull Location clone = Location.parse(reference.toString());
 
         Assertions.assertEquals(reference, clone);
     }

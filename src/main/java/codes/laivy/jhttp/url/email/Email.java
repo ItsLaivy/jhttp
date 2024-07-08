@@ -6,7 +6,6 @@ import codes.laivy.jhttp.url.domain.Subdomain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -29,7 +28,7 @@ public class Email implements CharSequence {
             try {
                 //noinspection unchecked
                 domain = (Domain<Name>) Domain.parse(matcher.group("domain"));
-            } catch (@NotNull ClassCastException | @NotNull ParseException e) {
+            } catch (@NotNull ClassCastException | @NotNull IllegalArgumentException e) {
                 throw new IllegalArgumentException("invalid host name '" + matcher.group("domain") + "'", e);
             }
 

@@ -32,9 +32,9 @@ public abstract class HttpVersion {
     public static @NotNull HttpVersion[] getVersions() {
         return versions.toArray(new HttpVersion[0]);
     }
-    public static @NotNull HttpVersion getVersion(@NotNull String string) throws NullPointerException {
+    public static @Nullable HttpVersion getVersion(@NotNull String string) {
         @NotNull Optional<HttpVersion> optional = Arrays.stream(getVersions()).filter(version -> version.toString().equalsIgnoreCase(string)).findFirst();
-        return optional.orElseThrow(() -> new NullPointerException("cannot find the HTTP version '" + string + "'"));
+        return optional.orElse(null);
     }
 
     public static @NotNull HttpVersion HTTP1_0() {
