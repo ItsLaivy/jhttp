@@ -6,85 +6,59 @@ import codes.laivy.jhttp.url.Host;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class Domain<T extends Host> implements ContentSecurityPolicy.Source {
 
     // Static initializers
-
-    public static final @NotNull Pattern DOMAIN_URL_PATTERN = Pattern.compile("^((?<protocol>http|https)://)?(?<host>[^:]{2,39})(?::(?<port>\\d+))?$");
-
+    
     public static boolean validate(@NotNull String string) {
-        return DOMAIN_URL_PATTERN.matcher(string).matches();
+        if (string.startsWith("http://")) {
+            string = string.substring(7);
+        } else if (string.startsWith("https://")) {
+            string = string.substring(8);
+        }
+
+        if (string.endsWith("/")) {
+            string = string.substring(0, string.length() - 1);
+        }
+
+        return Host.validate(string);
     }
     public static @NotNull Domain<?> parse(@NotNull String string) throws IllegalArgumentException {
-        @NotNull Matcher matcher = DOMAIN_URL_PATTERN.matcher(string);
-
-        if (matcher.matches()) {
+        if (validate(string)) {
             // Protocol
             @Nullable HttpProtocol protocol = null;
 
-            if (matcher.group("protocol") != null) {
-                protocol = matcher.group("protocol").equalsIgnoreCase("http") ? HttpProtocol.HTTP : matcher.group("protocol").equalsIgnoreCase("https") ? HttpProtocol.HTTPS : null;
+            if (string.startsWith("http://")) {
+                string = string.substring(7);
+                protocol = HttpProtocol.HTTP;
+            } else if (string.startsWith("https://")) {
+                string = string.substring(8);
+                protocol = HttpProtocol.HTTPS;
             }
 
             // Host
-            @NotNull Host host;
-            @NotNull Subdomain[] subdomains = new Subdomain[0];
-            @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
-            @NotNull String hostname = matcher.group("host");
-
-            if (Host.IPv4.validate(hostname)) {
-                host = Host.IPv4.parse(hostname + (port != null ? ":" + port : ""));
-            } else if (Host.IPv6.validate(hostname)) {
-                if (!(hostname.startsWith("[") && hostname.endsWith("]"))) {
-                    throw new IllegalArgumentException("cannot parse '" + hostname + "' as a valid domain ipv6 address");
-                }
-
-                host = Host.IPv6.parse(hostname + (port != null ? ":" + port : ""));
-            } else if (Host.Name.validate(hostname)) {
-                @NotNull String[] parts = hostname.split("\\.");
-                hostname = parts.length >= 2 ? parts[parts.length - 2] + "." + parts[parts.length - 1] : hostname;
-                host = Host.Name.parse(hostname + (port != null ? ":" + port : ""));
-
-                // Subdomains
-                if (parts.length > 1) {
-                    subdomains = Arrays.stream(Arrays.copyOf(parts, parts.length - 2)).map(subdomain -> {
-                        if (!subdomain.trim().equals("*")) return Subdomain.create(subdomain);
-                        else return Subdomain.wildcard();
-                    }).toArray(Subdomain[]::new);
-                }
-            } else {
-                throw new IllegalArgumentException("cannot parse '" + hostname + "' as a valid domain host");
-            }
+            @NotNull Host host = Host.parse(string);
 
             // Finish
-            return new Domain<>(protocol, subdomains, hostname, host);
+            return new Domain<>(protocol, host);
         } else {
             throw new IllegalArgumentException("cannot parse '" + string + "' as a valid domain url");
         }
     }
 
-    public static <E extends Host> @NotNull Domain<E> create(@NotNull HttpProtocol protocol, @NotNull Subdomain @NotNull [] subdomains, @NotNull String name, @NotNull E host) {
-        return new Domain<>(protocol, subdomains, name, host);
+    public static <E extends Host> @NotNull Domain<E> create(@NotNull HttpProtocol protocol, @NotNull E host) {
+        return new Domain<>(protocol, host);
     }
 
     // Object
 
     private final @Nullable HttpProtocol protocol;
-    private final @NotNull Subdomain @NotNull [] subdomains;
-    private final @NotNull Host host;
+    private final @NotNull T host;
 
-    private final @NotNull String name;
-
-    private Domain(@Nullable HttpProtocol protocol, @NotNull Subdomain @NotNull [] subdomains, @NotNull String name, @NotNull Host host) {
+    private Domain(@Nullable HttpProtocol protocol, @NotNull T host) {
         this.protocol = protocol;
-        this.subdomains = subdomains;
-        this.name = name;
         this.host = host;
     }
 
@@ -94,48 +68,33 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
         return protocol;
     }
 
-    public @NotNull Subdomain @NotNull [] getSubdomains() {
-        return subdomains;
-    }
-
-    public @NotNull String getName() {
-        return name;
-    }
-
-    public @NotNull Host getHost() {
+    public @NotNull T getHost() {
         return host;
     }
 
     // Implementations
-
+    
     @Override
     public boolean equals(@Nullable Object object) {
         if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
+        if (!(object instanceof Domain)) return false;
         @NotNull Domain<?> domain = (Domain<?>) object;
-        return protocol == domain.protocol && Arrays.equals(subdomains, domain.subdomains) && Objects.equals(host, domain.host) && Objects.equals(name, domain.name);
+        return getProtocol() == domain.getProtocol() && Objects.equals(getHost(), domain.getHost());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(protocol, Arrays.hashCode(subdomains), host, name);
+        return Objects.hash(getProtocol(), getHost());
     }
 
     @Override
     public @NotNull String toString() {
         @NotNull StringBuilder builder = new StringBuilder();
-        @Nullable Integer port = getHost().getPort();
 
         if (getProtocol() != null) {
             builder.append(getProtocol().getName());
-        } for (@NotNull Subdomain subdomain : getSubdomains()) {
-            builder.append(subdomain).append(".");
         }
 
-        builder.append(getHost().getName());
-
-        if (port != null) {
-            builder.append(":").append(port);
-        }
+        builder.append(getHost());
 
         return builder.toString();
     }
