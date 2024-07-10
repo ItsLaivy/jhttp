@@ -11,13 +11,12 @@ import java.util.Objects;
  * <p>An SLD is the part of a domain name that is directly to the left of the top-level domain (TLD). For example, in the domain name "example.com",
  * "example" is the SLD and "com" is the TLD.</p>
  *
- * <p>This class enforces that the SLD follows these rules:
+ * <p>This class enforces that the SLD follows these rules:</p>
  * <ul>
  *   <li>Must consist of only alphanumeric characters and hyphens ('-').</li>
  *   <li>Cannot start or end with a hyphen ('-').</li>
  *   <li>Must be between 1 and 63 characters in length.</li>
  * </ul>
- * </p>
  *
  * <p>Instances of this class are immutable and thread-safe.</p>
  *

@@ -3,7 +3,9 @@ package codes.laivy.jhttp.tests.content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
 import codes.laivy.jhttp.url.Data;
+import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.domain.Domain;
+import codes.laivy.jhttp.url.domain.Port;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -23,12 +25,12 @@ public final class SourceTests {
     final class DomainsUrl {
 
         private final @NotNull String[] VALIDS = new String[] {
-                "http://*.example.com",
+                "http://dwf.example.com",
                 "mail.example.com:443",
                 "https://store.example.com",
-                "*.example.com",
-                "https://*.example.com:12",
-                "*.example.com:12",
+                "dad.example.com",
+                "https://gaga.example.com:12",
+                "dwad.example.com:12",
                 "localhost:12",
                 "https://localhost:12"
         };
@@ -43,22 +45,21 @@ public final class SourceTests {
         @Test
         @Order(value = 1)
         void assertions() throws ParseException {
-            @NotNull Domain<?> domain = Domain.parse("https://*.example.com:12");
+            @NotNull Domain<?> domain = Domain.parse("https://daw.example.com:12");
 
             Assertions.assertNotNull(domain.getProtocol());
 
-            Assertions.assertEquals(12, domain.getHost().getPort());
-            Assertions.assertEquals("example.com", domain.getName());
+            Assertions.assertEquals(Port.create(12), domain.getHost().getPort());
+            Assertions.assertEquals("example.com", ((Host.Name) domain.getHost()).getSLD() + "." + ((Host.Name) domain.getHost()).getTLD());
             Assertions.assertTrue(domain.getProtocol().isSecure());
 
             // Subdomains
-            Assertions.assertEquals(1, domain.getSubdomains().length);
-            Assertions.assertTrue(domain.getSubdomains()[0].isWildcard());
+            Assertions.assertEquals(1, ((Host.Name) domain.getHost()).getSubdomains().length);
         }
         @Test
         @Order(value = 2)
         void serialization() throws ParseException {
-            @NotNull Domain<?> reference = Domain.parse("https://*.example.com:12");
+            @NotNull Domain<?> reference = Domain.parse("https://daw.example.com:12");
             @NotNull Domain<?> clone = Domain.parse(reference.toString());
 
             Assertions.assertEquals(reference, clone);

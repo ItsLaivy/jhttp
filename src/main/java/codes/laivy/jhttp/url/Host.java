@@ -1,28 +1,25 @@
 package codes.laivy.jhttp.url;
 
+import codes.laivy.jhttp.url.domain.Port;
+import codes.laivy.jhttp.url.domain.SLD;
 import codes.laivy.jhttp.url.domain.Subdomain;
-import inet.ipaddr.IPAddressString;
-import inet.ipaddr.ipv4.IPv4Address;
-import inet.ipaddr.ipv6.IPv6Address;
+import codes.laivy.jhttp.url.domain.TLD;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
 
-import java.text.ParseException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
-import java.util.regex.Matcher;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public interface Host {
+public abstract class Host {
 
     // Static initializers
 
-    static boolean validate(@NotNull String string) {
-        return IPv4.validate(string) || IPv6.validate(string) || Name.validate(string);
+    public static boolean validate(@NotNull String string) {
+        return Name.validate(string) || IPv4.validate(string) || IPv6.validate(string);
     }
-    static @NotNull Host parse(@NotNull String string) throws ParseException {
+    public static @NotNull Host parse(@NotNull String string) throws IllegalArgumentException {
         if (Name.validate(string)) {
             return Name.parse(string);
         } else if (IPv4.validate(string)) {
@@ -30,234 +27,483 @@ public interface Host {
         } else if (IPv6.validate(string)) {
             return IPv6.parse(string);
         } else {
-            throw new ParseException("the value '" + string + "' isn't a valid host", 0);
+            throw new IllegalArgumentException("the value '" + string + "' isn't a valid host");
         }
     }
 
     // Object
 
-    @NotNull
-    String getName();
+    private final @Nullable Port port;
 
-    @Range(from = 0, to = 65535)
-    @Nullable
-    Integer getPort();
+    protected Host(@Nullable Port port) {
+        this.port = port;
+    }
+
+    // Getters
+
+    public final @Nullable Port getPort() {
+        return this.port;
+    }
+
+    public abstract @NotNull String getName();
+
+    // Modules
+
+    public final boolean isIPv4() {
+        return IPv4.validate(toString());
+    }
+    public final boolean isIPv6() {
+        return IPv6.validate(toString());
+    }
+
+    // Implementations
+
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Host)) return false;
+        @NotNull Host host = (Host) object;
+        return Objects.equals(getPort(), host.getPort());
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getPort());
+    }
+
+    @Override
+    public abstract @NotNull String toString();
 
     // Classes
 
-    final class Name implements Host {
+    public static final class Name extends Host {
 
         // Static initializers
 
-        public static final @NotNull Pattern NAME_PARSE_PATTERN = Pattern.compile("^(?:https?://)?(?:[^@/\\n]+@)?(?:(?:\\*|[a-zA-Z0-9-]+)\\.)*(?<host>(localhost|[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}))(?::(?<port>\\d{1,5}))?$");
-
         public static boolean validate(@NotNull String string) {
-            return NAME_PARSE_PATTERN.matcher(string).matches();
-        }
-        public static @NotNull Name parse(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = NAME_PARSE_PATTERN.matcher(string);
+            @NotNull String[] parts = string.split(":");
 
-            if (matcher.matches()) {
-                @NotNull String name = matcher.group("host");
-                @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
-
-                return new Name(name, port);
-            } else {
-                throw new ParseException("cannot parse '" + string + "' as a valid host name", 0);
-            }
-        }
-
-        // Object
-
-        private final @NotNull String name;
-
-        @Range(from = 0, to = 65535)
-        private final @Nullable Integer port;
-
-        private Name(@NotNull String name, @Range(from = 0, to = 65535) @Nullable Integer port) {
-            this.name = name;
-            this.port = port;
-        }
-
-        public @NotNull Subdomain[] getSubdomains() {
-            @NotNull String[] split = getName().split("\\.");
-            @NotNull List<Subdomain> list = new LinkedList<>();
-
-            if (split.length > 1) {
-                for (int row = 0; row + 2 < split.length; row++) {
-                    list.add(Subdomain.create(split[row]));
+            if (parts.length > 2) {
+                return false;
+            } else try {
+                if (parts.length == 2 && !Port.validate(parts[1])) {
+                    return false;
                 }
+
+                parts = parts[0].split("\\.");
+
+                if (parts.length == 0) {
+                    return false;
+                } else if (parts[parts.length - 1].equalsIgnoreCase("localhost")) {
+                    if (parts.length > 1 && Arrays.stream(Arrays.copyOfRange(parts, 0, parts.length - 1)).anyMatch(subdomain -> !Subdomain.validate(subdomain))) {
+                        return false;
+                    }
+                } else {
+                    if (!TLD.validate(parts[parts.length - 1])) {
+                        return false;
+                    } else if (!SLD.validate(parts[parts.length - 2])) {
+                        return false;
+                    } else if (parts.length > 2 && Arrays.stream(Arrays.copyOfRange(parts, 0, parts.length - 2)).anyMatch(subdomain -> !Subdomain.validate(subdomain))) {
+                        return false;
+                    }
+                }
+            } catch (@NotNull NumberFormatException ignore) {
+                return false;
             }
 
-            return list.toArray(new Subdomain[0]);
+            return true;
         }
+        public static @NotNull Name parse(@NotNull String string) throws IllegalArgumentException {
+            @NotNull String[] parts = string.split(":");
 
-        @Override
-        public @NotNull String getName() {
-            return name;
-        }
-        @Override
-        public @Range(from = 0, to = 65535) @Nullable Integer getPort() {
-            return port;
-        }
+            if (validate(string)) {
+                @Nullable Port port = parts.length == 2 ? Port.parse(parts[1]) : null;
+                parts = parts[0].split("\\.");
 
-        // Implementations
+                @Nullable TLD tld;
+                @NotNull SLD sld;
+                @NotNull Subdomain[] subdomains;
 
-        @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            Name that = (Name) object;
-            return Objects.equals(name, that.name) && Objects.equals(port, that.port);
-        }
-        @Override
-        public int hashCode() {
-            return Objects.hash(name, port);
-        }
+                if (parts[parts.length - 1].equalsIgnoreCase("localhost")) {
+                    tld = null;
 
-        @Override
-        public @NotNull String toString() {
-            return getName() + (getPort() != null ? ":" + getPort() : "");
-        }
+                    sld = SLD.parse(parts[parts.length - 1]);
+                    subdomains = parts.length > 1 ? Arrays.stream(Arrays.copyOfRange(parts, 0, parts.length - 1)).map(Subdomain::create).toArray(Subdomain[]::new) : new Subdomain[0];
+                } else {
+                    tld = TLD.parse(parts[parts.length - 1]);
+                    sld = SLD.parse(parts[parts.length - 2]);
+                    subdomains = parts.length > 2 ? Arrays.stream(Arrays.copyOfRange(parts, 0, parts.length - 2)).map(Subdomain::create).toArray(Subdomain[]::new) : new Subdomain[0];
 
-    }
-    final class IPv4 implements Host {
+                }
 
-        private static final @NotNull Pattern IPV4_PATTERN = Pattern.compile("^(?<bytes>[^]:]{2,39})(:(?<port>\\d{1,5}))?$");
-
-        public static boolean validate(@NotNull String string) {
-            @NotNull Matcher matcher = IPV4_PATTERN.matcher(string);
-            return matcher.matches() && new IPAddressString(matcher.group("bytes")).isIPv4();
-        }
-        public static @NotNull IPv4 parse(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = IPV4_PATTERN.matcher(string);
-
-            if (matcher.matches() && validate(string)) {
-                @NotNull IPv4Address address = (IPv4Address) new IPAddressString(matcher.group("bytes")).getAddress();
-                @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
-
-                return new IPv4(address, port);
+                return new Name(subdomains, sld, tld, port);
             } else {
-                throw new ParseException("cannot parse '" + string + "' into a valid ipv6", 0);
+                throw new IllegalArgumentException("cannot parse '" + string + "' as a valid name address");
             }
+        }
+
+        public static @NotNull Name create(@NotNull Subdomain @NotNull [] subdomains, @NotNull SLD sld, @Nullable TLD tld, @Nullable Port port) {
+            return new Name(subdomains, sld, tld, port);
         }
 
         // Object
 
-        private final @NotNull IPv4Address address;
+        private final @NotNull Subdomain @NotNull [] subdomains;
+        private final @NotNull SLD sld;
+        private final @Nullable TLD tld;
 
-        @Range(from = 0, to = 65535)
-        private final @Nullable Integer port;
+        private Name(@NotNull Subdomain @NotNull [] subdomains, @NotNull SLD sld, @Nullable TLD tld, @Nullable Port port) {
+            super(port);
 
-        private IPv4(
-                @NotNull IPv4Address address,
-
-                @Range(from = 0, to = 65535)
-                @Nullable Integer port
-        ) {
-            this.address = address;
-            this.port = port;
+            this.subdomains = subdomains;
+            this.sld = sld;
+            this.tld = tld;
         }
 
         // Getters
 
+        public boolean isLocalhost() {
+            return getTLD() == null && getSLD().equalsIgnoreCase("localhost");
+        }
+
+        public @NotNull Subdomain @NotNull [] getSubdomains() {
+            return subdomains;
+        }
+        public @NotNull SLD getSLD() {
+            return sld;
+        }
+
+        /**
+         * The TLD name may be null if the SLD is localhost.
+         *
+         * @return The host name TLD (maybe null)
+         */
+        public @Nullable TLD getTLD() {
+            return tld;
+        }
+
         @Override
         public @NotNull String getName() {
-            return address.toString();
-        }
-        @Override
-        public @Range(from = 0, to = 65535) @Nullable Integer getPort() {
-            return port;
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull Subdomain subdomain : getSubdomains()) {
+                builder.append(subdomain).append(".");
+            }
+
+            builder.append(getSLD());
+
+            if (getTLD() != null) {
+                builder.append(".").append(getTLD());
+            }
+
+            return builder.toString();
         }
 
         // Implementations
 
         @Override
-        public boolean equals(Object object) {
+        public boolean equals(@Nullable Object object) {
             if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            IPv4 that = (IPv4) object;
-            return Objects.equals(address, that.address) && Objects.equals(port, that.port);
+            if (!(object instanceof Name)) return false;
+            if (!super.equals(object)) return false;
+            @NotNull Name name = (Name) object;
+            return Objects.deepEquals(getSubdomains(), name.getSubdomains()) && Objects.equals(getSLD(), name.getSLD()) && Objects.equals(getTLD(), name.getTLD());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(address, port);
+            return Objects.hash(super.hashCode(), Arrays.hashCode(getSubdomains()), getSLD(), getTLD());
         }
 
         @Override
         public @NotNull String toString() {
-            return getName() + (getPort() != null ? ":" + getPort() : "");
+            @NotNull StringBuilder builder = new StringBuilder(getName());
+
+            if (getPort() != null) {
+                builder.append(":").append(getPort());
+            }
+
+            return builder.toString();
         }
 
     }
-    final class IPv6 implements Host {
+    public static final class IPv4 extends Host {
 
-        // Static initializers
-
-        private static final @NotNull Pattern IPV6_PATTERN = Pattern.compile("^\\[?(?<bytes>[^]]{2,39})]?(:(?<port>\\d{1,5}))?$");
+        private static final @NotNull Pattern IPV4_PATTERN = Pattern.compile("^(?<bytes>[^]:]{2,39})(:(?<port>\\d{1,5}))?$");
 
         public static boolean validate(@NotNull String string) {
-            @NotNull Matcher matcher = IPV6_PATTERN.matcher(string);
-            return matcher.matches() && new IPAddressString(matcher.group("bytes")).isIPv6();
-        }
-        public static @NotNull IPv6 parse(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = IPV6_PATTERN.matcher(string);
 
-            if (matcher.matches() && validate(string)) {
-                @NotNull IPv6Address address = (IPv6Address) new IPAddressString(matcher.group("bytes")).getAddress();
-                @Nullable Integer port = matcher.group("port") != null ? Integer.parseInt(matcher.group("port")) : null;
-
-                return new IPv6(address, port);
+            if (string.length() > 21) {
+                return false;
             } else {
-                throw new ParseException("cannot parse '" + string + "' into a valid ipv6", 0);
+                @NotNull String[] parts = string.split(":");
+
+                if (parts.length > 2) {
+                    return false;
+                } else if (parts.length == 2 && !Port.validate(parts[1])) {
+                    return false;
+                }
+
+                string = parts[0];
+            }
+
+            @NotNull String[] parts = string.split("\\.");
+
+            if (parts.length != 4) {
+                return false;
+            } else for (@NotNull String part : parts) try {
+                int octet = Integer.parseInt(part);
+                if (octet < 0 || octet > 255) return false;
+            } catch (@NotNull NumberFormatException ignore) {
+                return false;
+            }
+
+            return true;
+        }
+        public static @NotNull IPv4 parse(@NotNull String string) throws IllegalArgumentException {
+            if (validate(string)) {
+                @NotNull String[] parts = string.split(":");
+
+                @NotNull String name = parts[0];
+                @Nullable Port port = parts.length == 2 ? Port.parse(parts[1]) : null;
+
+                parts = name.split("\\.");
+                int[] octets = new int[4];
+
+                for (int index = 0; index < 4; index++) {
+                    octets[index] = Integer.parseInt(parts[index]);
+                }
+
+                return new IPv4(octets, port);
+            } else {
+                throw new IllegalArgumentException("cannot parse '" + string + "' as a valid ipv4 address");
             }
         }
 
         // Object
 
-        private final @NotNull IPv6Address address;
+        private final int[] octets;
 
-        @Range(from = 0, to = 65535)
-        private final @Nullable Integer port;
+        private IPv4(int @NotNull [] octets, @Nullable Port port) {
+            super(port);
+            this.octets = octets;
 
-        private IPv6(
-                @NotNull IPv6Address address,
+            // Verifications
+            if (octets.length != 4) {
+                throw new IllegalArgumentException("an ipv4 address must have four octets");
+            } else for (int octet : octets) {
+                if (octet < 0 || octet > 255) {
+                    throw new IllegalArgumentException("invalid octect '" + octet + "'");
+                }
+            }
+        }
 
-                @Range(from = 0, to = 65535)
-                @Nullable Integer port
-        ) {
-            this.address = address;
-            this.port = port;
+        // Getters
+
+        public int[] getOctets() {
+            return octets;
         }
 
         @Override
         public @NotNull String getName() {
-            if (getPort() != null) return "[" + address + "]";
-            else return address.toString();
-        }
-        @Override
-        @Range(from = 0, to = 65535)
-        public @Nullable Integer getPort() {
-            return port;
+            return getOctets()[0] + "." + getOctets()[1] + "." + getOctets()[2] + "." + getOctets()[3];
         }
 
         // Implementations
 
         @Override
-        public boolean equals(Object object) {
+        public boolean equals(@Nullable Object object) {
             if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            IPv6 iPv6 = (IPv6) object;
-            return Objects.equals(address, iPv6.address) && Objects.equals(port, iPv6.port);
+            if (!(object instanceof IPv4)) return false;
+            if (!super.equals(object)) return false;
+            @NotNull IPv4 iPv4 = (IPv4) object;
+            return Objects.deepEquals(getOctets(), iPv4.getOctets());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(address, port);
+            return Objects.hash(super.hashCode(), Arrays.hashCode(getOctets()));
         }
 
         @Override
         public @NotNull String toString() {
-            return getName() + (getPort() != null ? ":" + getPort() : "");
+            @NotNull StringBuilder builder = new StringBuilder(getName());
+
+            if (getPort() != null) {
+                builder.append(":").append(getPort());
+            }
+
+            return builder.toString();
+        }
+
+    }
+    public static final class IPv6 extends Host {
+
+        // Static initializers
+
+        public static boolean validate(@NotNull String string) {
+            if (string.startsWith("[")) {
+                string = string.substring(1);
+            }
+
+            // Parse port
+            @NotNull String[] parts = string.split("]");
+            if (parts.length > 2) {
+                return false;
+            } else if (parts.length == 2) {
+                if (!parts[1].startsWith(":")) {
+                    return false;
+                } else if (!Port.validate(parts[1].substring(1))) {
+                    return false;
+                }
+            }
+
+            string = parts[0];
+
+            // Add the missing zero groups to the string to start address verification
+            int missing = 7 - string.replace("::", "").split(":").length;
+
+            @NotNull StringBuilder zeros = new StringBuilder();
+            for (int row = 0; row < missing; row++) {
+                zeros.append("0:");
+            }
+            string = string.replace("::", ":" + zeros);
+
+            // Basic verifications
+            parts = string.split(":");
+
+            if (parts.length != 8) {
+                return false;
+            } else for (@NotNull String hex : parts) {
+                try {
+                    Integer.parseInt(hex, 16);
+                } catch (@NotNull NumberFormatException ignore) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        public static @NotNull IPv6 parse(@NotNull String string) throws IllegalArgumentException {
+            if (validate(string)) {
+                if (string.startsWith("[")) {
+                    string = string.substring(1);
+                }
+
+                // Get port
+                @Nullable Port port = null;
+
+                // Parse port
+                @NotNull String[] parts = string.split("]");
+                if (parts.length == 2) {
+                    port = Port.parse(parts[1].substring(1));
+                }
+
+                string = parts[0];
+
+                // Parse groups
+                short[] groups = new short[8];
+
+                // Add the missing zero groups to the string
+                int missing = 7 - string.replace("::", "").split(":").length;
+
+                @NotNull StringBuilder zeros = new StringBuilder();
+                for (int row = 0; row < missing; row++) {
+                    zeros.append("0:");
+                }
+                string = string.replace("::", ":" + zeros);
+
+                // Read all the groups one by one
+                @NotNull String[] groupParts = string.split(":");
+                for (int index = 0; index < groupParts.length; index++) {
+                    @NotNull String hex = groupParts[index].replaceFirst("^0+(?!$)", "");
+                    groups[index] = (short) Integer.parseInt(hex, 16);
+                }
+
+                // Finish
+                return new IPv6(groups, port);
+            } else {
+                throw new IllegalArgumentException("cannot parse '" + string + "' as a valid ipv6 address");
+            }
+        }
+
+        // Object
+
+        // This array will always have 8 elements
+        private final short[] groups;
+
+        private IPv6(short[] groups, @Nullable Port port) {
+            super(port);
+            this.groups = groups;
+
+            if (groups.length != 8) {
+                throw new IllegalArgumentException("An IPv6 address must have eight hexadecimal groups");
+            }
+        }
+
+        // Getters
+
+        public short[] getGroups() {
+            return groups;
+        }
+
+        @Override
+        public @NotNull String getName() {
+            // Functions
+            @NotNull Function<Short, String> function = new Function<Short, String>() {
+                @Override
+                public @NotNull String apply(@NotNull Short group) {
+                    @NotNull String hex = String.format("%04X", group);
+                    while (hex.startsWith("0")) hex = hex.substring(1);
+
+                    return hex;
+                }
+            };
+
+            // Build string
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (int index = 0; index < 8; index++) {
+                short group = getGroups()[index];
+
+                // Generate representation
+                @NotNull String representation = function.apply(group);
+                if (representation.equals("0000")) representation = "0";
+
+                // Zero abbreviation check
+                if (group == 0 && index != 7 && getGroups()[index + 1] == 0) {
+                    continue;
+                }
+
+                // Add the ":"
+                if (builder.length() > 0) builder.append(":");
+                // Add representation
+                builder.append(representation);
+            }
+
+            // Replace zeros
+
+            return "[" + builder + "]";
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof IPv6)) return false;
+            if (!super.equals(object)) return false;
+            @NotNull IPv6 iPv6 = (IPv6) object;
+            return Objects.deepEquals(getGroups(), iPv6.getGroups());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), Arrays.hashCode(getGroups()));
+        }
+
+        @Override
+        public @NotNull String toString() {
+            @NotNull StringBuilder builder = new StringBuilder(getName());
+            if (getPort() != null) builder.append(":").append(getPort());
+
+            return builder.toString();
         }
 
     }

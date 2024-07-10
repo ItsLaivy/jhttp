@@ -1033,6 +1033,7 @@ public final class HeaderTests {
                     HttpHeaderKey.HOST,
 
                     new String[] {
+                            "localhost",
                             "example.com:80",
                             "example.com",
                             "localhost:80",

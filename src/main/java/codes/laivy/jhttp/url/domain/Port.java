@@ -11,11 +11,10 @@ import java.util.Objects;
  * <p>A port number is a 16-bit unsigned integer that is used by network protocols, such as TCP and UDP,
  * to identify specific processes or network services. The valid range for a port number is from 0 to 65535.</p>
  *
- * <p>This class enforces that the port number follows these rules:
+ * <p>This class enforces that the port number follows these rules:</p>
  * <ul>
  *   <li>Must be an integer between 0 and 65535, inclusive.</li>
  * </ul>
- * </p>
  *
  * <p>Instances of this class are immutable and thread-safe.</p>
  *
@@ -47,8 +46,12 @@ public final class Port extends Number implements Comparable<Port> {
             return false;
         }
     }
-    public static @NotNull Port create(@NotNull String port) throws NumberFormatException {
+    public static @NotNull Port parse(@NotNull String port) throws NumberFormatException {
         return new Port(Integer.parseInt(port));
+    }
+
+    public static @NotNull Port create(int port) {
+        return new Port(port);
     }
 
     // todo: well known ports list

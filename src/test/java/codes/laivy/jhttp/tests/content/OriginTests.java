@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.tests.content;
 
 import codes.laivy.jhttp.module.Location;
+import codes.laivy.jhttp.url.domain.Port;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
@@ -41,7 +42,7 @@ public final class OriginTests {
         Assertions.assertNotNull(location.getDomain());
         Assertions.assertNotNull(location.getDomain().getHost().getPort());
 
-        Assertions.assertEquals(location.getDomain().getHost().getPort(), 80);
+        Assertions.assertEquals(location.getDomain().getHost().getPort(), Port.create(80));
         Assertions.assertEquals(location.getDomain().getHost().getName(), "localhost");
     }
     @Test

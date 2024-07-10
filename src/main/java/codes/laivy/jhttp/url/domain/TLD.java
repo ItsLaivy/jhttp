@@ -12,12 +12,11 @@ import java.util.Objects;
  * "com" is the TLD. TLDs are used to classify domains into different categories such as generic top-level domains (gTLDs)
  * and country code top-level domains (ccTLDs).</p>
  *
- * <p>This class enforces that the TLD follows these rules:
+ * <p>This class enforces that the TLD follows these rules:</p>
  * <ul>
  *   <li>Must consist of only alphabetic characters (A-Z, case insensitive).</li>
  *   <li>Must be between 2 and 6 characters in length.</li>
  * </ul>
- * </p>
  *
  * <p>Instances of this class are immutable and thread-safe.</p>
  *
