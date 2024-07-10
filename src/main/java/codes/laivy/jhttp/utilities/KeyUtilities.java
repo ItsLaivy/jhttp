@@ -22,7 +22,7 @@ public final class KeyUtilities {
 
             if (delimiter != null) {
                 @NotNull String[] option = part.split("\\s*" + delimiter + "\\s*");
-                @NotNull String key = option[0];
+                @NotNull String key = option[0].toLowerCase();
 
                 if (option.length > 1) {
                     @NotNull String value = option[1].startsWith("\"") && option[1].endsWith("\"") ? option[1].substring(1, option[1].length() - 1) : option[1];

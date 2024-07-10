@@ -1,98 +1,111 @@
 package codes.laivy.jhttp.module;
 
+import codes.laivy.jhttp.utilities.KeyUtilities;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
 import java.time.Duration;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public interface KeepAlive {
+public class KeepAlive {
 
     // Static initializers
 
-    static @NotNull KeepAlive create(final @NotNull Duration timeout) {
+    public static @NotNull KeepAlive parse(@NotNull String string) throws ParseException {
+        @NotNull Map<String, String> map = KeyUtilities.read(string, '=', ',');
+        @Nullable Duration timeout = null;
+        @Nullable Duration maximum = null;
+
+        for (@NotNull String key : map.keySet()) try {
+            if (key.equalsIgnoreCase("timeout")) {
+                timeout = Duration.ofSeconds(Long.parseLong(map.get(key)));
+            } else if (key.equalsIgnoreCase("max")) {
+                maximum = Duration.ofSeconds(Long.parseLong(map.get(key)));
+            } else {
+                throw new IllegalArgumentException("keep alive with illegal parameter '" + key + "'");
+            }
+        } catch (@NotNull NumberFormatException ignore) {
+            throw new IllegalArgumentException("Illegal parameter value '" + key + "': " + map.get(key));
+        }
+
+        if (timeout == null) {
+            throw new IllegalArgumentException("keep alive missing timeout parameter");
+        }
+
+        return new KeepAlive(timeout, maximum);
+    }
+    public static boolean validate(@NotNull String string) {
+        @NotNull Map<String, String> map = KeyUtilities.read(string, '=', ',');
+
+        if (!map.containsKey("timeout")) {
+            return false;
+        } else for (@NotNull Entry<String, String> entry : KeyUtilities.read(string, '=', ',').entrySet()) try {
+            if (entry.getKey().equalsIgnoreCase("timeout")) {
+                Long.parseLong(entry.getValue());
+            } else if (entry.getKey().equalsIgnoreCase("max")) {
+                Long.parseLong(entry.getValue());
+            } else {
+                return false;
+            }
+        } catch (@NotNull NumberFormatException ignore) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static @NotNull KeepAlive create(final @NotNull Duration timeout) {
         return create(timeout, null);
     }
-    static @NotNull KeepAlive create(final @NotNull Duration timeout, final @Nullable Duration maximum) {
-        return new KeepAlive() {
+    public static @NotNull KeepAlive create(final @NotNull Duration timeout, final @Nullable Duration maximum) {
+        return new KeepAlive(timeout, maximum);
+    }
 
-            // Object
+    // Object
 
-            @Override
-            public @NotNull Duration getTimeout() {
-                return timeout;
-            }
-            @Override
-            public @Nullable Duration getMaximum() {
-                return maximum;
-            }
+    private final @NotNull Duration timeout;
+    private final @Nullable Duration maximum;
 
-            // Implementations
-
-            @Override
-            public boolean equals(@Nullable Object object) {
-                if (this == object) return true;
-                if (object == null || getClass() != object.getClass()) return false;
-                @NotNull KeepAlive that = (KeepAlive) object;
-                return Objects.equals(getTimeout(), that.getTimeout()) && Objects.equals(getMaximum(), that.getMaximum());
-            }
-            @Override
-            public int hashCode() {
-                return Objects.hash(timeout, maximum);
-            }
-            @Override
-            public @NotNull String toString() {
-                return Parser.serialize(this);
-            }
-
-        };
+    protected KeepAlive(@NotNull Duration timeout, @Nullable Duration maximum) {
+        this.timeout = timeout;
+        this.maximum = maximum;
     }
 
     // Getters
 
-    @NotNull Duration getTimeout();
-    @Nullable Duration getMaximum();
+    public @NotNull Duration getTimeout() {
+        return timeout;
+    }
+    public @Nullable Duration getMaximum() {
+        return maximum;
+    }
 
-    // Classes
+    // Implementations
 
-    final class Parser {
-        private Parser() {
-            throw new UnsupportedOperationException();
+    @Override
+    public final boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof KeepAlive)) return false;
+        @NotNull KeepAlive keepAlive = (KeepAlive) object;
+        return Objects.equals(getTimeout(), keepAlive.getTimeout()) && Objects.equals(getMaximum(), keepAlive.getMaximum());
+    }
+    @Override
+    public final int hashCode() {
+        return Objects.hash(getTimeout(), getMaximum());
+    }
+
+    @Override
+    public final @NotNull String toString() {
+        @NotNull StringBuilder builder = new StringBuilder("timeout=" + getTimeout().getSeconds());
+
+        if (getMaximum() != null) {
+            builder.append(", max=").append(getMaximum().getSeconds());
         }
 
-        // Serializers
-
-        private static final @NotNull Pattern KEEP_ALIVE_PATTERN = Pattern.compile("^timeout\\s*=\\s*(?<timeout>\\d+)(?:\\s*,\\s*max\\s*=\\s*(?<max>\\d+))?$");
-
-        public static @NotNull String serialize(@NotNull KeepAlive keepAlive) {
-            @NotNull StringBuilder builder = new StringBuilder("timeout=" + keepAlive.getTimeout().getSeconds());
-
-            if (keepAlive.getMaximum() != null) {
-                builder.append(", max=").append(keepAlive.getMaximum().getSeconds());
-            }
-
-            return builder.toString();
-        }
-        public static @NotNull KeepAlive deserialize(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = KEEP_ALIVE_PATTERN.matcher(string);
-
-            if (matcher.matches()) {
-                @NotNull Duration timeout = Duration.ofSeconds(Long.parseLong(matcher.group("timeout")));
-                @Nullable Duration maximum = matcher.group("max") != null ? Duration.ofSeconds(Long.parseLong(matcher.group("max"))) : null;
-
-                return create(timeout, maximum);
-            } else {
-                throw new ParseException("cannot parse '" + string + "' as a valid keep alive object", 0);
-            }
-        }
-
-        public static boolean validate(@NotNull String string) {
-            return KEEP_ALIVE_PATTERN.matcher(string).matches();
-        }
-
+        return builder.toString();
     }
 
 }

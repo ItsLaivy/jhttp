@@ -1219,11 +1219,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<KeepAlive> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
-                return create(KeepAlive.Parser.deserialize(value));
+                return create(KeepAlive.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<KeepAlive> header) {
-                return KeepAlive.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class IfUnmodifiedSinceHeaderKey extends HttpHeaderKey<@NotNull OffsetDateTime> {
