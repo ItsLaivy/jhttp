@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Represents an HTTP cookie with key-value pairs and additional attributes.
@@ -526,10 +525,7 @@ public class Cookie {
                 @NotNull StringBuilder builder = new StringBuilder(request.getName()).append("=").append(request.getValue()).append("; ");
 
                 if (request.getDomain() != null) {
-                    @NotNull String subdomains = Arrays.stream(request.getDomain().getSubdomains()).map(s -> s + ".").collect(Collectors.joining());
-                    @NotNull String domain = subdomains + request.getDomain().getName();
-
-                    builder.append("Domain=").append(domain).append("; ");
+                    builder.append("Domain=").append(request.getDomain().getHost().getName()).append("; ");
                 } if (request.getExpires() != null) {
                     builder.append("Expires=").append(DateUtils.RFC822.convert(request.getExpires().atOffset(ZoneOffset.UTC))).append("; ");
                 } if (request.getMaxAge() != null) {

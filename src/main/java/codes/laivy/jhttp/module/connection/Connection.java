@@ -156,7 +156,6 @@ public class Connection {
 
         Type(@NotNull String id) {
             this.id = id;
-            System.out.println("Loaded");
         }
 
         // Getters

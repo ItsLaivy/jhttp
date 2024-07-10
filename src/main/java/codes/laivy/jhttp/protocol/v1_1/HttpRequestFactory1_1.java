@@ -28,8 +28,10 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +48,12 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
     // Static initializers
 
     private static @NotNull URI uri(@NotNull String string) throws URISyntaxException {
+        try {
+            string = URLDecoder.decode(string, "UTF-8");
+        } catch (@NotNull UnsupportedEncodingException e) {
+            throw new RuntimeException("cannot find UTF-8 charset on system", e);
+        }
+
         // Remove protocol
         for (@NotNull HttpProtocol protocol : HttpProtocol.values()) {
             if (string.startsWith(protocol.getName())) {
@@ -144,7 +152,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
                     if (!header.getKey().getTarget().isRequests()) continue;
 
                     headers.add(header);
-                } catch (HeaderFormatException e) {
+                } catch (@NotNull HeaderFormatException e) {
                     throw new HttpRequestParseException("cannot parse http request header line '" + line + "'", e);
                 }
             }
@@ -157,6 +165,7 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             throw new HttpRequestParseException("the http 1.1 requests cannot have multiples 'Host' headers", new HeaderFormatException(HttpHeaderKey.HOST.getName()));
         }
 
+        time = System.currentTimeMillis();
         @NotNull Host host = headers.get(HttpHeaderKey.HOST)[0].getValue();
 
         // Request line
@@ -176,12 +185,14 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
         // Authority
         if (URIAuthority.validate(requestLine[1])) try {
+            time = System.currentTimeMillis();
             authority = URIAuthority.parse(requestLine[1]);
         } catch (@NotNull URISyntaxException e) {
             throw new HttpRequestParseException("cannot parse uri authority '" + requestLine[1] + "' from http request", e);
         }
 
         // Message
+        time = System.currentTimeMillis();
         @Nullable HttpBody body = getVersion().getBodyFactory().parse(headers, content[1]);
 
         // Finish
@@ -344,7 +355,9 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
             // Request
             try {
+                long time = System.currentTimeMillis();
                 @NotNull HttpRequest request = parse(StringUtils.splitAndKeepDelimiter(body, CRLF + CRLF, 2)[0]);
+
                 this.version = request.getVersion();
                 this.method = request.getMethod();
                 this.authority = request.getAuthority();

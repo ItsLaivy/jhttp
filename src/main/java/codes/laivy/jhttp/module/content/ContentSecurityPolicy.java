@@ -4,10 +4,7 @@ import codes.laivy.jhttp.exception.parser.FilesystemProtocolException;
 import codes.laivy.jhttp.module.Location;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Keyword;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy.Directive.Name;
-import codes.laivy.jhttp.url.Blob;
-import codes.laivy.jhttp.url.Data;
-import codes.laivy.jhttp.url.FileSystem;
-import codes.laivy.jhttp.url.MediaStream;
+import codes.laivy.jhttp.url.*;
 import codes.laivy.jhttp.url.domain.Domain;
 import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
@@ -452,4 +449,5 @@ public final class ContentSecurityPolicy implements Iterable<Directive> {
         }
 
     }
+
 }

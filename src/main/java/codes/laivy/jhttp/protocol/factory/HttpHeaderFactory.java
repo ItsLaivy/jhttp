@@ -71,8 +71,9 @@ public interface HttpHeaderFactory {
             throw new HeaderFormatException("illegal header key '" + split[0] + "'");
         } else try {
             @NotNull HttpHeaderKey<?> key = HttpHeaderKey.retrieve(split[0]);
-            @NotNull String value = split[1].trim();
+            // todo: Notify headers with a big parsing time
 
+            @NotNull String value = split[1].trim();
             return key.read(getVersion(), value);
         } catch (@NotNull Throwable throwable) {
             throw new HeaderFormatException("cannot read header: '" + print + "'", throwable);

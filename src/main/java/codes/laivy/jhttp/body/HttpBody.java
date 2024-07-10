@@ -83,6 +83,7 @@ public interface HttpBody {
      * Provides an {@link InputStream} for reading the raw content of the HTTP body.
      *
      * @return an input stream for reading the raw HTTP body content, never null
+     * @throws IOException if an I/O exception occurs while perform
      */
     @NotNull InputStream getInputStream() throws IOException;
 

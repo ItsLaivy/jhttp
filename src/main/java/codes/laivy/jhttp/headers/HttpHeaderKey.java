@@ -54,18 +54,11 @@ public abstract class HttpHeaderKey<T> {
 
     public static final @NotNull Pattern NAME_FORMAT_REGEX = Pattern.compile("^[A-Za-z][A-Za-z0-9-]*$");
 
-    public static @NotNull HttpHeaderKey<?> retrieve(@NotNull String name) {
-        try {
-            @NotNull Field field = HttpHeaderKey.class.getDeclaredField(name.replace("-", "_").toUpperCase());
-            field.setAccessible(true);
+    private static final @NotNull Map<String, HttpHeaderKey<?>> map = new HashMap<>();
 
-            if (field.getType() == HttpHeaderKey.class) {
-                return (HttpHeaderKey<?>) field.get(null);
-            }
-        } catch (NoSuchFieldException | IllegalAccessException ignore) {
-        } catch (Throwable throwable) {
-            throw new IllegalStateException("Cannot create header key '" + name + "'");
-        }
+    public static @NotNull HttpHeaderKey<?> retrieve(@NotNull String name) {
+        @Nullable HttpHeaderKey<?> key = map.getOrDefault(name.replace("-", "_").toLowerCase(), null);
+        if (key != null) return key;
 
         return new HttpHeaderKey<String>(name, Target.BOTH) {
             @Override
@@ -294,6 +287,20 @@ public abstract class HttpHeaderKey<T> {
     public static @NotNull HttpHeaderKey<@NotNull String> X_FRAME_OPTIONS = new Provided.StringHeaderKey("X-Frame-Options", Target.RESPONSE);
     @ApiStatus.Experimental
     public static @NotNull HttpHeaderKey<@NotNull String> X_XSS_PROTECTION = new Provided.StringHeaderKey("X-XSS-Protection", Target.RESPONSE);
+
+    static {
+        for (@NotNull Field field : HttpHeaderKey.class.getDeclaredFields()) {
+            if (field.getType() == HttpHeaderKey.class) {
+                try {
+                    field.setAccessible(true);
+
+                    map.put(field.getName().toLowerCase(), (HttpHeaderKey<?>) field.get(null));
+                } catch (@NotNull IllegalAccessException ignore) {
+                    ignore.printStackTrace();
+                }
+            }
+        }
+    }
 
     // Object
 
@@ -756,11 +763,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
-                return create(Location.Parser.deserialize(value));
+                return create(Location.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
-                return Location.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class SaveDataHeaderKey extends HttpHeaderKey<@NotNull Boolean> {
@@ -812,11 +819,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
-                return create(Location.Parser.deserialize(value));
+                return create(Location.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
-                return Location.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class ProxyAuthorizationHeaderKey extends HttpHeaderKey<@NotNull Credentials> {
@@ -1164,11 +1171,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
-                return create(Location.Parser.deserialize(value));
+                return create(Location.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
-                return Location.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class LastModifiedHeaderKey extends HttpHeaderKey<@NotNull OffsetDateTime> {
@@ -1688,11 +1695,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<Location> read(@NotNull HttpVersion version, @NotNull String value) throws UnknownHostException, ParseException, URISyntaxException {
-                return create(Location.Parser.deserialize(value));
+                return create(Location.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Location> header) {
-                return Location.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class ContentEncodingHeaderKey extends HttpHeaderKey<@NotNull Deferred<Encoding> @NotNull []> {
@@ -1755,11 +1762,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<Connection> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
-                return create(Connection.Parser.deserialize(value));
+                return create(Connection.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<Connection> header) {
-                return Connection.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class ClearSiteDataHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull SiteData @NotNull []>> {
