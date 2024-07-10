@@ -82,7 +82,7 @@ public abstract class Host {
         public static boolean validate(@NotNull String string) {
             @NotNull String[] parts = string.split(":");
 
-            if (parts.length > 2) {
+            if (parts.length > 2 || parts.length == 0) {
                 return false;
             } else try {
                 if (parts.length == 2 && !Port.validate(parts[1])) {
@@ -236,7 +236,7 @@ public abstract class Host {
             } else {
                 @NotNull String[] parts = string.split(":");
 
-                if (parts.length > 2) {
+                if (parts.length > 2 || parts.length == 0) {
                     return false;
                 } else if (parts.length == 2 && !Port.validate(parts[1])) {
                     return false;
@@ -345,7 +345,7 @@ public abstract class Host {
 
             // Parse port
             @NotNull String[] parts = string.split("]");
-            if (parts.length > 2) {
+            if (parts.length > 2 || parts.length == 0) {
                 return false;
             } else if (parts.length == 2) {
                 if (!parts[1].startsWith(":")) {

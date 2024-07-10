@@ -48,7 +48,7 @@ public final class Domain<T extends Host> implements ContentSecurityPolicy.Sourc
         }
     }
 
-    public static <E extends Host> @NotNull Domain<E> create(@NotNull HttpProtocol protocol, @NotNull E host) {
+    public static <E extends Host> @NotNull Domain<E> create(@Nullable HttpProtocol protocol, @NotNull E host) {
         return new Domain<>(protocol, host);
     }
 

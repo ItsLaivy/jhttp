@@ -1,36 +1,95 @@
 package codes.laivy.jhttp.module;
 
+import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.module.content.ContentSecurityPolicy;
+import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.domain.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Location implements ContentSecurityPolicy.Source {
 
     // Static initializers
 
-    private static final @NotNull Pattern LOCATION_PATTERN = Pattern.compile("^(?<domain>(https?://)?(localhost|(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})(?::\\d+)?)?(/.*)??(?<path>/?\\S*)?$");
-
     public static boolean validate(@NotNull String string) {
-        return LOCATION_PATTERN.matcher(string).matches();
+        try {
+            if (!string.startsWith("/")) {
+                // Get the protocol
+                @Nullable HttpProtocol protocol;
+
+                if (string.toLowerCase().startsWith("https://") || string.toLowerCase().startsWith("http://")) {
+                    if (string.toLowerCase().startsWith("https://")) {
+                        protocol = HttpProtocol.HTTPS;
+                    } else if (string.toLowerCase().startsWith("http://")) {
+                        protocol = HttpProtocol.HTTP;
+                    } else {
+                        return false;
+                    }
+
+                    string = string.substring(protocol.getName().length());
+                }
+
+                // Get domain
+                @NotNull String[] parts = string.split("/", 2);
+                if (!Host.validate(parts[0])) return false;
+
+                // Finish with uri
+                string = "/" + (parts.length == 2 ? parts[1] : "");
+            }
+
+            // Parse uri
+            new URI(URLDecoder.decode(string, "UTF-8"));
+
+            // Finish successfully
+            return true;
+        } catch (@NotNull UnsupportedEncodingException | @NotNull URISyntaxException ignore) {
+        }
+
+        return false;
     }
     public static @NotNull Location parse(@NotNull String string) {
-        @NotNull Matcher matcher = LOCATION_PATTERN.matcher(string);
+        if (validate(string)) try {
+            @Nullable Domain<?> domain = null;
+            @NotNull URI uri;
 
-        if (matcher.matches()) {
-            @Nullable Domain<?> domain = matcher.group("domain") != null ? Domain.parse(matcher.group("domain")) : null;
-            @NotNull URI uri = matcher.group("path") != null ? URI.create(matcher.group("path")) : URI.create("");
+            if (string.startsWith("/")) { // It's a path
+                uri = URI.create(URLDecoder.decode(string, "UTF-8"));
+            } else { // Parse domain and path
+                @Nullable HttpProtocol protocol = null;
+
+                if (string.toLowerCase().startsWith("https://") || string.toLowerCase().startsWith("http://")) {
+                    if (string.toLowerCase().startsWith("https://")) {
+                        protocol = HttpProtocol.HTTPS;
+                    } else if (string.toLowerCase().startsWith("http://")) {
+                        protocol = HttpProtocol.HTTP;
+                    } else {
+                        throw new IllegalArgumentException("cannot retrieve protocol from location");
+                    }
+
+                    string = string.substring(protocol.getName().length());
+                }
+
+                // Get domain
+                @NotNull String[] parts = string.split("/", 2);
+
+                domain = Domain.parse(parts[0]);
+                uri = URI.create("/" + (parts.length == 2 ? URLDecoder.decode(parts[1], "UTF-8") : ""));
+            }
 
             return create(domain, uri);
+        } catch (@NotNull UnsupportedEncodingException e) {
+            throw new RuntimeException("cannot find UTF-8 charset on system", e);
         } else {
-            throw new IllegalArgumentException("cannot parse '" + string + "' into a valid origin");
+            throw new IllegalArgumentException("cannot parse '" + string + "' as a valid location");
         }
     }
+
     public static @NotNull Location create(@Nullable Domain<?> domain, @NotNull URI uri) {
         return new Location(domain, uri);
     }
@@ -57,11 +116,11 @@ public class Location implements ContentSecurityPolicy.Source {
     // Implementations
 
     @Override
-    public final boolean equals(@Nullable Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        @NotNull Location that = (Location) o;
-        return Objects.equals(getDomain(), that.getDomain()) && Objects.equals(getURI(), that.getURI());
+    public final boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Location)) return false;
+        @NotNull Location location = (Location) object;
+        return Objects.equals(getDomain(), location.getDomain()) && Objects.equals(getURI(), location.getURI());
     }
     @Override
     public final int hashCode() {

@@ -165,7 +165,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
             throw new HttpRequestParseException("the http 1.1 requests cannot have multiples 'Host' headers", new HeaderFormatException(HttpHeaderKey.HOST.getName()));
         }
 
-        time = System.currentTimeMillis();
         @NotNull Host host = headers.get(HttpHeaderKey.HOST)[0].getValue();
 
         // Request line
@@ -185,14 +184,12 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
         // Authority
         if (URIAuthority.validate(requestLine[1])) try {
-            time = System.currentTimeMillis();
             authority = URIAuthority.parse(requestLine[1]);
         } catch (@NotNull URISyntaxException e) {
             throw new HttpRequestParseException("cannot parse uri authority '" + requestLine[1] + "' from http request", e);
         }
 
         // Message
-        time = System.currentTimeMillis();
         @Nullable HttpBody body = getVersion().getBodyFactory().parse(headers, content[1]);
 
         // Finish
