@@ -77,13 +77,12 @@ public interface HttpRequest extends HttpElement {
 
     // Modules
 
-    /**
-     * Retrieves the authorization credentials specified in the headers, if present.
-     *
-     * @return the authorization credentials, or {@code null} if not found
-     */
     default @Nullable Credentials getAuthorization() {
         return getHeaders().first(HttpHeaderKey.AUTHORIZATION).map(HttpHeader::getValue).orElse(null);
+    }
+    default void setAuthorization(@Nullable Credentials value) {
+        if (value != null) getHeaders().put(HttpHeaderKey.AUTHORIZATION.create(value));
+        else getHeaders().remove(HttpHeaderKey.AUTHORIZATION);
     }
 
     /**

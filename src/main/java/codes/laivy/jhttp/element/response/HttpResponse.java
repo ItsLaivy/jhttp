@@ -1,6 +1,5 @@
 package codes.laivy.jhttp.element.response;
 
-import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
@@ -467,15 +466,6 @@ public interface HttpResponse extends HttpElement {
         else getHeaders().remove(HttpHeaderKey.ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
     }
 
-    default @Nullable Credentials getAuthorization() {
-        return getHeaders().first(HttpHeaderKey.AUTHORIZATION).map(HttpHeader::getValue).orElse(null);
-    }
-
-    default void setAuthorization(@Nullable Credentials value) {
-        if (value != null) getHeaders().put(HttpHeaderKey.AUTHORIZATION.create(value));
-        else getHeaders().remove(HttpHeaderKey.AUTHORIZATION);
-    }
-
     default @Nullable Wildcard<@NotNull SiteData @NotNull []> getClearSiteData() {
         return getHeaders().first(HttpHeaderKey.CLEAR_SITE_DATA).map(HttpHeader::getValue).orElse(null);
     }
@@ -688,12 +678,12 @@ public interface HttpResponse extends HttpElement {
     }
 
     @ApiStatus.Experimental
-    default @Nullable String getSetLogin() {
+    default @Nullable String getLogin() {
         return getHeaders().first(HttpHeaderKey.SET_LOGIN).map(HttpHeader::getValue).orElse(null);
     }
 
     @ApiStatus.Experimental
-    default void setSetLogin(@Nullable String value) {
+    default void setLogin(@Nullable String value) {
         if (value != null) getHeaders().put(HttpHeaderKey.SET_LOGIN.create(value));
         else getHeaders().remove(HttpHeaderKey.SET_LOGIN);
     }

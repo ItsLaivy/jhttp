@@ -3,6 +3,7 @@ package codes.laivy.jhttp.network;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import java.util.Objects;
 
@@ -10,7 +11,10 @@ public interface BitMeasure {
 
     // Static initializers
 
-    static @NotNull BitMeasure create(final long bits) {
+    static @NotNull BitMeasure create(
+            @Range(from = 0, to = Long.MAX_VALUE)
+            final long bits
+    ) {
         return new BitMeasure() {
             @Override
             @Contract(pure = true)

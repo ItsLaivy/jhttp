@@ -9,8 +9,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public interface UserAgent {
 
@@ -59,19 +57,46 @@ public interface UserAgent {
 
         // Static initializers
 
-        public static @NotNull Product parse(@NotNull String string) throws ParseException {
-            @NotNull Matcher matcher = Pattern.compile("^(?<name>[^/()]+)(?:/(?<version>[^ ()]+))? *(?<comments>\\(.*?\\))*").matcher(string);
-
-            if (matcher.find()) {
-                @NotNull String name = matcher.group("name").trim();
-                @Nullable String version = matcher.group("version") != null && !matcher.group("version").isEmpty() ? matcher.group("version") : null;
-                @NotNull String @NotNull [] comments = matcher.group("comments") != null ? Arrays.stream(matcher.group("comments").split("\\s+(?![^(]*\\))")).map(str -> str.substring(1, str.length() - 1).trim()).toArray(String[]::new) : new String[0];
-
-                // Finish
-                return new Product(name, version, comments);
-            } else {
-                throw new ParseException("cannot parse '" + string + "' as a valid user agent product", 0);
+        public static @NotNull Product parse(@NotNull String string) {
+            if (string.length() > 1024) {
+                throw new IllegalArgumentException("product too long!");
+            } else if (string.isEmpty()) {
+                throw new IllegalArgumentException("empty product");
             }
+
+            // Split parts
+            @NotNull String[] parts = string.split("\\(", 2);
+
+            // Name and version
+            @NotNull String[] nameAndVersion = parts[0].trim().split("/");
+
+            if (nameAndVersion.length > 2) {
+                throw new IllegalArgumentException("illegal product name and version '" + parts[0] + "'");
+            }
+
+            @NotNull String name = nameAndVersion[0];
+            @Nullable String version = nameAndVersion.length == 2 ? nameAndVersion[1] : null;
+
+            // Comments
+            @NotNull String[] comments = new String[0];
+
+            if (parts.length == 2) {
+                parts = ("(" + parts[1]).split("\\s+(?![^()]*\\))");
+                comments = new String[parts.length];
+
+                for (int index = 0; index < parts.length; index++) {
+                    @NotNull String comment = parts[index];
+
+                    if (!comment.startsWith("(") || !comment.endsWith(")")) {
+                        throw new IllegalArgumentException("cannot parse product comment '" + comment + "'");
+                    }
+
+                    comments[index] = comment.substring(1, comment.length() - 1);
+                }
+            }
+
+            // Finish
+            return new Product(name, version, comments);
         }
 
         public static @NotNull Product create(

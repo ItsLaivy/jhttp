@@ -74,7 +74,16 @@ public interface HttpHeaderFactory {
             // todo: Notify headers with a big parsing time
 
             @NotNull String value = split[1].trim();
-            return key.read(getVersion(), value);
+
+            long time = System.currentTimeMillis();
+            @NotNull HttpHeader<?> read = key.read(getVersion(), value);
+            long lock = System.currentTimeMillis();
+
+            if (lock - time > 5) {
+                System.out.println("Header '" + split[0] + "' took " + (lock - time) + "ms to read with value '" + value + "'");
+            }
+
+            return read;
         } catch (@NotNull Throwable throwable) {
             throw new HeaderFormatException("cannot read header: '" + print + "'", throwable);
         }
