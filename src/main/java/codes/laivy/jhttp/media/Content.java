@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.media;
 
 import codes.laivy.jhttp.body.HttpBody;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Flushable;
@@ -13,7 +14,7 @@ import java.io.InputStream;
  * <p>
  * When this class undergoes a {@link Flushable#flush()}, the new data of this class is written to the
  * {@link HttpBody#getInputStream()}. When a content is created, the data from {@link #getData()} is deserialized by
- * {@link MediaParser#deserialize(InputStream, MediaType.Parameter...)} and is already loaded into memory.
+ * {@link MediaParser#deserialize(HttpVersion, InputStream, MediaType.Parameter...)} and is already loaded into memory.
  * </p>
  *
  * @param <T> the type of the content data

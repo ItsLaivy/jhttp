@@ -50,7 +50,7 @@ final class HttpBodyFactory1_0 implements HttpBodyFactory {
 
         if (headers.contains(CONTENT_LENGTH)) {
             int length = (int) headers.get(CONTENT_LENGTH)[0].getValue().getBytes();
-            content = content.substring(0, (int) length);
+            content = content.substring(0, Math.min(content.length(), length));
         }
 
         // Message Encoding
