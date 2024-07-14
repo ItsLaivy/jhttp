@@ -4,6 +4,7 @@ import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.network.BitMeasure;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,25 +23,32 @@ import java.util.Objects;
  */
 public class HttpSimpleBody implements HttpBody {
 
+    private final @NotNull HttpVersion version;
+
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     protected byte @NotNull [] bytes;
 
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided byte array.
      *
+     * @param version the http version used at this body
      * @param bytes the byte array containing the HTTP body data.
      */
-    public HttpSimpleBody(byte @NotNull [] bytes) {
+    public HttpSimpleBody(@NotNull HttpVersion version, byte @NotNull [] bytes) {
+        this.version = version;
         this.bytes = bytes;
     }
 
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided input stream.
      *
+     * @param version the http version used at this body
      * @param stream the input stream containing the HTTP body data.
      * @throws IOException if an I/O exception occurs.
      */
-    public HttpSimpleBody(@NotNull InputStream stream) throws IOException {
+    public HttpSimpleBody(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
+        this.version = version;
+
         try (@NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             @NotNull BitMeasure size = BitMeasure.create(BitMeasure.Level.KILOBYTES, 2D);
             byte[] bytes = new byte[(int) size.getBytes()];
@@ -83,13 +91,23 @@ public class HttpSimpleBody implements HttpBody {
             //noinspection unchecked
             content = (Content<T>) contentMap.get(mediaType);
         } else {
-            @NotNull T data = mediaType.getParser().deserialize(getInputStream(), mediaType.getParameters());
+            @NotNull T data = mediaType.getParser().deserialize(getVersion(), getInputStream(), mediaType.getParameters());
             content = new SimpleContent<>(mediaType, data);
 
             contentMap.put(mediaType, content);
         }
 
         return content;
+    }
+
+    /**
+     * The version instance used to create this http body. The body is important to serialize/deserialize contents
+     *
+     * @return the http version
+     */
+    @Override
+    public @NotNull HttpVersion getVersion() {
+        return version;
     }
 
     /**
@@ -200,7 +218,7 @@ public class HttpSimpleBody implements HttpBody {
         @Override
         public void flush() throws IOException {
             try (
-                    @NotNull InputStream stream = getMediaType().getParser().serialize(getData(), getMediaType().getParameters());
+                    @NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters());
                     @NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()
             ) {
                 @NotNull BitMeasure size = BitMeasure.create(BitMeasure.Level.KILOBYTES, 2D);
@@ -213,6 +231,8 @@ public class HttpSimpleBody implements HttpBody {
                 }
 
                 HttpSimpleBody.this.bytes = output.toByteArray();
+            } catch (@NotNull MediaParserException e) {
+                throw new RuntimeException("cannot flush http simple body", e);
             }
         }
     }

@@ -4,6 +4,7 @@ import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.network.BitMeasure;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +36,8 @@ public class HttpBigBody implements HttpBody, Closeable {
 
     // Object
 
+    private final @NotNull HttpVersion version;
+
     protected final @NotNull Object lock = new Object();
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     private final @NotNull File file;
@@ -43,12 +46,15 @@ public class HttpBigBody implements HttpBody, Closeable {
      * Constructs an instance of {@link HttpBigBody} with the provided {@link Byte} array.
      * A temporary file is created and data from the byte array is saved into it.
      *
+     * @param version the http version used at this body
      * @param bytes the bytes containing the HTTP body data
      * @throws IOException if an I/O error occurs
      */
-    public HttpBigBody(byte @NotNull [] bytes) throws IOException {
-        file = File.createTempFile("jhttp-", "-big_body");
-        file.deleteOnExit();
+    public HttpBigBody(@NotNull HttpVersion version, byte @NotNull [] bytes) throws IOException {
+        this.version = version;
+
+        this.file = File.createTempFile("jhttp-", "-big_body");
+        this.file.deleteOnExit();
 
         update(new ByteArrayInputStream(bytes));
     }
@@ -57,12 +63,15 @@ public class HttpBigBody implements HttpBody, Closeable {
      * Constructs an instance of {@link HttpBigBody} with the provided {@link InputStream}.
      * A temporary file is created and data from the stream is saved into it.
      *
+     * @param version the http version used at this body
      * @param stream the input stream containing the HTTP body data
      * @throws IOException if an I/O error occurs
      */
-    public HttpBigBody(@NotNull InputStream stream) throws IOException {
-        file = File.createTempFile("jhttp-", "-big_body");
-        file.deleteOnExit();
+    public HttpBigBody(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
+        this.version = version;
+
+        this.file = File.createTempFile("jhttp-", "-big_body");
+        this.file.deleteOnExit();
 
         update(stream);
     }
@@ -76,6 +85,16 @@ public class HttpBigBody implements HttpBody, Closeable {
      */
     public final @NotNull File getFile() {
         return file;
+    }
+
+    /**
+     * The version instance used to create this http body. The body is important to serialize/deserialize contents
+     *
+     * @return the http version
+     */
+    @Override
+    public @NotNull HttpVersion getVersion() {
+        return version;
     }
 
     /**
@@ -115,7 +134,7 @@ public class HttpBigBody implements HttpBody, Closeable {
             content = (Content<T>) contentMap.get(mediaType);
         } else {
             synchronized (lock) {
-                @NotNull T data = mediaType.getParser().deserialize(getInputStream(), mediaType.getParameters());
+                @NotNull T data = mediaType.getParser().deserialize(getVersion(), getInputStream(), mediaType.getParameters());
                 content = new BigContent<>(mediaType, data);
             }
 
@@ -249,8 +268,10 @@ public class HttpBigBody implements HttpBody, Closeable {
         @Override
         public void flush() throws IOException {
             synchronized (lock) {
-                try (@NotNull InputStream stream = getMediaType().getParser().serialize(getData(), getMediaType().getParameters())) {
+                try (@NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters())) {
                     update(stream);
+                } catch (@NotNull MediaParserException e) {
+                    throw new RuntimeException("cannot flush http big body", e);
                 }
             }
         }

@@ -3,6 +3,7 @@ package codes.laivy.jhttp.body;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -28,35 +29,35 @@ public interface HttpBody {
 
     static @NotNull HttpBody empty() {
         try {
-            return create(new byte[0]);
+            return create(HttpVersion.HTTP1_1(), new byte[0]);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    static @NotNull HttpBody create(byte @NotNull [] bytes) throws IOException {
+    static @NotNull HttpBody create(@NotNull HttpVersion version, byte @NotNull [] bytes) throws IOException {
         if (bytes.length >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-            return new HttpBigBody(bytes);
+            return new HttpBigBody(version, bytes);
         } else {
-            return new HttpSimpleBody(bytes);
+            return new HttpSimpleBody(version, bytes);
         }
     }
-    static @NotNull HttpBody create(@NotNull InputStream stream) throws IOException {
+    static @NotNull HttpBody create(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
         if (stream.available() >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-            return new HttpBigBody(stream);
+            return new HttpBigBody(version, stream);
         } else {
-            return new HttpSimpleBody(stream);
+            return new HttpSimpleBody(version, stream);
         }
     }
-    static <T> @NotNull Content<T> create(@NotNull MediaType<T> mediaType, @NotNull T data) {
-        try (@NotNull InputStream stream = mediaType.getParser().serialize(data, mediaType.getParameters())) {
+    static <T> @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+        try (@NotNull InputStream stream = mediaType.getParser().serialize(version, data, mediaType.getParameters())) {
             int available = stream.available();
 
             @NotNull HttpBody body;
             if (available >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-                body = new HttpBigBody(stream);
+                body = new HttpBigBody(version, stream);
             } else {
-                body = new HttpSimpleBody(stream);
+                body = new HttpSimpleBody(version, stream);
             }
 
             return body.getContent(mediaType);
@@ -78,6 +79,13 @@ public interface HttpBody {
      * @throws IOException if an exception occurs, trying to read content
      */
     <T> @NotNull Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
+
+    /**
+     * The version instance used to create this http body. The body is important to serialize/deserialize contents
+     *
+     * @return the http version
+     */
+    @NotNull HttpVersion getVersion();
 
     /**
      * Provides an {@link InputStream} for reading the raw content of the HTTP body.
