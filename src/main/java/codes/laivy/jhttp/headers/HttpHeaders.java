@@ -1,7 +1,10 @@
 package codes.laivy.jhttp.headers;
 
+import codes.laivy.jhttp.element.Target;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +12,57 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface HttpHeaders extends Iterable<HttpHeader<?>>, Cloneable {
+
+    // Static initializers
+
+    static @NotNull HttpHeaders create(@NotNull HttpVersion version, @NotNull HttpHeader<?> @NotNull ... headers) {
+        return create(version, Target.BOTH, headers);
+    }
+    static @NotNull HttpHeaders create(@NotNull HttpVersion version, @NotNull Target target, @NotNull HttpHeader<?> @NotNull ... headers) {
+        @NotNull HttpHeaders a = version.getHeaderFactory().createMutable(target);
+
+        for (@NotNull HttpHeader<?> header : headers) {
+            a.add(header);
+        }
+
+        return a;
+    }
+    static @NotNull HttpHeaders empty() {
+        return new HttpHeaders() {
+            @Override
+            public boolean put(@NotNull HttpHeader<?> header) {
+                throw new UnsupportedOperationException("you cannot put headers into a empty http header");
+            }
+            @Override
+            public boolean add(@NotNull HttpHeader<?> header) {
+                throw new UnsupportedOperationException("you cannot add headers into a empty http header");
+            }
+            @Override
+            public boolean remove(@NotNull String name) {
+                throw new UnsupportedOperationException("you cannot remove headers into a empty http header");
+            }
+
+            @Override
+            public @NotNull Stream<HttpHeader<?>> stream() {
+                return Stream.empty();
+            }
+
+            @Override
+            public void clear() {
+            }
+
+            @Override
+            @SuppressWarnings("MethodDoesntCallSuperMethod")
+            public @NotNull HttpHeaders clone() {
+                return HttpHeaders.empty();
+            }
+
+            @Override
+            public @NotNull Iterator<HttpHeader<?>> iterator() {
+                return stream().iterator();
+            }
+        };
+    }
 
     // Object
 
