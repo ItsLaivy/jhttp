@@ -3,6 +3,7 @@ package codes.laivy.jhttp.protocol.v1_1;
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.element.FormData;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
@@ -11,12 +12,17 @@ import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.encoding.Encoding;
 import codes.laivy.jhttp.exception.MissingHeaderException;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
+import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
 import codes.laivy.jhttp.exception.parser.element.HttpRequestParseException;
 import codes.laivy.jhttp.headers.HttpHeader;
 import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;
+import codes.laivy.jhttp.media.Content;
+import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
+import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
@@ -36,6 +42,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
@@ -286,6 +293,29 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
         public @NotNull URI getUri() {
             return uri;
         }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public @NotNull FormData @Nullable [] getFormData() {
+            @NotNull Optional<MediaType<?>> optional = getHeaders().first(HttpHeaderKey.CONTENT_TYPE).map(HttpHeader::getValue);
+
+            if (!optional.isPresent()) {
+                return null;
+            } else try {
+                @Nullable MediaType<?> media = optional.get();
+
+                if (!media.getType().equals(FormUrlEncodedMediaType.TYPE) && !media.getType().equals(MultipartFormDataMediaType.TYPE)) {
+                    return null;
+                }
+
+                // Finish
+                @NotNull Content<FormData[]> content = getBody().getContent(((MediaType<FormData[]>) media));
+                return content.getData();
+            } catch (@NotNull MediaParserException | @NotNull IOException e) {
+                throw new IllegalArgumentException("cannot parse form data content from body", e);
+            }
+        }
+
         @Override
         public @NotNull HttpVersion getVersion() {
             return version;

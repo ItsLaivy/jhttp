@@ -49,6 +49,7 @@ public interface MediaParser<T> {
      * @return the string representation of the serialized content
      *
      * @throws IOException if an I/O exception occurs, trying to serialize
+     * @throws MediaParserException if there's an issue parsing the serialize
      */
     @NotNull InputStream serialize(@NotNull HttpVersion version, @NotNull T content, @NotNull Parameter @NotNull ... parameters) throws IOException, MediaParserException;
 

@@ -11,6 +11,16 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * Represents a form data entity that can be used in HTTP requests. This interface provides methods to retrieve
+ * the key, body, headers, and content disposition associated with a form data item.
+ * <p>
+ * Form data items can be used in different content types such as "application/x-www-form-urlencoded" and "multipart/form-data".
+ * The availability of certain properties (like headers and content disposition) depends on the content type.
+ *
+ * @author Daniel Richard (Laivy)
+ * @version 1.0-SNAPSHOT
+ */
 public interface FormData {
 
     // Static initializers
@@ -21,7 +31,7 @@ public interface FormData {
             // Object
 
             @Override
-            public @NotNull String getKey() {
+            public @NotNull String getName() {
                 return key;
             }
             @Override
@@ -41,11 +51,11 @@ public interface FormData {
                 if (this == object) return true;
                 if (object == null || getClass() != object.getClass()) return false;
                 @NotNull FormData that = (FormData) object;
-                return Objects.equals(getKey(), that.getKey()) && Objects.equals(getBody(), that.getBody()) && Arrays.equals(getHeaders(), that.getHeaders());
+                return Objects.equals(getName(), that.getName()) && Objects.equals(getBody(), that.getBody()) && Arrays.equals(getHeaders(), that.getHeaders());
             }
             @Override
             public int hashCode() {
-                return Objects.hash(getKey(), getBody(), Arrays.hashCode(getHeaders()));
+                return Objects.hash(getName(), getBody(), Arrays.hashCode(getHeaders()));
             }
 
         };
@@ -53,26 +63,47 @@ public interface FormData {
 
     // Object
 
-    @NotNull String getKey();
+    /**
+     * Retrieves the name associated with this form data item.
+     * The name is a non-null value that identifies the form field.
+     *
+     * @return the name associated with this form data item, never null.
+     */
+    @NotNull String getName();
 
     /**
-     * O valor as vezes pode ser nulo pois nem sempre uma key possui um valor no "application/x-www-form-urlencoded"
-     * @return
+     * Retrieves the body of the form data item.
+     * The body can sometimes be null because not all keys have associated values
+     * in "application/x-www-form-urlencoded" content type.
+     *
+     * @return the body associated with this form data item, or null if no body is present.
      */
     @Nullable HttpBody getBody();
 
     /**
-     * Os headers só são disponíveis em form datas de `multipart/form-data`, pois os formdatas de `application/x-www-form-urlencoded`
-     * @return
+     * Retrieves the headers associated with this form data item.
+     * Headers are only available in "multipart/form-data" content type,
+     * as form data items in "application/x-www-form-urlencoded" do not include headers.
+     *
+     * @return an array of headers associated with this form data item, never null but can be empty.
      */
     @NotNull HttpHeader<?> @NotNull [] getHeaders();
 
     /**
-     * Também só disponível em `multipart/form-data`, caso contrário será nulo
-     * @return
+     * Retrieves the content disposition of the form data item.
+     * The content disposition is only available in "multipart/form-data" content type.
+     * For other content types, this will return null.
+     * <p>
+     * This method provides a default implementation that extracts the content disposition
+     * from the headers if it is present.
+     *
+     * @return the content disposition of the form data item, or null if not available.
      */
     default @UnknownNullability ContentDisposition getDisposition() {
-        return (ContentDisposition) Arrays.stream(getHeaders()).filter(header -> header.getKey().equals(HttpHeaderKey.CONTENT_DISPOSITION)).findFirst().map(HttpHeader::getValue).orElse(null);
+        return (ContentDisposition) Arrays.stream(getHeaders())
+                .filter(header -> header.getKey().equals(HttpHeaderKey.CONTENT_DISPOSITION))
+                .findFirst()
+                .map(HttpHeader::getValue)
+                .orElse(null);
     }
-
 }

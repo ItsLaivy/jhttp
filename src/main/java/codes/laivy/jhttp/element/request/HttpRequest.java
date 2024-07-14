@@ -4,6 +4,7 @@ import codes.laivy.jhttp.authorization.Credentials;
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
 import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.element.FormData;
 import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
@@ -160,6 +161,39 @@ public interface HttpRequest extends HttpElement {
      */
     default @Nullable Location getReferrer() {
         return getHeaders().first(HttpHeaderKey.REFERER).map(HttpHeader::getValue).orElse(null);
+    }
+
+    // Post Data
+
+    /**
+     * Retrieves the form data associated with the request.
+     * <p>
+     * The form data is represented as an array of {@link FormData} objects.
+     *
+     * @return an array of {@link FormData} objects associated with the POST request, or null if there's no form data available
+     */
+    @NotNull FormData @Nullable [] getFormData();
+
+    /**
+     * Retrieves a specific form data item by its name from the POST request as example.
+     * This method provides a convenient way to find a form data item with the specified name.
+     * <p>
+     * If the specified name is not found, an empty {@link Optional} is returned.
+     *
+     * @param name the name of the form data item to retrieve, must not be null.
+     * @return an {@link Optional} containing the {@link FormData} item with the specified name, or an empty {@link Optional} if not found.
+     * @throws IllegalStateException if the request is not a POST request.
+     */
+    default @NotNull Optional<FormData> getFormData(@NotNull String name) {
+        @NotNull FormData @Nullable [] data = getFormData();
+
+        if (data != null) {
+            return Arrays.stream(data)
+                    .filter(post -> post.getName().equalsIgnoreCase(name))
+                    .findFirst();
+        } else {
+            throw new IllegalStateException("there's no form data into the request available to read");
+        }
     }
 
     // Query and Path

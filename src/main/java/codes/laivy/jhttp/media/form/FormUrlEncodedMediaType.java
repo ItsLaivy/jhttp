@@ -73,7 +73,7 @@ public final class FormUrlEncodedMediaType extends MediaType<@NotNull FormData @
 
             for (@NotNull FormData data : content) {
                 if (builder.length() > 0) builder.append("&");
-                builder.append(URLEncoder.encode(data.getKey(), "UTF-8").replace("%20", "+"));
+                builder.append(URLEncoder.encode(data.getName(), "UTF-8").replace("%20", "+"));
 
                 if (data.getBody() != null) try {
                     builder.append("=");
