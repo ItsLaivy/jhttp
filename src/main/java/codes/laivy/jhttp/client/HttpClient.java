@@ -7,7 +7,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 

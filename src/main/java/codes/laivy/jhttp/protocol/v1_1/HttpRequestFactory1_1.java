@@ -142,10 +142,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
     }
 
     public @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException, HttpBodyParseException {
-        if (!string.contains(CRLF + CRLF)) {
-            throw new HttpRequestParseException("http request missing conclusion (headers to body transition CRLFs)");
-        }
-
         // Content
         @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
 
@@ -219,10 +215,6 @@ final class HttpRequestFactory1_1 implements HttpRequestFactory {
 
     @Override
     public boolean validate(@NotNull String string) {
-        if (!string.contains(CRLF + CRLF)) {
-            return false;
-        }
-
         try {
             @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
 

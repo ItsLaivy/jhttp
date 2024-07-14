@@ -322,6 +322,7 @@ public class MediaType<T> {
          */
         @SuppressWarnings({"rawtypes", "unchecked"})
         public static @NotNull MediaType<?> deserialize(@NotNull String string) throws ParseException {
+            // todo: improve this (low performance)
             @NotNull Pattern pattern = Pattern.compile("([\\w-]+\\s*=\\s*[^;]+)|(^[^;]+)");
             @NotNull Matcher matcher = pattern.matcher(string);
 

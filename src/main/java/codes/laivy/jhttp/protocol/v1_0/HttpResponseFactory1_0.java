@@ -81,10 +81,6 @@ final class HttpResponseFactory1_0 implements HttpResponseFactory {
     }
 
     public @NotNull HttpResponse parse(@NotNull String string) throws HttpResponseParseException, HttpBodyParseException {
-        if (!string.contains(CRLF + CRLF)) {
-            throw new HttpResponseParseException("http request missing conclusion (headers to body transition CRLFs)");
-        }
-
         // Content
         @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
         @NotNull String[] line = content[0].split(CRLF, 2)[0].split(" ", 3);
@@ -131,10 +127,6 @@ final class HttpResponseFactory1_0 implements HttpResponseFactory {
 
     @Override
     public boolean validate(@NotNull String string) {
-        if (!string.contains(CRLF + CRLF)) {
-            return false;
-        }
-
         try {
             @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
 

@@ -2459,7 +2459,6 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<MediaType<?>[]> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
-                @NotNull Matcher matcher = Pattern.compile("\\s*,\\s*").matcher(value);
                 @NotNull List<MediaType<?>> types = new LinkedList<>();
 
                 for (@NotNull String name : value.split("\\s*,\\s*")) {
