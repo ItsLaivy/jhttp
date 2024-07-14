@@ -4,6 +4,7 @@ import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class JsonMediaType extends MediaType<JsonElement> {
 
@@ -25,7 +27,10 @@ public class JsonMediaType extends MediaType<JsonElement> {
 
     public static @NotNull MediaType<JsonElement> getInstance() {
         //noinspection unchecked
-        return (MediaType<JsonElement>) MediaType.retrieve(TYPE).orElseThrow(() -> new NullPointerException("there's no media type '" + TYPE + "' registered on media type collections"));
+        @Nullable MediaType<JsonElement> media = (MediaType<JsonElement>) MediaType.retrieve(TYPE).orElse(null);
+        if (media == null) media = new JsonMediaType();
+
+        return media;
     }
 
     // Object
@@ -39,7 +44,7 @@ public class JsonMediaType extends MediaType<JsonElement> {
     private static final class Parser implements MediaParser<JsonElement> {
 
         @Override
-        public @NotNull JsonElement deserialize(@NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
+        public @NotNull JsonElement deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
             @Nullable Parameter parameter = Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase("charset")).findFirst().orElse(null);
             @Nullable Charset charset = parameter != null ? Deferred.charset(parameter.getValue()).orElse(null) : null;
 
@@ -50,7 +55,7 @@ public class JsonMediaType extends MediaType<JsonElement> {
             }
         }
         @Override
-        public @NotNull InputStream serialize(@NotNull JsonElement content, @NotNull Parameter @NotNull ... parameters) {
+        public @NotNull InputStream serialize(@NotNull HttpVersion version, @NotNull JsonElement content, @NotNull Parameter @NotNull ... parameters) {
             @Nullable Parameter parameter = Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase("charset")).findFirst().orElse(null);
             @Nullable Charset charset = parameter != null ? Deferred.charset(parameter.getValue()).orElse(null) : null;
 

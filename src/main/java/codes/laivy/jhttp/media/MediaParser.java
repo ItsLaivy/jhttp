@@ -3,6 +3,7 @@ package codes.laivy.jhttp.media;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaType.Parameter;
 import codes.laivy.jhttp.media.text.TextMediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public interface MediaParser<T> {
     /**
      * Deserializes a given string into a {@link Content} object based on the specified {@link MediaType}.
      *
+     * @param version the version to deserialize
      * @param stream the string representation of the content to be deserialized
      * @param parameters the MIME type parameters of this stream
      * @return the deserialized content object
@@ -36,17 +38,18 @@ public interface MediaParser<T> {
      * @throws IOException if an I/O error occurs during deserialization
      * @throws MediaParserException if an error occurs during deserialization
      */
-    @NotNull T deserialize(@NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException;
+    @NotNull T deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException;
 
     /**
      * Serializes a given {@link Content} object into its string representation.
      *
+     * @param version the version to serialize
      * @param content the content object to be serialized
      * @param parameters the MIME type parameters of this stream
      * @return the string representation of the serialized content
      *
      * @throws IOException if an I/O exception occurs, trying to serialize
      */
-    @NotNull InputStream serialize(@NotNull T content, @NotNull Parameter @NotNull ... parameters) throws IOException;
+    @NotNull InputStream serialize(@NotNull HttpVersion version, @NotNull T content, @NotNull Parameter @NotNull ... parameters) throws IOException, MediaParserException;
 
 }

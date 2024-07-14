@@ -3,7 +3,9 @@ package codes.laivy.jhttp.media.jar;
 import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,15 +17,18 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-public class JarMediaType extends MediaType<JarFile> {
+public class JarMediaType extends MediaType<@NotNull JarFile> {
 
     // Static initializers
 
     public static final @NotNull Type TYPE = new Type("application", "java-archive");
 
-    public static @NotNull MediaType<JarFile> getInstance() {
+    public static @NotNull MediaType<@NotNull JarFile> getInstance() {
         //noinspection unchecked
-        return (MediaType<JarFile>) MediaType.retrieve(TYPE).orElseThrow(() -> new NullPointerException("there's no media type '" + TYPE + "' registered on media type collections"));
+        @Nullable MediaType<JarFile> media = (MediaType<JarFile>) MediaType.retrieve(TYPE).orElse(null);
+        if (media == null) media = new JarMediaType();
+
+        return media;
     }
 
     // Object
@@ -37,7 +42,7 @@ public class JarMediaType extends MediaType<JarFile> {
     private static final class Parser implements MediaParser<JarFile> {
 
         @Override
-        public @NotNull JarFile deserialize(@NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
+        public @NotNull JarFile deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
             @NotNull File file = File.createTempFile("jhttp-", "-jar_media_type");
             file.deleteOnExit();
 
@@ -55,7 +60,7 @@ public class JarMediaType extends MediaType<JarFile> {
             return new JarFile(file, true);
         }
         @Override
-        public @NotNull InputStream serialize(@NotNull JarFile jar, @NotNull Parameter @NotNull ... parameters) throws IOException {
+        public @NotNull InputStream serialize(@NotNull HttpVersion version, @NotNull JarFile jar, @NotNull Parameter @NotNull ... parameters) throws IOException {
             @NotNull File file = File.createTempFile("jhttp-", "-jar_media_type");
             file.deleteOnExit();
 

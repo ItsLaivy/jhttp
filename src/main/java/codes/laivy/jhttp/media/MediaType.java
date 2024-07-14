@@ -2,14 +2,21 @@ package codes.laivy.jhttp.media;
 
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.element.FormData;
+import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
+import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
 import codes.laivy.jhttp.media.jar.JarMediaType;
 import codes.laivy.jhttp.media.json.JsonMediaType;
 import codes.laivy.jhttp.media.text.TextMediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.*;
@@ -33,11 +40,32 @@ public class MediaType<T> {
 
     // Static initializers
 
-    public static @NotNull MediaType<JsonElement> APPLICATION_JSON() { return JsonMediaType.getInstance(); }
-    public static @NotNull MediaType<JarFile> APPLICATION_JAR() { return JarMediaType.getInstance(); }
-    public static @NotNull MediaType<String> TEXT_PLAIN() { return TextMediaType.getInstance(); }
+    public static @NotNull MediaType<@NotNull JsonElement> APPLICATION_JSON() { return JsonMediaType.getInstance(); }
+    public static @NotNull MediaType<@NotNull JarFile> APPLICATION_JAR() { return JarMediaType.getInstance(); }
+    public static @NotNull MediaType<@NotNull String> TEXT_PLAIN() { return TextMediaType.getInstance(); }
+    public static @NotNull MediaType<@NotNull FormData @NotNull []> X_WWW_FORM_URLENCODED() { return FormUrlEncodedMediaType.getInstance(); }
+    public static @NotNull MediaType<@NotNull FormData @NotNull []> MULTIPART_FORMDATA() { return MultipartFormDataMediaType.getInstance(); }
 
     // Media type content
+
+    private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
+
+    static {
+        // Load all default media types
+        for (@NotNull Method method : MediaType.class.getDeclaredMethods()) {
+            try {
+                method.setAccessible(true);
+
+                if (Modifier.isStatic(method.getModifiers()) && Modifier.isPublic(method.getModifiers()) && method.getParameterCount() == 0 && method.getReturnType() == MediaType.class) {
+                    @NotNull MediaType<?> media = (MediaType<?>) method.invoke(null);
+                    collection.add(media);
+                }
+            } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
+                e.printStackTrace();
+                throw new RuntimeException("cannot load media type with method #" + method.getName(), e);
+            }
+        }
+    }
 
     /**
      * Retrieves all the available media types.
@@ -46,7 +74,7 @@ public class MediaType<T> {
      * @author Daniel Richard (Laivy)
      */
     public static @NotNull Collection<MediaType<?>> retrieve() {
-        return Collections.unmodifiableSet(Provided.collection);
+        return Collections.unmodifiableSet(collection);
     }
 
     /**
@@ -68,12 +96,12 @@ public class MediaType<T> {
      * @author Daniel Richard (Laivy)
      */
     public static boolean add(@NotNull MediaType<?> type) {
-        // Check if there's an media type with that name already defined
-        if (Provided.collection.stream().anyMatch(media -> media.getType().equals(type.getType()))) {
+        // Check if there's a media type with that name already defined
+        if (collection.stream().anyMatch(media -> media.getType().equals(type.getType()))) {
             return false;
         }
 
-        return Provided.collection.add(type);
+        return collection.add(type);
     }
 
     /**
@@ -84,7 +112,7 @@ public class MediaType<T> {
      * @author Daniel Richard (Laivy)
      */
     public static boolean remove(@NotNull MediaType<?> media) {
-        return Provided.collection.remove(media);
+        return collection.remove(media);
     }
 
     /**
@@ -227,8 +255,8 @@ public class MediaType<T> {
         }
     }
 
-    public @NotNull Content<T> create(@NotNull T object) {
-        return HttpBody.create(this, object);
+    public @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull T object) {
+        return HttpBody.create(version, this, object);
     }
 
     // Implementations
@@ -251,22 +279,6 @@ public class MediaType<T> {
     }
 
     // Classes
-
-    /**
-     * Class to register the provided media types
-     *
-     * @author Daniel Richard (Laivy)
-     * @since 1.0-SNAPSHOT
-     */
-    public static final class Provided {
-        private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
-
-        static {
-            add(new TextMediaType());
-            add(new JsonMediaType());
-            add(new JarMediaType());
-        }
-    }
 
     /**
      * Utility class for parsing and serializing media types.

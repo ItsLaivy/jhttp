@@ -3,6 +3,7 @@ package codes.laivy.jhttp.media.text;
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.media.MediaParser;
 import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,9 +20,12 @@ public class TextMediaType extends MediaType<String> {
 
     public static final @NotNull Type TYPE = new Type("text", "plain");
 
-    public static @NotNull MediaType<String> getInstance() {
+    public static @NotNull MediaType<@NotNull String> getInstance() {
         //noinspection unchecked
-        return (MediaType<String>) MediaType.retrieve(TYPE).orElseThrow(() -> new NullPointerException("there's no media type '" + TYPE + "' registered on media type collections"));
+        @Nullable MediaType<String> media = (MediaType<String>) MediaType.retrieve(TYPE).orElse(null);
+        if (media == null) media = new TextMediaType();
+
+        return media;
     }
 
     // Object
@@ -35,7 +39,7 @@ public class TextMediaType extends MediaType<String> {
     private static final class Parser implements MediaParser<String> {
 
         @Override
-        public @NotNull String deserialize(@NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws IOException {
+        public @NotNull String deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws IOException {
             @Nullable Parameter parameter = Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase("charset")).findFirst().orElse(null);
             @Nullable Charset charset = parameter != null ? Deferred.charset(parameter.getValue()).orElse(null) : null;
 
@@ -48,7 +52,7 @@ public class TextMediaType extends MediaType<String> {
             return builder.toString();
         }
         @Override
-        public @NotNull InputStream serialize(@NotNull String content, @NotNull Parameter @NotNull ... parameters) {
+        public @NotNull InputStream serialize(@NotNull HttpVersion version, @NotNull String content, @NotNull Parameter @NotNull ... parameters) {
             @Nullable Parameter parameter = Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase("charset")).findFirst().orElse(null);
             @Nullable Charset charset = parameter != null ? Deferred.charset(parameter.getValue()).orElse(null) : null;
 
