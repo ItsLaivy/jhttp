@@ -80,7 +80,8 @@ public interface HttpHeaderFactory {
             long lock = System.currentTimeMillis();
 
             if (lock - time > 5) {
-                System.out.println("Header '" + split[0] + "' took " + (lock - time) + "ms to read with value '" + value + "'");
+                // todo: log
+//                System.out.println("Header '" + split[0] + "' took " + (lock - time) + "ms to read with value '" + value + "'");
             }
 
             return read;

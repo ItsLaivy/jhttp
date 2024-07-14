@@ -9,7 +9,12 @@ import codes.laivy.jhttp.element.HttpElement;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.headers.*;
+import codes.laivy.jhttp.media.Content;
+import codes.laivy.jhttp.media.MediaType;
+import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
+import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
 import codes.laivy.jhttp.module.Forwarded;
 import codes.laivy.jhttp.module.Location;
 import codes.laivy.jhttp.module.UserAgent;
@@ -20,6 +25,7 @@ import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.*;
@@ -172,7 +178,26 @@ public interface HttpRequest extends HttpElement {
      *
      * @return an array of {@link FormData} objects associated with the POST request, or null if there's no form data available
      */
-    @NotNull FormData @Nullable [] getFormData();
+    @SuppressWarnings("unchecked")
+    default @NotNull FormData @Nullable [] getFormData() {
+        @NotNull Optional<MediaType<?>> optional = getHeaders().first(HttpHeaderKey.CONTENT_TYPE).map(HttpHeader::getValue);
+
+        if (!optional.isPresent()) {
+            return null;
+        } else try {
+            @Nullable MediaType<?> media = optional.get();
+
+            if (!media.getType().equals(FormUrlEncodedMediaType.TYPE) && !media.getType().equals(MultipartFormDataMediaType.TYPE)) {
+                return null;
+            }
+
+            // Finish
+            @NotNull Content<FormData[]> content = getBody().getContent(((MediaType<FormData[]>) media));
+            return content.getData();
+        } catch (@NotNull MediaParserException | @NotNull IOException e) {
+            throw new IllegalArgumentException("cannot parse form data content from body", e);
+        }
+    }
 
     /**
      * Retrieves a specific form data item by its name from the POST request as example.

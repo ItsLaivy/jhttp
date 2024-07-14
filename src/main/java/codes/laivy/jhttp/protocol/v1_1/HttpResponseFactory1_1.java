@@ -87,7 +87,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
 
     public @NotNull HttpResponse parse(@NotNull String string) throws HttpResponseParseException, HttpBodyParseException {
         // Content
-        @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
+        @NotNull String[] content = string.split(CRLF + CRLF, 2);
         @NotNull String[] line = content[0].split(CRLF, 2)[0].split(" ", 3);
 
         int code = Integer.parseInt(line[1]);
@@ -97,7 +97,7 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
         @NotNull HttpHeaders headers = getVersion().getHeaderFactory().createMutable(Target.RESPONSE);
 
         if (content[0].split(CRLF, 2).length > 1) {
-            for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split("\\s*" + CRLF)) {
+            for (@NotNull String headerString : content[0].split(CRLF, 2)[1].split(CRLF)) {
                 try {
                     @NotNull HttpHeader<?> header = getVersion().getHeaderFactory().parse(headerString);
                     if (!header.getKey().getTarget().isResponses()) continue;
@@ -133,10 +133,10 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
     @Override
     public boolean validate(@NotNull String string) {
         try {
-            @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
+            @NotNull String[] content = string.split(CRLF + CRLF, 2);
 
             // Check response line
-            @NotNull String[] requestLine = content[0].split("\\s*" + CRLF, 2)[0].split("[\\s*]");
+            @NotNull String[] requestLine = content[0].split(CRLF, 2)[0].split("[\\s*]");
 
             // Check version
             if (!requestLine[0].equalsIgnoreCase(getVersion().toString())) {
@@ -147,8 +147,8 @@ final class HttpResponseFactory1_1 implements HttpResponseFactory {
             Integer.parseInt(requestLine[1]);
 
             // Check headers
-            if (content[0].split("\\s*" + CRLF + "\\s*", 2).length > 1) {
-                for (@NotNull String line : content[0].split("\\s*" + CRLF + "\\s*", 2)[1].split("\\s*" + CRLF + "\\s*")) {
+            if (content[0].split(CRLF, 2).length > 1) {
+                for (@NotNull String line : content[0].split(CRLF, 2)[1].split(CRLF)) {
                     if (!getVersion().getHeaderFactory().validate(line)) {
                         return false;
                     }

@@ -44,6 +44,7 @@ public class Connection {
 
         // Headers
         @NotNull Set<HttpHeaderKey<?>> headers = new LinkedHashSet<>();
+
         for (@NotNull String name : keys.keySet()) {
             headers.add(HttpHeaderKey.retrieve(name));
         }

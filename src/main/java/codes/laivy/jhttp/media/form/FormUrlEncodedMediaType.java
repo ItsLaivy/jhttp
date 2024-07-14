@@ -11,14 +11,13 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 public final class FormUrlEncodedMediaType extends MediaType<@NotNull FormData @NotNull []> {
 
@@ -46,23 +45,41 @@ public final class FormUrlEncodedMediaType extends MediaType<@NotNull FormData @
 
         @Override
         public @NotNull FormData @NotNull [] deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
+            // Functions
+            @NotNull Function<String, FormData> function = new Function<String, FormData>() {
+                @Override
+                public @NotNull FormData apply(@NotNull String string) {
+                    try {
+                        @NotNull String[] parts = string.split("=", 2);
+                        @NotNull String key = URLDecoder.decode(parts[0], "UTF-8");
+                        byte[] value = parts.length == 2 ? URLDecoder.decode(parts[1], "UTF-8").getBytes(StandardCharsets.UTF_8) : new byte[0];
+
+                        return FormData.create(key, HttpBody.create(version, value));
+                    } catch (@NotNull IOException e) {
+                        throw new RuntimeException("cannot parse form data", e);
+                    }
+                }
+            };
+
+            // Parse
             @NotNull Set<FormData> forms = new HashSet<>();
             @NotNull StringBuilder sequence = new StringBuilder();
 
-            int read;
-            while ((read = stream.read()) != -1) {
-                byte b = (byte) read;
+            try (@NotNull InputStreamReader reader = new InputStreamReader(stream)) {
+                while (reader.ready()) {
+                    char a = (char) reader.read();
 
-                if (b == '&') { // End of the sequence, starting other
-                    @NotNull String[] parts = sequence.toString().split("=", 2);
-                    @NotNull String key = URLDecoder.decode(parts[0], "UTF-8");
-                    byte[] value = parts.length == 2 ? URLDecoder.decode(parts[1], "UTF-8").getBytes(StandardCharsets.UTF_8) : new byte[0];
-
-                    forms.add(FormData.create(key, HttpBody.create(version, value)));
-                    sequence = new StringBuilder();
-                } else {
-                    sequence.append(b);
+                    if (a == '&') { // End of the sequence, starting other
+                        forms.add(function.apply(sequence.toString()));
+                        sequence = new StringBuilder();
+                    } else {
+                        sequence.append(a);
+                    }
                 }
+            }
+
+            if (sequence.length() > 0) {
+                forms.add(function.apply(sequence.toString()));
             }
 
             return forms.toArray(new FormData[0]);

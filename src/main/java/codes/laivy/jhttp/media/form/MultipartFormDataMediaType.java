@@ -15,10 +15,7 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -59,53 +56,55 @@ public final class MultipartFormDataMediaType extends MediaType<@NotNull FormDat
             @NotNull StringBuilder sequence = new StringBuilder();
 
             // Read
-            int read;
-            while ((read = stream.read()) != -1) {
-                byte b = (byte) read;
-                sequence.append(b);
+            try (@NotNull InputStreamReader reader = new InputStreamReader(stream)) {
+                while (reader.ready()) {
+                    char a = (char) reader.read();
 
-                if (b == '\n' && sequence.toString().endsWith("--" + boundary.getName() + "\r\n")) { // End of the data
-                    @NotNull String[] parts = sequence.toString().split("\r\n\r\n", 2);
+                    sequence.append(a);
 
-                    // Headers
-                    for (@NotNull String string : parts[0].split("\r\n")) {
-                        try {
-                            // Parse header
-                            @NotNull HttpHeader<?> header = HttpVersion.HTTP1_1().getHeaderFactory().parse(string);
+                    if (a == '\n' && sequence.toString().endsWith("--" + boundary.getName() + "\r\n")) { // End of the data
+                        @NotNull String[] parts = sequence.toString().split("\r\n\r\n", 2);
 
-                            // Add to array
-                            headers = Arrays.copyOfRange(headers, 0, headers.length + 1);
-                            headers[headers.length - 1] = header;
-                        } catch (@NotNull HeaderFormatException e) {
-                            throw new MediaParserException("cannot parse header '" + string + "'", e);
+                        // Headers
+                        for (@NotNull String string : parts[0].split("\r\n")) {
+                            try {
+                                // Parse header
+                                @NotNull HttpHeader<?> header = HttpVersion.HTTP1_1().getHeaderFactory().parse(string);
+
+                                // Add to array
+                                headers = Arrays.copyOfRange(headers, 0, headers.length + 1);
+                                headers[headers.length - 1] = header;
+                            } catch (@NotNull HeaderFormatException e) {
+                                throw new MediaParserException("cannot parse header '" + string + "'", e);
+                            }
                         }
+
+                        // Body
+                        @NotNull HttpBody body;
+
+                        try {
+                            body = version.getBodyFactory().parse(HttpHeaders.create(version, headers), parts[1]);
+                        } catch (@NotNull HttpBodyParseException e) {
+                            throw new MediaParserException("cannot parse http body from multipart form-data", e);
+                        }
+
+                        // Finish formulary data
+                        @Nullable ContentDisposition disposition = (ContentDisposition) Arrays.stream(headers).filter(header -> header.getKey().equals(HttpHeaderKey.CONTENT_DISPOSITION)).findFirst().map(HttpHeader::getValue).orElse(null);
+
+                        if (disposition == null) {
+                            throw new MediaParserException("cannot parse form-data from multipart: missing content-disposition header");
+                        } else if (disposition.getType() != ContentDisposition.Type.FORM_DATA || disposition.getName() == null) {
+                            throw new MediaParserException("invalid form-data content disposition: '" + disposition + "'");
+                        }
+
+                        // Finish
+                        @NotNull FormData data = FormData.create(disposition.getName(), body);
+                        forms.add(data);
+
+                        // Reset sequence
+                        headers = new HttpHeader[0];
+                        sequence = new StringBuilder();
                     }
-
-                    // Body
-                    @NotNull HttpBody body;
-
-                    try {
-                        body = version.getBodyFactory().parse(HttpHeaders.create(version, headers), parts[1]);
-                    } catch (@NotNull HttpBodyParseException e) {
-                        throw new MediaParserException("cannot parse http body from multipart form-data", e);
-                    }
-
-                    // Finish formulary data
-                    @Nullable ContentDisposition disposition = (ContentDisposition) Arrays.stream(headers).filter(header -> header.getKey().equals(HttpHeaderKey.CONTENT_DISPOSITION)).findFirst().map(HttpHeader::getValue).orElse(null);
-
-                    if (disposition == null) {
-                        throw new MediaParserException("cannot parse form-data from multipart: missing content-disposition header");
-                    } else if (disposition.getType() != ContentDisposition.Type.FORM_DATA || disposition.getName() == null) {
-                        throw new MediaParserException("invalid form-data content disposition: '" + disposition + "'");
-                    }
-
-                    // Finish
-                    @NotNull FormData data = FormData.create(disposition.getName(), body);
-                    forms.add(data);
-
-                    // Reset sequence
-                    headers = new HttpHeader[0];
-                    sequence = new StringBuilder();
                 }
             }
 

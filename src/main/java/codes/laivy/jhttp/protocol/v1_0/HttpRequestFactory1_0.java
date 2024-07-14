@@ -2,24 +2,17 @@ package codes.laivy.jhttp.protocol.v1_0;
 
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.client.HttpClient;
-import codes.laivy.jhttp.element.FormData;
 import codes.laivy.jhttp.element.HttpProtocol;
 import codes.laivy.jhttp.element.Method;
 import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.element.request.HttpRequest;
 import codes.laivy.jhttp.element.request.HttpRequest.Future;
 import codes.laivy.jhttp.exception.encoding.EncodingException;
-import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.exception.parser.HeaderFormatException;
 import codes.laivy.jhttp.exception.parser.element.HttpBodyParseException;
 import codes.laivy.jhttp.exception.parser.element.HttpRequestParseException;
 import codes.laivy.jhttp.headers.HttpHeader;
-import codes.laivy.jhttp.headers.HttpHeaderKey;
 import codes.laivy.jhttp.headers.HttpHeaders;
-import codes.laivy.jhttp.media.Content;
-import codes.laivy.jhttp.media.MediaType;
-import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
-import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.URIAuthority;
@@ -36,7 +29,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
@@ -127,26 +119,27 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
     @Override
     public @NotNull HttpRequest parse(@NotNull String string) throws HttpRequestParseException, HttpBodyParseException {
         // Content
-        @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
+        @NotNull String[] content = string.split(CRLF + CRLF, 2);
+        @NotNull String[] parts = content[0].split(CRLF, 2);
 
         // Headers
         @NotNull HttpHeaders headers = getVersion().getHeaderFactory().createMutable(Target.REQUEST);
 
-        if (content[0].split(CRLF, 2).length > 1) {
-            for (@NotNull String line : content[0].split(CRLF, 2)[1].split("\\s*" + CRLF)) {
+        if (parts.length == 2) {
+            for (@NotNull String line : parts[1].split(CRLF)) {
                 try {
                     @NotNull HttpHeader<?> header = getVersion().getHeaderFactory().parse(line);
                     if (!header.getKey().getTarget().isRequests()) continue;
 
                     headers.add(header);
-                } catch (HeaderFormatException e) {
+                } catch (@NotNull HeaderFormatException e) {
                     throw new HttpRequestParseException("cannot parse http request header line '" + line + "'", e);
                 }
             }
         }
 
         // Request line
-        @NotNull String[] requestLine = content[0].split(CRLF, 2)[0].split(" ");
+        @NotNull String[] requestLine = parts[0].split(" ");
         @NotNull Method method = Method.valueOf(requestLine[0].toUpperCase());
         @Nullable URIAuthority authority = null;
         @NotNull URI uri;
@@ -172,7 +165,7 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         }
 
         // Message
-        @Nullable HttpBody body = getVersion().getBodyFactory().parse(headers, content[1]);
+        @NotNull HttpBody body = content.length == 2 ? getVersion().getBodyFactory().parse(headers, content[1]) : HttpBody.empty();
 
         // Finish
         return HttpRequest.create(getVersion(), method, authority, uri, headers, body);
@@ -195,10 +188,10 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
     @Override
     public boolean validate(@NotNull String string) {
         try {
-            @NotNull String[] content = string.split("\\s*" + CRLF + CRLF, 2);
+            @NotNull String[] content = string.split(CRLF + CRLF, 2);
 
             // Check request line
-            @NotNull String[] requestLine = content[0].split("\\s*" + CRLF, 2)[0].split("[\\s*]");
+            @NotNull String[] requestLine = content[0].split(CRLF, 2)[0].split("[\\s*]");
 
             // Check version
             if (!requestLine[2].equalsIgnoreCase(getVersion().toString())) {
@@ -213,8 +206,8 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
             }
 
             // Headers
-            if (content[0].split("\\s*" + CRLF + "\\s*", 2).length > 1) {
-                for (@NotNull String line : content[0].split("\\s*" + CRLF + "\\s*", 2)[1].split("\\s*" + CRLF + "\\s*")) {
+            if (content[0].split(CRLF, 2).length > 1) {
+                for (@NotNull String line : content[0].split(CRLF, 2)[1].split(CRLF)) {
                     if (!getVersion().getHeaderFactory().validate(line)) {
                         return false;
                     }
@@ -267,28 +260,6 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
         @Override
         public @NotNull URI getUri() {
             return uri;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public @NotNull FormData @Nullable [] getFormData() {
-            @NotNull Optional<MediaType<?>> optional = getHeaders().first(HttpHeaderKey.CONTENT_TYPE).map(HttpHeader::getValue);
-
-            if (!optional.isPresent()) {
-                return null;
-            } else try {
-                @Nullable MediaType<?> media = optional.get();
-
-                if (!media.getType().equals(FormUrlEncodedMediaType.TYPE) && !media.getType().equals(MultipartFormDataMediaType.TYPE)) {
-                    return null;
-                }
-
-                // Finish
-                @NotNull Content<FormData[]> content = getBody().getContent(((MediaType<FormData[]>) media));
-                return content.getData();
-            } catch (@NotNull MediaParserException | @NotNull IOException e) {
-                throw new IllegalArgumentException("cannot parse form data content from body", e);
-            }
         }
 
         @Override
@@ -409,7 +380,12 @@ final class HttpRequestFactory1_0 implements HttpRequestFactory {
                     long required = getHeaders().get(CONTENT_LENGTH)[0].getValue().getBytes();
 
                     if (required <= body.length()) {
-                        body = this.body.substring(0, (int) required);
+                        @NotNull String[] parts = body.split(CRLF + CRLF, 2);
+
+                        if (parts.length == 2) {
+                            parts[1] = parts[1].substring(0, (int) required);
+                            body = parts[0] + CRLF + CRLF + parts[1];
+                        }
 
                         // Completes the message with the new body
                         @NotNull HttpRequest request = parse(getAsString());
