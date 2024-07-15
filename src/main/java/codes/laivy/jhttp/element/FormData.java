@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -25,7 +28,7 @@ public interface FormData {
 
     // Static initializers
 
-    static @NotNull FormData create(@NotNull String key, @NotNull HttpBody body, @NotNull HttpHeader<?> @NotNull ... keys) {
+    static @NotNull FormData create(@NotNull String key, @Nullable HttpBody body, @NotNull HttpHeader<?> @NotNull ... keys) {
         return new FormData() {
 
             // Object
@@ -35,8 +38,27 @@ public interface FormData {
                 return key;
             }
             @Override
-            public @NotNull HttpBody getBody() {
+            public @Nullable HttpBody getBody() {
                 return body;
+            }
+
+            @Override
+            public @Nullable String getValue() {
+                @Nullable HttpBody body = getBody();
+
+                if (body != null) try {
+                    @NotNull StringBuilder builder = new StringBuilder();
+
+                    try (@NotNull InputStreamReader reader = new InputStreamReader(body.getInputStream(), StandardCharsets.UTF_8)) {
+                        while (reader.ready()) builder.append((char) reader.read());
+                    }
+
+                    return builder.toString();
+                } catch (@NotNull IOException e) {
+                    throw new RuntimeException("cannot read form data body as a string", e);
+                } else {
+                    return null;
+                }
             }
 
             @Override
@@ -79,6 +101,15 @@ public interface FormData {
      * @return the body associated with this form data item, or null if no body is present.
      */
     @Nullable HttpBody getBody();
+
+    /**
+     * Retrieves the value (body) as a string.
+     * This method is just a simple way to retrieve the form data value, you
+     * must use {@link #getBody()} if you want more details.
+     *
+     * @return the body associated with this form data item as a string, or null if no value is present.
+     */
+    @Nullable String getValue();
 
     /**
      * Retrieves the headers associated with this form data item.

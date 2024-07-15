@@ -95,4 +95,14 @@ public interface HttpBody {
      */
     @NotNull InputStream getInputStream() throws IOException;
 
+    /**
+     * Clones the {@link HttpBody} using the specified version.
+     *
+     * @return a new http body with the selected version
+     * @throws IOException if an I/O exception occurs while perform
+     */
+    default @NotNull HttpBody clone(@NotNull HttpVersion version) throws IOException {
+        return create(version, getInputStream());
+    }
+
 }
