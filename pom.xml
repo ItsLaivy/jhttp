@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.jlogm</groupId>
             <artifactId>jlogm</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->

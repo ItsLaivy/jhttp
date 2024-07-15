@@ -4,56 +4,71 @@ import codes.laivy.jhttp.utilities.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-public interface UserAgent {
+public class UserAgent {
 
     // Static initializers
 
-    static @NotNull UserAgent create(
-            final @NotNull Product @NotNull [] products
-    ) {
-        return new UserAgent() {
+    public static @NotNull UserAgent parse(@NotNull String string) {
+        @NotNull List<Product> products = new LinkedList<>();
 
-            // Object
+        for (@NotNull String part : string.split("\\s(?!\\([^)]*\\)|[^()]*\\))")) {
+            products.add(Product.parse(part));
+        }
 
-            @Override
-            public @NotNull Product @NotNull [] getProducts() {
-                return products;
-            }
+        // Finish
+        return new UserAgent(products.toArray(new Product[0]));
+    }
 
-            // Implementations
+    // Object
 
-            @Override
-            public boolean equals(@Nullable Object object) {
-                if (this == object) return true;
-                if (object == null || getClass() != object.getClass()) return false;
-                @NotNull UserAgent agent = (UserAgent) object;
-                return Arrays.equals(getProducts(), agent.getProducts());
-            }
-            @Override
-            public int hashCode() {
-                return Arrays.hashCode(getProducts());
-            }
-            @Override
-            public @NotNull String toString() {
-                return Parser.serialize(this);
-            }
+    private final @NotNull Product @NotNull [] products;
 
-        };
+    // Constructors
+
+    public UserAgent(@NotNull Product @NotNull [] products) {
+        this.products = products;
     }
 
     // Getters
 
-    @NotNull Product @NotNull [] getProducts();
+    public @NotNull Product @NotNull [] getProducts() {
+        return products;
+    }
+
+    // Implementations
+
+    @Override
+    public final boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof UserAgent)) return false;
+        @NotNull UserAgent agent = (UserAgent) object;
+        return Objects.deepEquals(getProducts(), agent.getProducts());
+    }
+    @Override
+    public final int hashCode() {
+        return Arrays.hashCode(getProducts());
+    }
+
+    @Override
+    public final @NotNull String toString() {
+        @NotNull StringBuilder builder = new StringBuilder();
+
+        for (@NotNull Product product : getProducts()) {
+            if (builder.length() > 0) builder.append(" ");
+            builder.append(product);
+        }
+
+        return builder.toString();
+    }
 
     // Classes
 
-    final class Product {
+    public static final class Product {
 
         // Static initializers
 
@@ -174,45 +189,6 @@ public interface UserAgent {
             }
 
             return builder.toString();
-        }
-
-    }
-    final class Parser {
-        private Parser() {
-            throw new UnsupportedOperationException();
-        }
-
-        // Serializers
-
-        public static @NotNull String serialize(@NotNull UserAgent agent) {
-            @NotNull StringBuilder builder = new StringBuilder();
-
-            for (@NotNull Product product : agent.getProducts()) {
-                if (builder.length() > 0) builder.append(" ");
-                builder.append(product);
-            }
-
-            return builder.toString();
-        }
-
-        public static @NotNull UserAgent deserialize(@NotNull String string) throws IllegalStateException, ParseException {
-            @NotNull List<Product> products = new LinkedList<>();
-
-            for (@NotNull String part : string.split("\\s(?!\\([^)]*\\)|[^()]*\\))")) {
-                products.add(Product.parse(part));
-            }
-
-            // Finish
-            return create(products.toArray(new Product[0]));
-        }
-
-        public static boolean validate(@NotNull String string) {
-            try {
-                deserialize(string);
-                return true;
-            } catch (@NotNull Throwable throwable) {
-                return false;
-            }
         }
 
     }

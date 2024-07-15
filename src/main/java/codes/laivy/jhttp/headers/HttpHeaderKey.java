@@ -611,11 +611,11 @@ public abstract class HttpHeaderKey<T> {
 
             @Override
             public @NotNull HttpHeader<UserAgent> read(@NotNull HttpVersion version, @NotNull String value) throws ParseException {
-                return create(UserAgent.Parser.deserialize(value));
+                return create(UserAgent.parse(value));
             }
             @Override
             public @NotNull String write(@NotNull HttpVersion version, @NotNull HttpHeader<UserAgent> header) {
-                return UserAgent.Parser.serialize(header.getValue());
+                return header.getValue().toString();
             }
         }
         private static final class VaryHeaderKey extends HttpHeaderKey<@NotNull Wildcard<@NotNull HttpHeaderKey<?> @NotNull []>> {
