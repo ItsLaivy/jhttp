@@ -40,28 +40,28 @@ public class Location implements ContentSecurityPolicy.Source {
                 if (!Host.validate(parts[0])) return false;
 
                 // Finish with uri
-                string = "/" + (parts.length == 2 ? parts[1] : "");
+                string = "/" + (parts.length == 2 ? parts[1].replace("+", "%20") : "");
             }
 
             // Parse uri
-            new URI(URLDecoder.decode(string, "UTF-8"));
+            new URI(string);
 
             // Finish successfully
             return true;
-        } catch (@NotNull UnsupportedEncodingException | @NotNull URISyntaxException ignore) {
+        } catch (@NotNull URISyntaxException ignore) {
         }
 
         return false;
     }
     public static @NotNull Location parse(@NotNull String string) {
         if (validate(string)) try {
+            @Nullable HttpProtocol protocol = null;
             @Nullable Domain<?> domain = null;
             @NotNull URI uri;
 
             if (string.startsWith("/")) { // It's a path
-                uri = URI.create(URLDecoder.decode(string, "UTF-8"));
+                uri = URI.create(URLDecoder.decode(string.replace("+", "%20"), "UTF-8"));
             } else { // Parse domain and path
-                @Nullable HttpProtocol protocol = null;
 
                 if (string.toLowerCase().startsWith("https://") || string.toLowerCase().startsWith("http://")) {
                     if (string.toLowerCase().startsWith("https://")) {
@@ -79,10 +79,10 @@ public class Location implements ContentSecurityPolicy.Source {
                 @NotNull String[] parts = string.split("/", 2);
 
                 domain = Domain.parse(parts[0]);
-                uri = URI.create("/" + (parts.length == 2 ? URLDecoder.decode(parts[1], "UTF-8") : ""));
+                uri = URI.create("/" + (parts.length == 2 ? parts[1] : ""));
             }
 
-            return create(domain, uri);
+            return create(protocol, domain, uri);
         } catch (@NotNull UnsupportedEncodingException e) {
             throw new RuntimeException("cannot find UTF-8 charset on system", e);
         } else {
@@ -90,22 +90,27 @@ public class Location implements ContentSecurityPolicy.Source {
         }
     }
 
-    public static @NotNull Location create(@Nullable Domain<?> domain, @NotNull URI uri) {
-        return new Location(domain, uri);
+    public static @NotNull Location create(@Nullable HttpProtocol protocol, @Nullable Domain<?> domain, @NotNull URI uri) {
+        return new Location(protocol, domain, uri);
     }
 
     // Object
 
+    private final @Nullable HttpProtocol protocol;
     private final @Nullable Domain<?> domain;
     private final @NotNull URI uri;
 
-    protected Location(@Nullable Domain<?> domain, @NotNull URI uri) {
+    protected Location(@Nullable HttpProtocol protocol, @Nullable Domain<?> domain, @NotNull URI uri) {
+        this.protocol = protocol;
         this.domain = domain;
         this.uri = uri;
     }
 
     // Getters
 
+    public @Nullable HttpProtocol getProtocol() {
+        return protocol;
+    }
     public @Nullable Domain<?> getDomain() {
         return domain;
     }
@@ -116,21 +121,27 @@ public class Location implements ContentSecurityPolicy.Source {
     // Implementations
 
     @Override
-    public final boolean equals(@Nullable Object object) {
+    public boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (!(object instanceof Location)) return false;
         @NotNull Location location = (Location) object;
-        return Objects.equals(getDomain(), location.getDomain()) && Objects.equals(getURI(), location.getURI());
+        return getProtocol() == location.getProtocol() && Objects.equals(getDomain(), location.getDomain()) && Objects.equals(getURI(), location.getURI());
     }
     @Override
-    public final int hashCode() {
-        return Objects.hash(getDomain(), getURI());
+    public int hashCode() {
+        return Objects.hash(getProtocol(), getDomain(), getURI());
     }
 
     @Override
     public final @NotNull String toString() {
         if (getDomain() != null) {
-            @NotNull StringBuilder builder = new StringBuilder(getDomain().toString());
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            if (getProtocol() != null) {
+                builder.append(getProtocol().getName());
+            }
+
+            builder.append(getDomain().toString());
 
             if (!getURI().toString().isEmpty() && !getURI().toString().startsWith("/")) {
                 builder.append("/");

@@ -7,7 +7,6 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
-import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 

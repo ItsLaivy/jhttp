@@ -22,13 +22,11 @@ import codes.laivy.jhttp.protocol.factory.HttpRequestFactory;
 import codes.laivy.jhttp.url.Host;
 import codes.laivy.jhttp.url.URIAuthority;
 import codes.laivy.jhttp.utilities.StringUtils;
-import com.jlogm.utils.Colors;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
