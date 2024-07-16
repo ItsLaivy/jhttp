@@ -47,8 +47,8 @@ public class JsonMediaType extends MediaType<JsonElement> {
             @Nullable Parameter parameter = Arrays.stream(parameters).filter(p -> p.getKey().equalsIgnoreCase("charset")).findFirst().orElse(null);
             @Nullable Charset charset = parameter != null ? Deferred.charset(parameter.getValue()).orElse(null) : null;
 
-            try {
-                return JsonParser.parseReader(charset != null ? new InputStreamReader(stream, charset) : new InputStreamReader(stream));
+            try (@NotNull InputStreamReader reader = charset != null ? new InputStreamReader(stream, charset) : new InputStreamReader(stream)) {
+                return JsonParser.parseReader(reader);
             } catch (@NotNull JsonSyntaxException e) {
                 throw new MediaParserException("cannot parse stream as a valid json element", e);
             }

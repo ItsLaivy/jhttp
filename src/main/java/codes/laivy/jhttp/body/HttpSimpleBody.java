@@ -28,6 +28,8 @@ public class HttpSimpleBody implements HttpBody {
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     protected byte @NotNull [] bytes;
 
+    protected volatile boolean closed = false;
+
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided byte array.
      *
@@ -69,8 +71,12 @@ public class HttpSimpleBody implements HttpBody {
      * Returns the byte array containing the HTTP body data.
      *
      * @return the byte array
+     * @throws IOException if the http body is closed
      */
-    public final byte @NotNull [] getBytes() {
+    public final byte @NotNull [] getBytes() throws IOException {
+        if (closed) {
+            throw new IOException("this http body is closed");
+        }
         return bytes;
     }
 
@@ -81,10 +87,14 @@ public class HttpSimpleBody implements HttpBody {
      * @param <T> the type of content
      * @return the content of the specified media type
      * @throws MediaParserException if a parsing error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs or if the body is closed
      */
     @Override
     public @NotNull <T> Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+        if (closed) {
+            throw new IOException("this http body is closed");
+        }
+
         @NotNull Content<T> content;
 
         if (contentMap.containsKey(mediaType)) {
@@ -114,11 +124,38 @@ public class HttpSimpleBody implements HttpBody {
      * Returns an input stream for reading the byte array containing the HTTP body data.
      *
      * @return the input stream for reading the byte array
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs or if the body is closed
      */
     @Override
     public @NotNull InputStream getInputStream() throws IOException {
+        if (closed) {
+            throw new IOException("this http body is closed");
+        }
         return new ByteArrayInputStream(bytes);
+    }
+
+    // Modules
+
+    /**
+     * Closes all the contents and flush the byte array
+     *
+     * @throws IOException if the http body is already closed
+     */
+    @Override
+    public void close() throws IOException {
+        if (closed) {
+            throw new IOException("this http body is already closed");
+        } else try {
+            // Close contents
+            for (@NotNull Content<?> content : contentMap.values()) {
+                content.flush();
+            }
+
+            // Clear bytes
+            bytes = new byte[0];
+        } finally {
+            closed = true;
+        }
     }
 
     // Implementations
@@ -128,16 +165,16 @@ public class HttpSimpleBody implements HttpBody {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         @NotNull HttpSimpleBody that = (HttpSimpleBody) object;
-        return Objects.deepEquals(getBytes(), that.getBytes());
+        return Objects.deepEquals(bytes, that.bytes);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(Arrays.hashCode(getBytes()));
+        return Objects.hash(Arrays.hashCode(bytes));
     }
 
     @Override
     public @NotNull String toString() {
-        return new String(getBytes());
+        return new String(bytes);
     }
 
     // Classes
@@ -213,10 +250,14 @@ public class HttpSimpleBody implements HttpBody {
         /**
          * Flushes the current content data to the byte array.
          *
-         * @throws IOException if an I/O error occurs during writing to the byte array
+         * @throws IOException if an I/O error occurs during writing to the byte array or if the http body is closed
          */
         @Override
         public void flush() throws IOException {
+            if (closed) {
+                throw new IOException("this http body is closed");
+            }
+
             try (
                     @NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters());
                     @NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()

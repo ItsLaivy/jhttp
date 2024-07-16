@@ -23,7 +23,7 @@ import java.util.Objects;
  * and reading from a temporary file may outweigh the benefits compared to using
  * {@link HttpSimpleBody}, as example.
  */
-public class HttpBigBody implements HttpBody, Closeable {
+public class HttpBigBody implements HttpBody {
 
     // Static initializers
 
@@ -41,6 +41,8 @@ public class HttpBigBody implements HttpBody, Closeable {
     protected final @NotNull Object lock = new Object();
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     private final @NotNull File file;
+
+    protected volatile boolean closed = false;
 
     /**
      * Constructs an instance of {@link HttpBigBody} with the provided {@link Byte} array.
@@ -84,7 +86,9 @@ public class HttpBigBody implements HttpBody, Closeable {
      * @return the temporary file
      */
     public final @NotNull File getFile() {
-        return file;
+        synchronized (lock) {
+            return file;
+        }
     }
 
     /**
@@ -123,10 +127,14 @@ public class HttpBigBody implements HttpBody, Closeable {
      * @param <T> the type of content
      * @return the content of the specified media type
      * @throws MediaParserException if a parsing error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs or if the http body is closed
      */
     @Override
     public @NotNull <T> Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+        if (closed) {
+            throw new IOException("this http body is closed");
+        }
+
         @NotNull Content<T> content;
 
         if (contentMap.containsKey(mediaType)) {
@@ -148,11 +156,13 @@ public class HttpBigBody implements HttpBody, Closeable {
      * Returns an input stream for reading the temporary file containing the HTTP body data.
      *
      * @return the input stream for reading the file
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs or if the http body is closed
      */
     @Override
     public @NotNull InputStream getInputStream() throws IOException {
-        synchronized (lock) {
+        if (closed) {
+            throw new IOException("this http body is closed");
+        } else synchronized (lock) {
             return Files.newInputStream(file.toPath());
         }
     }
@@ -160,12 +170,24 @@ public class HttpBigBody implements HttpBody, Closeable {
     /**
      * Closes this {@code HttpBigBody} by deleting the temporary file.
      *
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs, or if this http body is already closed
      */
     @Override
     public void close() throws IOException {
-        synchronized (lock) {
-            Files.delete(file.toPath());
+        if (closed) {
+            throw new IOException("this http body is already closed");
+        } else try {
+            synchronized (lock) {
+                // Close contents
+                for (@NotNull Content<?> content : contentMap.values()) {
+                    content.flush();
+                }
+
+                // Delete file
+                Files.delete(file.toPath());
+            }
+        } finally {
+            closed = true;
         }
     }
 
@@ -176,11 +198,11 @@ public class HttpBigBody implements HttpBody, Closeable {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         @NotNull HttpBigBody that = (HttpBigBody) object;
-        return Objects.equals(getFile(), that.getFile());
+        return Objects.equals(file, that.file);
     }
     @Override
     public int hashCode() {
-        return Objects.hashCode(getFile());
+        return Objects.hashCode(file);
     }
 
     @Override
@@ -263,10 +285,14 @@ public class HttpBigBody implements HttpBody, Closeable {
         /**
          * Flushes the current content data to the temporary file.
          *
-         * @throws IOException if an I/O error occurs during writing to the file
+         * @throws IOException if an I/O error occurs during writing to the file or if the http body is closed
          */
         @Override
         public void flush() throws IOException {
+            if (closed) {
+                throw new IOException("this http body is closed");
+            }
+
             synchronized (lock) {
                 try (@NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters())) {
                     update(stream);

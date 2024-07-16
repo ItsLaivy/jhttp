@@ -6,6 +6,8 @@ import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Closeable;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,7 +25,7 @@ import java.io.InputStream;
  * @see Content
  * @since 1.0-SNAPSHOT
  */
-public interface HttpBody {
+public interface HttpBody extends Closeable {
 
     // Static initializers
 
