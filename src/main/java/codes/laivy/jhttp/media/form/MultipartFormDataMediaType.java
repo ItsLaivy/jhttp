@@ -38,8 +38,15 @@ public final class MultipartFormDataMediaType extends MediaType<@NotNull FormDat
 
     // Object
 
-    public MultipartFormDataMediaType() {
-        super(TYPE, new Parser(), new MediaType.Parameter[0]);
+    public MultipartFormDataMediaType(@NotNull Parameter @NotNull ... parameters) {
+        super(TYPE, new Parser(), parameters);
+    }
+
+    // Modules
+
+    @Override
+    public @NotNull MediaType<FormData[]> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new MultipartFormDataMediaType(parameters);
     }
 
     // Classes

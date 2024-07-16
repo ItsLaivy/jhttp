@@ -5,6 +5,7 @@ import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.FormData;
 import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
 import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
+import codes.laivy.jhttp.media.html.HTMLMediaType;
 import codes.laivy.jhttp.media.jar.JarMediaType;
 import codes.laivy.jhttp.media.json.JsonMediaType;
 import codes.laivy.jhttp.media.text.TextMediaType;
@@ -13,6 +14,7 @@ import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jsoup.nodes.Element;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,6 +48,10 @@ public class MediaType<T> {
     public static @NotNull MediaType<@NotNull FormData @NotNull []> X_WWW_FORM_URLENCODED() { return FormUrlEncodedMediaType.getInstance(); }
     public static @NotNull MediaType<@NotNull FormData @NotNull []> MULTIPART_FORMDATA() { return MultipartFormDataMediaType.getInstance(); }
 
+    // todo 16/07/2024: create jhtml library
+    @ApiStatus.Experimental
+    public static @NotNull MediaType<@NotNull Element> TEXT_HTML() { return HTMLMediaType.getInstance(); }
+
     // Media type content
 
     private static final @NotNull Set<MediaType<?>> collection = ConcurrentHashMap.newKeySet();
@@ -61,7 +67,6 @@ public class MediaType<T> {
                     collection.add(media);
                 }
             } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
-                e.printStackTrace();
                 throw new RuntimeException("cannot load media type with method #" + method.getName(), e);
             }
         }
@@ -183,7 +188,7 @@ public class MediaType<T> {
     private final @NotNull MediaParser<T> parser;
     private final @NotNull Parameter @NotNull [] parameters;
 
-    protected MediaType(@NotNull Type type, @NotNull MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
+    public MediaType(@NotNull Type type, @NotNull MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
         this.type = type;
         this.parser = parser;
         this.parameters = parameters;
@@ -257,6 +262,13 @@ public class MediaType<T> {
 
     public @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull T object) {
         return HttpBody.create(version, this, object);
+    }
+    public @NotNull Content<T> create(@NotNull T object) {
+        return HttpBody.create(HttpVersion.HTTP1_1(), this, object);
+    }
+
+    public @NotNull MediaType<T> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new MediaType<>(getType(), getParser(), parameters);
     }
 
     // Implementations

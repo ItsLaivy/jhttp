@@ -33,8 +33,15 @@ public class JarMediaType extends MediaType<@NotNull JarFile> {
 
     // Object
 
-    public JarMediaType() {
-        super(TYPE, new Parser(), new Parameter[0]);
+    public JarMediaType(@NotNull Parameter @NotNull ... parameter) {
+        super(TYPE, new Parser(), parameter);
+    }
+
+    // Modules
+
+    @Override
+    public @NotNull MediaType<JarFile> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new JarMediaType(parameters);
     }
 
     // Classes

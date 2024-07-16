@@ -30,8 +30,15 @@ public class TextMediaType extends MediaType<String> {
 
     // Object
 
-    public TextMediaType() {
-        super(TYPE, new Parser(), new Parameter[0]);
+    public TextMediaType(@NotNull Parameter @NotNull ... parameters) {
+        super(TYPE, new Parser(), parameters);
+    }
+
+    // Modules
+
+    @Override
+    public @NotNull MediaType<String> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new TextMediaType(parameters);
     }
 
     // Classes

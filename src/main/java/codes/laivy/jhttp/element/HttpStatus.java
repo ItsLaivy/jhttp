@@ -149,6 +149,28 @@ public final class HttpStatus {
         return Category.getCategory(this);
     }
 
+    // Utilities
+
+    public boolean isInformational() {
+        return getCategory() == Category.INFORMATIONAL;
+    }
+    public boolean isSuccessful() {
+        return getCategory() == Category.SUCCESSFUL;
+    }
+    public boolean isRedirection() {
+        return getCategory() == Category.REDIRECTION;
+    }
+
+    public boolean isClientError() {
+        return getCategory() == Category.CLIENT_ERROR;
+    }
+    public boolean isServerError() {
+        return getCategory() == Category.SERVER_ERROR;
+    }
+    public boolean isError() {
+        return getCategory().isError();
+    }
+
     // Implementations
 
     @Override
@@ -191,6 +213,10 @@ public final class HttpStatus {
         }
         public int getMaximum() {
             return maximum;
+        }
+
+        public boolean isError() {
+            return this == CLIENT_ERROR || this == SERVER_ERROR;
         }
 
         public static @NotNull Category getCategory(@NotNull HttpStatus status) throws IndexOutOfBoundsException {

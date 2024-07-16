@@ -38,8 +38,15 @@ public final class FormUrlEncodedMediaType extends MediaType<@NotNull FormData @
 
     // Object
 
-    public FormUrlEncodedMediaType() {
-        super(TYPE, new Parser(), new MediaType.Parameter[0]);
+    public FormUrlEncodedMediaType(@NotNull Parameter @NotNull ... parameters) {
+        super(TYPE, new Parser(), parameters);
+    }
+
+    // Modules
+
+    @Override
+    public @NotNull MediaType<FormData[]> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new FormUrlEncodedMediaType(parameters);
     }
 
     // Classes

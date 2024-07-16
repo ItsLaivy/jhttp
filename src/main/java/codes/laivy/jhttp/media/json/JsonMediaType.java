@@ -34,8 +34,15 @@ public class JsonMediaType extends MediaType<JsonElement> {
 
     // Object
 
-    public JsonMediaType() {
-        super(TYPE, new Parser(), new Parameter[0]);
+    public JsonMediaType(@NotNull Parameter @NotNull ... parameters) {
+        super(TYPE, new Parser(), parameters);
+    }
+
+    // Modules
+
+    @Override
+    public @NotNull MediaType<JsonElement> clone(@NotNull Parameter @NotNull ... parameters) {
+        return new JsonMediaType(parameters);
     }
 
     // Classes
