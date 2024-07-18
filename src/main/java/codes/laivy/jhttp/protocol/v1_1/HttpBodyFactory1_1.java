@@ -76,8 +76,8 @@ final class HttpBodyFactory1_1 implements HttpBodyFactory {
 
         // Interpret Message
         try {
-            @NotNull HttpBody body = HttpBody.create(getVersion(), content.getBytes(StandardCharsets.ISO_8859_1));
-            if (media != null) body.getContent(media);
+            @NotNull HttpBody body = HttpBody.create(content.getBytes(StandardCharsets.ISO_8859_1));
+            if (media != null) body.getContent(getVersion(), media);
 
             return body;
         } catch (@NotNull MediaParserException | @NotNull IOException e) {

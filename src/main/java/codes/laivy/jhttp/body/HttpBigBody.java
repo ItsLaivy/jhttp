@@ -36,8 +36,6 @@ public class HttpBigBody implements HttpBody {
 
     // Object
 
-    private final @NotNull HttpVersion version;
-
     protected final @NotNull Object lock = new Object();
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     private final @NotNull File file;
@@ -48,13 +46,10 @@ public class HttpBigBody implements HttpBody {
      * Constructs an instance of {@link HttpBigBody} with the provided {@link Byte} array.
      * A temporary file is created and data from the byte array is saved into it.
      *
-     * @param version the http version used at this body
      * @param bytes the bytes containing the HTTP body data
      * @throws IOException if an I/O error occurs
      */
-    public HttpBigBody(@NotNull HttpVersion version, byte @NotNull [] bytes) throws IOException {
-        this.version = version;
-
+    public HttpBigBody(byte @NotNull [] bytes) throws IOException {
         this.file = File.createTempFile("jhttp-", "-big_body");
         this.file.deleteOnExit();
 
@@ -65,13 +60,10 @@ public class HttpBigBody implements HttpBody {
      * Constructs an instance of {@link HttpBigBody} with the provided {@link InputStream}.
      * A temporary file is created and data from the stream is saved into it.
      *
-     * @param version the http version used at this body
      * @param stream the input stream containing the HTTP body data
      * @throws IOException if an I/O error occurs
      */
-    public HttpBigBody(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
-        this.version = version;
-
+    public HttpBigBody(@NotNull InputStream stream) throws IOException {
         this.file = File.createTempFile("jhttp-", "-big_body");
         this.file.deleteOnExit();
 
@@ -89,16 +81,6 @@ public class HttpBigBody implements HttpBody {
         synchronized (lock) {
             return file;
         }
-    }
-
-    /**
-     * The version instance used to create this http body. The body is important to serialize/deserialize contents
-     *
-     * @return the http version
-     */
-    @Override
-    public @NotNull HttpVersion getVersion() {
-        return version;
     }
 
     /**
@@ -123,14 +105,16 @@ public class HttpBigBody implements HttpBody {
     /**
      * Retrieves the content of the specified media type from the temporary file.
      *
+     * @param version the http version of the content
      * @param mediaType the media type to retrieve
      * @param <T> the type of content
+     *
      * @return the content of the specified media type
      * @throws MediaParserException if a parsing error occurs
      * @throws IOException if an I/O error occurs or if the http body is closed
      */
     @Override
-    public @NotNull <T> Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
         if (closed) {
             throw new IOException("this http body is closed");
         }
@@ -142,8 +126,8 @@ public class HttpBigBody implements HttpBody {
             content = (Content<T>) contentMap.get(mediaType);
         } else {
             synchronized (lock) {
-                @NotNull T data = mediaType.getParser().deserialize(getVersion(), getInputStream(), mediaType.getParameters());
-                content = new BigContent<>(mediaType, data);
+                @NotNull T data = mediaType.getParser().deserialize(version, getInputStream(), mediaType.getParameters());
+                content = new BigContent<>(version, mediaType, data);
             }
 
             contentMap.put(mediaType, content);
@@ -221,16 +205,19 @@ public class HttpBigBody implements HttpBody {
      */
     protected class BigContent<T> implements Content<T> {
 
+        private final @NotNull HttpVersion version;
         private final @NotNull MediaType<T> mediaType;
         private volatile @NotNull T data;
 
         /**
          * Constructs an instance of {@code BigContent} with the specified media type and data.
          *
+         * @param version the http version of the content
          * @param mediaType the media type of the content
          * @param data the content data
          */
-        public BigContent(@NotNull MediaType<T> mediaType, @NotNull T data) {
+        public BigContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+            this.version = version;
             this.mediaType = mediaType;
             this.data = data;
         }
@@ -255,6 +242,16 @@ public class HttpBigBody implements HttpBody {
         @Override
         public @NotNull HttpBody getBody() {
             return HttpBigBody.this;
+        }
+
+        /**
+         * Gets the http version this content is from
+         *
+         * @return the http version
+         */
+        @Override
+        public @NotNull HttpVersion getVersion() {
+            return version;
         }
 
         /**

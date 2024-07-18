@@ -47,6 +47,13 @@ public interface Content<T> extends Flushable {
     @NotNull HttpBody getBody();
 
     /**
+     * Gets the http version this content is from
+     *
+     * @return the http version
+     */
+    @NotNull HttpVersion getVersion();
+
+    /**
      * Obtains the data of this content.
      *
      * @return the data of this content, never null

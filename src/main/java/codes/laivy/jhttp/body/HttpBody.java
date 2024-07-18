@@ -30,24 +30,24 @@ public interface HttpBody extends Closeable {
 
     static @NotNull HttpBody empty() {
         try {
-            return create(HttpVersion.HTTP1_1(), new byte[0]);
+            return create(new byte[0]);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    static @NotNull HttpBody create(@NotNull HttpVersion version, byte @NotNull [] bytes) throws IOException {
+    static @NotNull HttpBody create(byte @NotNull [] bytes) throws IOException {
         if (bytes.length >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-            return new HttpBigBody(version, bytes);
+            return new HttpBigBody(bytes);
         } else {
-            return new HttpSimpleBody(version, bytes);
+            return new HttpSimpleBody(bytes);
         }
     }
-    static @NotNull HttpBody create(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
+    static @NotNull HttpBody create(@NotNull InputStream stream) throws IOException {
         if (stream.available() >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-            return new HttpBigBody(version, stream);
+            return new HttpBigBody(stream);
         } else {
-            return new HttpSimpleBody(version, stream);
+            return new HttpSimpleBody(stream);
         }
     }
     static <T> @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
@@ -56,12 +56,12 @@ public interface HttpBody extends Closeable {
 
             @NotNull HttpBody body;
             if (available >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
-                body = new HttpBigBody(version, stream);
+                body = new HttpBigBody(stream);
             } else {
-                body = new HttpSimpleBody(version, stream);
+                body = new HttpSimpleBody(stream);
             }
 
-            return body.getContent(mediaType);
+            return body.getContent(version, mediaType);
         } catch (@NotNull IOException | @NotNull MediaParserException e) {
             throw new RuntimeException(e);
         }
@@ -72,6 +72,7 @@ public interface HttpBody extends Closeable {
     /**
      * Retrieves or create the content of the HTTP body, decoded and transformed to the specified media type.
      *
+     * @param version the http version of the content
      * @param mediaType the media type to which the content should be transformed must not be null
      * @param <T> the type of the content after transformation
      * @return the content of the HTTP body transformed to the specified media type
@@ -79,14 +80,7 @@ public interface HttpBody extends Closeable {
      * @throws MediaParserException if an exception occurs, trying to parse the content
      * @throws IOException if an exception occurs, trying to read content
      */
-    <T> @NotNull Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
-
-    /**
-     * The version instance used to create this http body. The body is important to serialize/deserialize contents
-     *
-     * @return the http version
-     */
-    @NotNull HttpVersion getVersion();
+    <T> @NotNull Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
 
     /**
      * Provides an {@link InputStream} for reading the raw content of the HTTP body.
@@ -99,11 +93,12 @@ public interface HttpBody extends Closeable {
     /**
      * Clones the {@link HttpBody} using the specified version.
      *
+     * @param version the http version to create the body
      * @return a new http body with the selected version
      * @throws IOException if an I/O exception occurs while perform
      */
     default @NotNull HttpBody clone(@NotNull HttpVersion version) throws IOException {
-        return create(version, getInputStream());
+        return create(getInputStream());
     }
 
 }

@@ -192,7 +192,7 @@ public interface HttpRequest extends HttpElement {
             }
 
             // Finish
-            @NotNull Content<FormData[]> content = getBody().getContent(((MediaType<FormData[]>) media));
+            @NotNull Content<FormData[]> content = getBody().getContent(getVersion(), ((MediaType<FormData[]>) media));
             return content.getData();
         } catch (@NotNull MediaParserException | @NotNull IOException e) {
             throw new IllegalArgumentException("cannot parse form data content from body", e);

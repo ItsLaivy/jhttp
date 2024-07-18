@@ -23,8 +23,6 @@ import java.util.Objects;
  */
 public class HttpSimpleBody implements HttpBody {
 
-    private final @NotNull HttpVersion version;
-
     protected final @NotNull Map<MediaType<?>, Content<?>> contentMap = new HashMap<>();
     protected byte @NotNull [] bytes;
 
@@ -33,24 +31,19 @@ public class HttpSimpleBody implements HttpBody {
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided byte array.
      *
-     * @param version the http version used at this body
      * @param bytes the byte array containing the HTTP body data.
      */
-    public HttpSimpleBody(@NotNull HttpVersion version, byte @NotNull [] bytes) {
-        this.version = version;
+    public HttpSimpleBody(byte @NotNull [] bytes) {
         this.bytes = bytes;
     }
 
     /**
      * Constructs an instance of {@code HttpSimpleBody} with the provided input stream.
      *
-     * @param version the http version used at this body
      * @param stream the input stream containing the HTTP body data.
      * @throws IOException if an I/O exception occurs.
      */
-    public HttpSimpleBody(@NotNull HttpVersion version, @NotNull InputStream stream) throws IOException {
-        this.version = version;
-
+    public HttpSimpleBody(@NotNull InputStream stream) throws IOException {
         try (@NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             @NotNull BitMeasure size = BitMeasure.create(BitMeasure.Level.KILOBYTES, 2D);
             byte[] bytes = new byte[(int) size.getBytes()];
@@ -83,14 +76,16 @@ public class HttpSimpleBody implements HttpBody {
     /**
      * Retrieves the content of the specified media type from the byte array.
      *
+     * @param version the http version of the content
      * @param mediaType the media type to retrieve
      * @param <T> the type of content
+     *
      * @return the content of the specified media type
      * @throws MediaParserException if a parsing error occurs
      * @throws IOException if an I/O error occurs or if the body is closed
      */
     @Override
-    public @NotNull <T> Content<T> getContent(@NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
         if (closed) {
             throw new IOException("this http body is closed");
         }
@@ -101,23 +96,13 @@ public class HttpSimpleBody implements HttpBody {
             //noinspection unchecked
             content = (Content<T>) contentMap.get(mediaType);
         } else {
-            @NotNull T data = mediaType.getParser().deserialize(getVersion(), getInputStream(), mediaType.getParameters());
-            content = new SimpleContent<>(mediaType, data);
+            @NotNull T data = mediaType.getParser().deserialize(version, getInputStream(), mediaType.getParameters());
+            content = new SimpleContent<>(version, mediaType, data);
 
             contentMap.put(mediaType, content);
         }
 
         return content;
-    }
-
-    /**
-     * The version instance used to create this http body. The body is important to serialize/deserialize contents
-     *
-     * @return the http version
-     */
-    @Override
-    public @NotNull HttpVersion getVersion() {
-        return version;
     }
 
     /**
@@ -186,16 +171,19 @@ public class HttpSimpleBody implements HttpBody {
      */
     protected class SimpleContent<T> implements Content<T> {
 
+        private final @NotNull HttpVersion version;
         private final @NotNull MediaType<T> mediaType;
         private volatile @NotNull T data;
 
         /**
          * Constructs an instance of {@code SimpleContent} with the specified media type and data.
          *
+         * @param version the http version of the content
          * @param mediaType the media type of the content
          * @param data the content data
          */
-        public SimpleContent(@NotNull MediaType<T> mediaType, @NotNull T data) {
+        public SimpleContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+            this.version = version;
             this.mediaType = mediaType;
             this.data = data;
         }
@@ -220,6 +208,16 @@ public class HttpSimpleBody implements HttpBody {
         @Override
         public @NotNull HttpBody getBody() {
             return HttpSimpleBody.this;
+        }
+
+        /**
+         * Returns the {@code HttpBody} that contains this content.
+         *
+         * @return the HTTP body
+         */
+        @Override
+        public @NotNull HttpVersion getVersion() {
+            return version;
         }
 
         /**

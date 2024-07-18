@@ -64,7 +64,7 @@ public final class FormUrlEncodedMediaType extends MediaType<@NotNull FormData @
                         @NotNull String key = URLDecoder.decode(parts[0], "UTF-8");
                         byte[] value = parts.length == 2 ? URLDecoder.decode(parts[1], "UTF-8").getBytes(StandardCharsets.UTF_8) : new byte[0];
 
-                        return FormData.create(key, HttpBody.create(version, value));
+                        return FormData.create(key, HttpBody.create(value));
                     } catch (@NotNull IOException e) {
                         throw new RuntimeException("cannot parse form data", e);
                     }

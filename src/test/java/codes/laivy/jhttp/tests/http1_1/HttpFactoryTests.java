@@ -101,13 +101,13 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(MediaType.APPLICATION_JSON(), headers.get(CONTENT_TYPE)[0].getValue());
 
             Assertions.assertNotNull(request.getBody());
-            Assertions.assertNotNull(request.getBody().getContent(MediaType.APPLICATION_JSON()));
+            Assertions.assertNotNull(request.getBody().getContent(HTTP1_1(), MediaType.APPLICATION_JSON()));
 
             // Match
             @NotNull JsonObject object = new JsonObject();
             object.addProperty("text", "test");
 
-            Assertions.assertEquals(object, request.getBody().getContent(MediaType.APPLICATION_JSON()).getData());
+            Assertions.assertEquals(object, request.getBody().getContent(HTTP1_1(), MediaType.APPLICATION_JSON()).getData());
         }
 
     }
@@ -178,13 +178,13 @@ public final class HttpFactoryTests {
             Assertions.assertEquals(MediaType.APPLICATION_JSON(), headers.get(CONTENT_TYPE)[0].getValue());
 
             Assertions.assertNotNull(response.getBody());
-            Assertions.assertNotNull(response.getBody().getContent(MediaType.APPLICATION_JSON()));
+            Assertions.assertNotNull(response.getBody().getContent(HTTP1_1(), MediaType.APPLICATION_JSON()));
 
             // Match
             @NotNull JsonObject object = new JsonObject();
             object.addProperty("text", "test");
 
-            Assertions.assertEquals(object, response.getBody().getContent(MediaType.APPLICATION_JSON()).getData());
+            Assertions.assertEquals(object, response.getBody().getContent(HTTP1_1(), MediaType.APPLICATION_JSON()).getData());
         }
 
     }

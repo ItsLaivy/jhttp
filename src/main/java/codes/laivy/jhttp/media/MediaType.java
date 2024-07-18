@@ -3,6 +3,7 @@ package codes.laivy.jhttp.media;
 import codes.laivy.jhttp.body.HttpBody;
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.element.FormData;
+import codes.laivy.jhttp.exception.media.MediaParserException;
 import codes.laivy.jhttp.media.form.FormUrlEncodedMediaType;
 import codes.laivy.jhttp.media.form.MultipartFormDataMediaType;
 import codes.laivy.jhttp.media.html.HTMLMediaType;
@@ -16,6 +17,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -51,6 +56,32 @@ public class MediaType<T> {
     // todo 16/07/2024: create jhtml library
     @ApiStatus.Experimental
     public static @NotNull MediaType<@NotNull Element> TEXT_HTML() { return HTMLMediaType.getInstance(); }
+
+    @ApiStatus.Experimental
+    public static @NotNull MediaType<byte[]> custom(@NotNull Type type, @NotNull Parameter @NotNull ... parameters) {
+        @NotNull MediaParser<byte[]> parser = new MediaParser<byte[]>() {
+            @Override
+            public byte @NotNull [] deserialize(@NotNull HttpVersion version, @NotNull InputStream stream, @NotNull Parameter @NotNull ... parameters) throws MediaParserException, IOException {
+                byte[] bytes = new byte[stream.available()];
+
+                try (@NotNull InputStreamReader reader = new InputStreamReader(stream)) {
+                    int row = 0;
+                    while (reader.ready()) {
+                        bytes[row] = (byte) reader.read();
+                        row++;
+                    }
+                }
+
+                return bytes;
+            }
+            @Override
+            public @NotNull InputStream serialize(@NotNull HttpVersion version, byte @NotNull [] content, @NotNull Parameter @NotNull ... parameters) throws IOException, MediaParserException {
+                return new ByteArrayInputStream(content);
+            }
+        };
+
+        return new MediaType<>(type, parser, parameters);
+    }
 
     // Media type content
 
@@ -188,7 +219,7 @@ public class MediaType<T> {
     private final @NotNull MediaParser<T> parser;
     private final @NotNull Parameter @NotNull [] parameters;
 
-    public MediaType(@NotNull Type type, @NotNull MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
+    protected MediaType(@NotNull Type type, @NotNull MediaParser<T> parser, @NotNull Parameter @NotNull [] parameters) {
         this.type = type;
         this.parser = parser;
         this.parameters = parameters;
@@ -262,9 +293,6 @@ public class MediaType<T> {
 
     public @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull T object) {
         return HttpBody.create(version, this, object);
-    }
-    public @NotNull Content<T> create(@NotNull T object) {
-        return HttpBody.create(HttpVersion.HTTP1_1(), this, object);
     }
 
     public @NotNull MediaType<T> clone(@NotNull Parameter @NotNull ... parameters) {
