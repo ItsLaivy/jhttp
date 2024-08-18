@@ -20,12 +20,12 @@ public class IdentityEncoding extends Encoding {
     // Implementations
 
     @Override
-    public @NotNull String decompress(@NotNull String string) {
-        return string;
+    public byte @NotNull [] decompress(byte @NotNull [] bytes) {
+        return bytes;
     }
     @Override
-    public @NotNull String compress(@NotNull String string) throws EncodingException {
-        return string;
+    public byte @NotNull [] compress(byte @NotNull [] bytes) throws EncodingException {
+        return bytes;
     }
 
     // Classes

@@ -57,13 +57,13 @@ public class ChunkedEncoding extends Encoding {
     }
 
     @Override
-    public @NotNull String compress(@NotNull String string) throws EncodingException {
+    public byte @NotNull [] compress(byte @NotNull [] bytes) throws EncodingException {
         // As you can see, the compression is pretty much simpler than the decompression
         // Lol the decompression method took Laivy almost 16 hours to be done :crying:
 
         @NotNull StringBuilder builder = new StringBuilder();
 
-        for (byte[] block : StringUtils.explode(string.getBytes(ISO_8859_1), getBlockSize())) {
+        for (byte[] block : StringUtils.explode(bytes, getBlockSize())) {
             // Length and extensions
             @NotNull Length length = new Length(block.length, extensions(new String(block, ISO_8859_1)));
             builder.append(length).append(CRLF);
@@ -77,10 +77,10 @@ public class ChunkedEncoding extends Encoding {
         builder.append(length).append(CRLF).append(CRLF);
 
         // Finish
-        return new String(builder.toString().getBytes(ISO_8859_1), ISO_8859_1);
+        return builder.toString().getBytes(ISO_8859_1);
     }
     @Override
-    public @NotNull String decompress(@NotNull String string) throws EncodingException {
+    public byte @NotNull [] decompress(byte @NotNull [] bytes) throws EncodingException {
         // Parser functions
         @NotNull BiFunction<String, Length, Chunk> chunkParser = new BiFunction<String, Length, Chunk>() {
             @Override
@@ -119,6 +119,7 @@ public class ChunkedEncoding extends Encoding {
 
         // Parse
         @NotNull List<Chunk> chunks = new LinkedList<>();
+        @NotNull String string = new String(bytes, ISO_8859_1);
 
         @Nullable Length length = null;
         while (!string.isEmpty()) {
@@ -159,7 +160,7 @@ public class ChunkedEncoding extends Encoding {
         }
 
         // Finish
-        return new String(decompressed, ISO_8859_1);
+        return decompressed;
     }
 
     // Classes

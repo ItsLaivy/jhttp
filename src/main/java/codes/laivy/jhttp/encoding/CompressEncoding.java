@@ -26,9 +26,8 @@ public class CompressEncoding extends Encoding {
     }
 
     @Override
-    public @NotNull String decompress(@NotNull String string) throws EncodingException {
-        byte[] bytes = string.getBytes();
-        if (bytes.length == 0) return new String(new byte[0]);
+    public byte @NotNull [] decompress(byte @NotNull [] bytes) throws EncodingException {
+        if (bytes.length == 0) return new byte[0];
 
         // Dictionary
         @NotNull Map<Integer, String> dictionary = new HashMap<>();
@@ -43,7 +42,7 @@ public class CompressEncoding extends Encoding {
         try {
             int oldCode = ((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF);
             @NotNull String oldString = dictionary.get(oldCode);
-            result.write(oldString.getBytes(StandardCharsets.UTF_8));
+            result.write(oldString.getBytes(StandardCharsets.ISO_8859_1));
 
             int i = 2;
             while (i < bytes.length) {
@@ -59,7 +58,7 @@ public class CompressEncoding extends Encoding {
                     throw new IllegalArgumentException("Bad compressed code");
                 }
 
-                result.write(current.getBytes(StandardCharsets.UTF_8));
+                result.write(current.getBytes(StandardCharsets.ISO_8859_1));
 
                 dictionary.put(dictSize++, oldString + current.charAt(0));
                 oldString = current;
@@ -69,13 +68,11 @@ public class CompressEncoding extends Encoding {
         }
 
         // Finish
-        return result.toString();
+        return result.toByteArray();
     }
 
     @Override
-    public @NotNull String compress(@NotNull String string) throws EncodingException {
-        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
-
+    public byte @NotNull [] compress(byte @NotNull [] bytes) throws EncodingException {
         // Dictionary
         @NotNull Map<String, Integer> dictionary = new HashMap<>();
         for (int i = 0; i < 256; i++) {
@@ -111,7 +108,7 @@ public class CompressEncoding extends Encoding {
             outputStream.write(code & 0xFF);
         }
 
-        return outputStream.toString();
+        return outputStream.toByteArray();
     }
 
 

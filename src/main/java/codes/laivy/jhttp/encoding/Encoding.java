@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  * is already a custom encoding with the same name already added here, in which case it will return your encoding
  * instead.</p>
  *
- * @author Daniel Richard (Laivy)
+ * @author Daniel Meinicke (Laivy)
  * @since 1.0-SNAPSHOT
  */
 // todo: 03/06/2023 add more tokens (See https://en.wikipedia.org/wiki/HTTP_compression)
@@ -41,7 +41,7 @@ public abstract class Encoding {
      * Retrieves all the available encodings.
      *
      * @return an unmodifiable collection of all registered encodings
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static @NotNull Collection<Encoding> retrieve() {
         synchronized (collection) {
@@ -54,7 +54,7 @@ public abstract class Encoding {
      *
      * @param string the name or alias of the encoding to retrieve
      * @return an optional containing the encoding if found, otherwise an empty optional
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static @NotNull Optional<Encoding> retrieve(@NotNull String string) {
         return stream().filter(encoding -> encoding.getName().equalsIgnoreCase(string) || Arrays.stream(encoding.getAliases()).anyMatch(alias -> alias.equalsIgnoreCase(string))).findFirst();
@@ -65,7 +65,7 @@ public abstract class Encoding {
      *
      * @param encoding the encoding to add
      * @return {@code true} if the encoding was added successfully, {@code false} if it was already present
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static boolean add(@NotNull Encoding encoding) {
         synchronized (collection) {
@@ -90,7 +90,7 @@ public abstract class Encoding {
      *
      * @param encoding the encoding to remove
      * @return {@code true} if the encoding was removed successfully, {@code false} if it was not present
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static boolean remove(@NotNull Encoding encoding) {
         synchronized (collection) {
@@ -103,7 +103,7 @@ public abstract class Encoding {
      *
      * @param encoding the encoding to check for
      * @return {@code true} if the encoding is present, {@code false} otherwise
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static boolean contains(@NotNull Encoding encoding) {
         return retrieve().contains(encoding);
@@ -114,7 +114,7 @@ public abstract class Encoding {
      *
      * @param name the encoding name
      * @return {@code true} if the encoding is present, {@code false} otherwise
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static boolean contains(@NotNull String name) {
         return retrieve(name).isPresent();
@@ -124,7 +124,7 @@ public abstract class Encoding {
      * Returns the number of encodings in the collection, including the default ones.
      *
      * @return the number of encodings in the collection
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static int size() {
         return retrieve().size();
@@ -134,7 +134,7 @@ public abstract class Encoding {
      * Returns a stream of all the encodings in the collection.
      *
      * @return a stream of all encodings
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static @NotNull Stream<Encoding> stream() {
         return retrieve().stream();
@@ -144,7 +144,7 @@ public abstract class Encoding {
      * Returns an iterator over the encodings in the collection.
      *
      * @return an iterator over the encodings
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static @NotNull Iterator<Encoding> iterator() {
         return retrieve().iterator();
@@ -154,7 +154,7 @@ public abstract class Encoding {
      * Returns an array containing all the encodings in the collection.
      *
      * @return an array of all encodings
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      */
     public static @NotNull Encoding[] toArray() {
         return retrieve().toArray(new Encoding[0]);
@@ -193,8 +193,8 @@ public abstract class Encoding {
 
     // Modules
 
-    public abstract @NotNull String decompress(@NotNull String string) throws EncodingException;
-    public abstract @NotNull String compress(@NotNull String string) throws EncodingException;
+    public abstract byte @NotNull [] decompress(byte @NotNull [] bytes) throws EncodingException;
+    public abstract byte @NotNull [] compress(byte @NotNull [] bytes) throws EncodingException;
 
     public final synchronized void register() {
         add(this);
