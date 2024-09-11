@@ -23,6 +23,7 @@ import java.util.Objects;
  * and reading from a temporary file may outweigh the benefits compared to using
  * {@link HttpSimpleBody}, as example.
  */
+// todo: rename this to HttpCacheBody
 public class HttpBigBody implements HttpBody {
 
     // Static initializers
@@ -30,9 +31,9 @@ public class HttpBigBody implements HttpBody {
     /**
      * This variable defines the minimum amount of data for a body to be automatically considered a big body.
      * It is used by the default factories of JHTTP. If the size of a content exceeds the value of this variable,
-     * it will automatically be considered a big body by the factory.
+     * it will automatically be considered a big body by the factory. The default value is 32 kilobytes.
      */
-    public static @NotNull BitMeasure MIN_BIG_BODY_SIZE = BitMeasure.create(BitMeasure.Level.MEGABYTES, 1D);
+    public static @NotNull BitMeasure MIN_BIG_BODY_SIZE = BitMeasure.create(BitMeasure.Level.KILOBYTES, 32D);
 
     // Object
 

@@ -22,6 +22,8 @@ import java.io.InputStream;
  *
  * @see CharSequence
  * @see Content
+ *
+ * @author Daniel Meinicke (Laivy)
  * @since 1.0-SNAPSHOT
  */
 public interface HttpBody extends Closeable {

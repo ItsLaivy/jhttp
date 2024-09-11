@@ -256,9 +256,8 @@ public class HttpSimpleBody implements HttpBody {
                 throw new IOException("this http body is closed");
             }
 
-            try (
-                    @NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters());
-                    @NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()
+            try (@NotNull InputStream stream = getMediaType().getParser().serialize(getVersion(), getData(), getMediaType().getParameters());
+                 @NotNull ByteArrayOutputStream output = new ByteArrayOutputStream()
             ) {
                 @NotNull BitMeasure size = BitMeasure.create(BitMeasure.Level.KILOBYTES, 2D);
                 byte[] buffer = new byte[(int) size.getBytes()];
