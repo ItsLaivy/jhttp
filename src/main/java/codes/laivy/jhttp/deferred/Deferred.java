@@ -1,6 +1,7 @@
 package codes.laivy.jhttp.deferred;
 
 import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.DeferredException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -88,11 +89,11 @@ public class Deferred<T> {
      * Retrieves the stored data if available, otherwise throws a NullPointerException.
      *
      * @return The retrieved data.
-     * @throws NullPointerException If the deferred data is not available (null).
+     * @throws DeferredException If the deferred data is not available (null).
      */
     public @NotNull T retrieve() {
         if (this.data == null) {
-            throw new NullPointerException("Deferred data not available");
+            throw new DeferredException("deferred data '" + raw + "' not available");
         } else {
             return this.data;
         }
