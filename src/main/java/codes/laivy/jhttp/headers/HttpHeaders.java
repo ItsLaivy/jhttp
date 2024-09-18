@@ -4,69 +4,30 @@ import codes.laivy.jhttp.element.Target;
 import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public interface HttpHeaders extends Iterable<HttpHeader<?>>, Cloneable {
+public interface HttpHeaders extends Collection<HttpHeader<?>> {
 
     // Static initializers
 
-    static @NotNull HttpHeaders create(@NotNull HttpVersion version, @NotNull HttpHeader<?> @NotNull ... headers) {
+    static @NotNull HttpHeaders create(@NotNull HttpVersion<?> version, @NotNull HttpHeader<?> @NotNull ... headers) {
         return create(version, Target.BOTH, headers);
     }
-    static @NotNull HttpHeaders create(@NotNull HttpVersion version, @NotNull Target target, @NotNull HttpHeader<?> @NotNull ... headers) {
-        @NotNull HttpHeaders a = version.getHeaderFactory().createMutable(target);
-
-        for (@NotNull HttpHeader<?> header : headers) {
-            a.add(header);
-        }
+    static @NotNull HttpHeaders create(@NotNull HttpVersion<?> version, @NotNull Target target, @NotNull HttpHeader<?> @NotNull ... headers) {
+        @NotNull HttpHeaders a = version.getHeadersFactory().create(target);
+        a.addAll(Arrays.asList(headers));
 
         return a;
-    }
-    static @NotNull HttpHeaders empty() {
-        return new HttpHeaders() {
-            @Override
-            public boolean put(@NotNull HttpHeader<?> header) {
-                throw new UnsupportedOperationException("you cannot put headers into a empty http header");
-            }
-            @Override
-            public boolean add(@NotNull HttpHeader<?> header) {
-                throw new UnsupportedOperationException("you cannot add headers into a empty http header");
-            }
-            @Override
-            public boolean remove(@NotNull String name) {
-                throw new UnsupportedOperationException("you cannot remove headers into a empty http header");
-            }
-
-            @Override
-            public @NotNull Stream<HttpHeader<?>> stream() {
-                return Stream.empty();
-            }
-
-            @Override
-            public void clear() {
-            }
-
-            @Override
-            @SuppressWarnings("MethodDoesntCallSuperMethod")
-            public @NotNull HttpHeaders clone() {
-                return HttpHeaders.empty();
-            }
-
-            @Override
-            public @NotNull Iterator<HttpHeader<?>> iterator() {
-                return stream().iterator();
-            }
-        };
     }
 
     // Object
 
-    boolean put(@NotNull HttpHeader<?> header);
+    @NotNull HttpVersion<?> getVersion();
+    @NotNull Target getTarget();
+
+    void put(@NotNull HttpHeader<?> header);
     boolean add(@NotNull HttpHeader<?> header);
 
     default boolean remove(@NotNull HttpHeader<?> header) {
@@ -133,10 +94,5 @@ public interface HttpHeaders extends Iterable<HttpHeader<?>>, Cloneable {
 
         return headers.toArray(new HttpHeader[0]);
     }
-    
-    // Implementations
-    
-    @NotNull
-    HttpHeaders clone();
 
 }

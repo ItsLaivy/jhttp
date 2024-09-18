@@ -33,7 +33,7 @@ public interface HttpHeader<T> extends Cloneable {
      * These categories help in organizing and understanding the purpose of each header type.
      *
      * @see <a href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Headers">MDN Web Docs - HTTP Headers</a>
-     * @author Daniel Richard (Laivy)
+     * @author Daniel Meinicke (Laivy)
      * @since 1.0-SNAPSHOT
      */
     enum Type {
