@@ -2,10 +2,15 @@ package codes.laivy.jhttp.body;
 
 import codes.laivy.jhttp.deferred.Deferred;
 import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.DeferredException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
+import codes.laivy.jhttp.headers.HttpHeaders;
+import jdk.internal.util.xml.impl.Input;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Represents an HTTP body that has been encoded with transfer and content encodings that may not be
@@ -34,8 +39,8 @@ import java.io.InputStream;
  */
 public class HttpEncodedBody extends HttpBigBody {
 
-    private final @NotNull Deferred<Encoding> @NotNull [] transferEncodings;
-    private final @NotNull Deferred<Encoding> @NotNull [] contentEncodings;
+    private @NotNull Deferred<Encoding> @NotNull [] transferEncodings;
+    private @NotNull Deferred<Encoding> @NotNull [] contentEncodings;
 
     /**
      * Constructs an {@link HttpEncodedBody} with the specified byte array and encoding information.
@@ -65,6 +70,16 @@ public class HttpEncodedBody extends HttpBigBody {
         this.contentEncodings = contentEncodings;
     }
 
+    // Modules
+
+    @Override
+    public @NotNull InputStream getInputStream() throws IOException {
+        throw new UnsupportedOperationException("cannot read the body of an encoded body");
+    }
+    public @NotNull InputStream getEncodedInputStream() throws IOException {
+        return super.getInputStream();
+    }
+
     // Getters
 
     /**
@@ -76,12 +91,37 @@ public class HttpEncodedBody extends HttpBigBody {
         return transferEncodings;
     }
     /**
+     * Sets the new transfer encodings from this encoded body
+     *
+     * @param transferEncodings the new transfer encodings
+     */
+    @SafeVarargs
+    public final void setTransferEncodings(@NotNull Deferred<Encoding> @NotNull ... transferEncodings) {
+        this.transferEncodings = transferEncodings;
+    }
+
+    /**
      * Returns the array of {@link Deferred<Encoding>} objects representing the content encodings applied to the HTTP body content.
      *
      * @return an array of content encodings
      */
     public @NotNull Deferred<Encoding> @NotNull [] getContentEncodings() {
         return contentEncodings;
+    }
+    /**
+     * Sets the new content encodings from this encoded body
+     *
+     * @param contentEncodings the new content encodings
+     */
+    @SafeVarargs
+    public final void setContentEncodings(@NotNull Deferred<Encoding> @NotNull ... contentEncodings) {
+        this.contentEncodings = contentEncodings;
+    }
+
+    @Override
+    public void write(@NotNull HttpHeaders headers, @NotNull OutputStream out) throws IOException, EncodingException {
+        // todo: write encoded body mechanic
+        throw new DeferredException("you cannot write an deferred encoded body");
     }
 
 }

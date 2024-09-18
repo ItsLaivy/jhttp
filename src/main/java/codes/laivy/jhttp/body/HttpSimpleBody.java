@@ -1,6 +1,13 @@
 package codes.laivy.jhttp.body;
 
+import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.encoding.ChunkedEncoding;
+import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk;
+import codes.laivy.jhttp.encoding.Encoding;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.network.BitMeasure;
@@ -8,14 +15,13 @@ import codes.laivy.jhttp.protocol.HttpVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static codes.laivy.jhttp.headers.HttpHeaderKey.*;
 
 /**
  * This class represents a simple HTTP body stored as a byte array.
@@ -85,7 +91,7 @@ public class HttpSimpleBody implements HttpBody {
      * @throws IOException if an I/O error occurs or if the body is closed
      */
     @Override
-    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
         if (closed) {
             throw new IOException("this http body is closed");
         }
@@ -117,6 +123,28 @@ public class HttpSimpleBody implements HttpBody {
             throw new IOException("this http body is closed");
         }
         return new ByteArrayInputStream(bytes);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void write(@NotNull HttpHeaders headers, @NotNull OutputStream stream) throws IOException, EncodingException {
+        @Nullable Long length = headers.first(CONTENT_LENGTH).map(HttpHeader::getValue).map(BitMeasure::getBytes).orElse(null);
+        @Nullable ChunkedEncoding chunked = (ChunkedEncoding) Arrays.stream(headers.first(TRANSFER_ENCODING).map(HttpHeader::getValue).orElse(new Deferred[0])).filter(deferred -> deferred.toString().equalsIgnoreCase("chunked")).map(Deferred::retrieve).findFirst().orElse(null);
+
+        byte[] bytes = getBytes(); // Get the bytes
+        bytes = Arrays.copyOf(bytes, length != null ? Math.toIntExact(length) : bytes.length); // Copy the bytes (with the length applied if specified)
+        bytes = BodyUtils.encode(headers, bytes);
+
+        // Apply the chunked encoding
+        if (chunked != null) {
+            for (@NotNull Chunk chunk : chunked.chunked(bytes)) {
+                chunk.write(stream);
+                stream.flush();
+            }
+        } else {
+            stream.write(bytes);
+            stream.flush();
+        }
     }
 
     // Modules
@@ -171,7 +199,7 @@ public class HttpSimpleBody implements HttpBody {
      */
     protected class SimpleContent<T> implements Content<T> {
 
-        private final @NotNull HttpVersion version;
+        private final @NotNull HttpVersion<?> version;
         private final @NotNull MediaType<T> mediaType;
         private volatile @NotNull T data;
 
@@ -182,7 +210,7 @@ public class HttpSimpleBody implements HttpBody {
          * @param mediaType the media type of the content
          * @param data the content data
          */
-        public SimpleContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+        public SimpleContent(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType, @NotNull T data) {
             this.version = version;
             this.mediaType = mediaType;
             this.data = data;
@@ -216,7 +244,7 @@ public class HttpSimpleBody implements HttpBody {
          * @return the HTTP body
          */
         @Override
-        public @NotNull HttpVersion getVersion() {
+        public @NotNull HttpVersion<?> getVersion() {
             return version;
         }
 

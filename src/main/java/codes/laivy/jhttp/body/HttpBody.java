@@ -1,6 +1,10 @@
 package codes.laivy.jhttp.body;
 
+import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk;
+import codes.laivy.jhttp.exception.DeferredException;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.protocol.HttpVersion;
@@ -9,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Represents the body of an HTTP request or response. The raw content is represented as a {@link CharSequence},
@@ -38,6 +43,9 @@ public interface HttpBody extends Closeable {
         }
     }
 
+    static @NotNull HttpBody create(@NotNull Chunk @NotNull ... chunks) throws IOException {
+        return new HttpChunkedBody(chunks);
+    }
     static @NotNull HttpBody create(byte @NotNull [] bytes) throws IOException {
         if (bytes.length >= HttpBigBody.MIN_BIG_BODY_SIZE.getBytes()) {
             return new HttpBigBody(bytes);
@@ -52,7 +60,7 @@ public interface HttpBody extends Closeable {
             return new HttpSimpleBody(stream);
         }
     }
-    static <T> @NotNull Content<T> create(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+    static <T> @NotNull Content<T> create(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType, @NotNull T data) {
         try (@NotNull InputStream stream = mediaType.getParser().serialize(version, data, mediaType.getParameters())) {
             int available = stream.available();
 
@@ -82,7 +90,7 @@ public interface HttpBody extends Closeable {
      * @throws MediaParserException if an exception occurs, trying to parse the content
      * @throws IOException if an exception occurs, trying to read content
      */
-    <T> @NotNull Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
+    <T> @NotNull Content<T> getContent(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException;
 
     /**
      * Provides an {@link InputStream} for reading the raw content of the HTTP body.
@@ -93,13 +101,26 @@ public interface HttpBody extends Closeable {
     @NotNull InputStream getInputStream() throws IOException;
 
     /**
+     * Writes the body content to an output stream according the headers specifications
+     * It auto applies the content encodings and transfer encodings.
+     *
+     * @param headers the headers used to retrieve some information for a precise write
+     * @param stream the output stream the data will be written
+     *
+     * @throws IOException if an I/O exception occurs while writing.
+     * @throws EncodingException if an exception occurs trying to encode.
+     * @throws DeferredException if any of encodings are deferred
+     */
+    void write(@NotNull HttpHeaders headers, @NotNull OutputStream stream) throws IOException, EncodingException, DeferredException;
+
+    /**
      * Clones the {@link HttpBody} using the specified version.
      *
      * @param version the http version to create the body
      * @return a new http body with the selected version
      * @throws IOException if an I/O exception occurs while perform
      */
-    default @NotNull HttpBody clone(@NotNull HttpVersion version) throws IOException {
+    default @NotNull HttpBody clone(@NotNull HttpVersion<?> version) throws IOException {
         return create(getInputStream());
     }
 

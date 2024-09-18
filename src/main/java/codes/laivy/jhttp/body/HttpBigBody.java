@@ -1,6 +1,12 @@
 package codes.laivy.jhttp.body;
 
+import codes.laivy.jhttp.deferred.Deferred;
+import codes.laivy.jhttp.encoding.ChunkedEncoding;
+import codes.laivy.jhttp.encoding.ChunkedEncoding.Chunk;
+import codes.laivy.jhttp.exception.encoding.EncodingException;
 import codes.laivy.jhttp.exception.media.MediaParserException;
+import codes.laivy.jhttp.headers.HttpHeader;
+import codes.laivy.jhttp.headers.HttpHeaders;
 import codes.laivy.jhttp.media.Content;
 import codes.laivy.jhttp.media.MediaType;
 import codes.laivy.jhttp.network.BitMeasure;
@@ -10,9 +16,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static codes.laivy.jhttp.headers.HttpHeaderKey.CONTENT_LENGTH;
+import static codes.laivy.jhttp.headers.HttpHeaderKey.TRANSFER_ENCODING;
 
 /**
  * This class is designed for handling large HTTP bodies by creating a temporary file
@@ -115,7 +125,7 @@ public class HttpBigBody implements HttpBody {
      * @throws IOException if an I/O error occurs or if the http body is closed
      */
     @Override
-    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
+    public @NotNull <T> Content<T> getContent(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType) throws MediaParserException, IOException {
         if (closed) {
             throw new IOException("this http body is closed");
         }
@@ -150,6 +160,54 @@ public class HttpBigBody implements HttpBody {
         } else synchronized (lock) {
             return Files.newInputStream(file.toPath());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void write(@NotNull HttpHeaders headers, @NotNull OutputStream out) throws IOException, EncodingException {
+        @Nullable Long limit = headers.first(CONTENT_LENGTH).map(HttpHeader::getValue).map(BitMeasure::getBytes).orElse(null);
+        @Nullable ChunkedEncoding chunked = (ChunkedEncoding) Arrays.stream(headers.first(TRANSFER_ENCODING).map(HttpHeader::getValue).orElse(new Deferred[0])).filter(deferred -> deferred.toString().equalsIgnoreCase("chunked")).map(Deferred::retrieve).findFirst().orElse(null);
+        @NotNull InputStream stream = getInputStream();
+
+        // Dynamic buffer
+        final int bufferSize = Math.min(64000, Math.max(4096, stream.available() / 16));
+        byte[] buffer = new byte[bufferSize];
+
+        long bytesReadTotal = 0;
+        int bytesRead;
+
+        while (true) {
+            int bytesToRead = (limit != null) ? (int) Math.min(bufferSize, limit - bytesReadTotal) : bufferSize;
+            bytesRead = stream.read(buffer, 0, bytesToRead);
+            if (bytesRead == -1) break;
+
+            byte[] processed = Arrays.copyOf(buffer, bytesRead);
+            processed = BodyUtils.encode(headers, processed);
+
+            if (chunked != null) {
+                @NotNull Chunk chunk = new Chunk(Chunk.Length.create(processed.length), new ByteArrayInputStream(processed));
+
+                chunk.write(out);
+                out.flush();
+            } else {
+                out.write(processed);
+                if (limit != null) out.flush();
+            }
+
+            bytesReadTotal += bytesRead;
+
+            if (limit != null && bytesReadTotal >= limit) {
+                break;
+            }
+        }
+
+        // If it's chunked, send the empty (final) chunk; All the data was delivered successfully.
+        if (chunked != null) {
+            Chunk.empty().write(out);
+            out.flush();
+        }
+
+        stream.close();
     }
 
     /**
@@ -206,7 +264,7 @@ public class HttpBigBody implements HttpBody {
      */
     protected class BigContent<T> implements Content<T> {
 
-        private final @NotNull HttpVersion version;
+        private final @NotNull HttpVersion<?> version;
         private final @NotNull MediaType<T> mediaType;
         private volatile @NotNull T data;
 
@@ -217,7 +275,7 @@ public class HttpBigBody implements HttpBody {
          * @param mediaType the media type of the content
          * @param data the content data
          */
-        public BigContent(@NotNull HttpVersion version, @NotNull MediaType<T> mediaType, @NotNull T data) {
+        public BigContent(@NotNull HttpVersion<?> version, @NotNull MediaType<T> mediaType, @NotNull T data) {
             this.version = version;
             this.mediaType = mediaType;
             this.data = data;
@@ -251,7 +309,7 @@ public class HttpBigBody implements HttpBody {
          * @return the http version
          */
         @Override
-        public @NotNull HttpVersion getVersion() {
+        public @NotNull HttpVersion<?> getVersion() {
             return version;
         }
 
